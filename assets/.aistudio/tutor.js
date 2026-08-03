@@ -1,6 +1,14 @@
-*import { GoogleGenAI } from "@google/genai";
+const { GoogleGenAI } = require("@google/genai");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -10,7 +18,7 @@ export default async function handler(req, res) {
         const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
         if (!apiKey) {
-            return res.status(500).json({ error: "Chưa cấu hình GEMINI_API_KEY trên Vercel!" });
+            return res.status(500).json({ error: "Chưa cấu hình GEMINI_API_KEY trong Environment Variables của Vercel!" });
         }
 
         const ai = new GoogleGenAI({ apiKey });
@@ -34,4 +42,4 @@ export default async function handler(req, res) {
         console.error("Vercel AI Error:", error);
         return res.status(500).json({ error: error.message || "Lỗi gọi AI" });
     }
-}
+};

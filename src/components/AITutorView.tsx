@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, Send, Sparkles, RefreshCw, User, Copy, Check } from "lucide-react";
 import { ChatMessage } from "../types";
-import { GoogleGenAI } from "@google/genai";
 
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -44,39 +43,19 @@ export const AITutorView: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("Chưa cấu hình VITE_GEMINI_API_KEY trong Environment Variables của Vercel!");
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-
-      const systemInstruction = `Bạn là AI Tutor - Gia sư ảo thông minh chuyên hỗ trợ học sinh cấp 2 (THCS) môn ${subject}. Hãy giải thích chi tiết, thân thiện, dễ hiểu, từng bước một.`;
-
-      const chatHistory = messages.map((m) => ({
-        role: m.role === "model" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
-
-      chatHistory.push({
-        role: "user",
-        parts: [{ text: query }],
+      const res = await fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, messages: [...messages, userMsg] }),
       });
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: chatHistory,
-        config: {
-          systemInstruction: systemInstruction,
-        }
-      });
-
-      const replyText = response.text || "Xin lỗi, Thầy/Cô chưa nhận được câu trả lời. Em thử lại nhé!";
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Lỗi server");
 
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "model",
-        content: replyText,
+        content: data.reply || "Xin lỗi, Thầy/Cô chưa nhận được câu trả lời.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
@@ -109,7 +88,6 @@ export const AITutorView: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-12">
-      {/* Header Banner */}
       <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-900 via-blue-900 to-slate-900 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
@@ -128,7 +106,6 @@ export const AITutorView: React.FC = () => {
           </div>
         </div>
 
-        {/* Subject Filter Chips */}
         <div className="flex flex-wrap items-center gap-1.5 bg-white/10 p-1.5 rounded-xl border border-white/10">
           {["Toán Học", "Ngữ Văn", "Tiếng Anh", "KHTN (Lí/Hóa/Sinh)", "Lịch Sử", "Tin Học"].map((s) => (
             <button
@@ -145,9 +122,7 @@ export const AITutorView: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Chat Container */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
-        {/* Chat Messages List */}
         <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-50/50">
           {messages.map((msg) => {
             const isAI = msg.role === "model";
@@ -229,7 +204,6 @@ export const AITutorView: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Sample Prompts */}
         <div className="p-3 bg-slate-100/80 border-t border-slate-200 overflow-x-auto scrollbar-none flex items-center gap-2 shrink-0">
           <span className="text-xs font-bold text-slate-500 shrink-0 flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Hỏi nhanh:
@@ -245,7 +219,6 @@ export const AITutorView: React.FC = () => {
           ))}
         </div>
 
-        {/* Input Form */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
