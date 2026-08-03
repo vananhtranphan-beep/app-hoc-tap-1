@@ -64,7 +64,7 @@ export const AITutorView: React.FC = () => {
       });
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash",
         contents: chatHistory,
         config: {
           systemInstruction: systemInstruction,
@@ -85,7 +85,7 @@ export const AITutorView: React.FC = () => {
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "model",
-        content: `⚠️ Lỗi kết nối AI: ${err.message}. Em kiểm tra lại API Key nhé!`,
+        content: `⚠️ Lỗi kết nối AI: ${err.message}. Em thử lại nhé!`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -119,7 +119,7 @@ export const AITutorView: React.FC = () => {
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <span>🤖 Gia Sư AI Tutor Thông Minh</span>
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                Gemini 2.5 Flash
+                Gemini 2.0 Flash
               </span>
             </h2>
             <p className="text-xs text-indigo-200 mt-0.5">
