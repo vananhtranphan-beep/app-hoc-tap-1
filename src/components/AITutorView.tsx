@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Bot, Send, Sparkles, RefreshCw, User, Copy, Check, MessageSquare } from "lucide-react";
+import { Bot, Send, Sparkles, RefreshCw, User, Copy, Check } from "lucide-react";
 import { ChatMessage } from "../types";
+import { GoogleGenerativeAI } from "@google/genai";
 
-// 1. Thêm bộ 4 thư viện dịch thuật Toán học và Markdown vào đây
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -44,23 +44,42 @@ export const AITutorView: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/ai/tutor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: query,
-          subject,
-          history: messages.map((m) => ({ role: m.role, content: m.content })),
-        }),
+      // Lấy API Key từ biến môi trường của Vite
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("Chưa cấu hình VITE_GEMINI_API_KEY trong Environment Variables của Vercel!");
+      }
+
+      const ai = new GoogleGenerativeAI({ apiKey });
+
+      // Tạo ngữ cảnh hệ thống cho gia sư THCS
+      const systemInstruction = `Bạn là AI Tutor - Gia sư ảo thông minh chuyên hỗ trợ học sinh cấp 2 (THCS) môn ${subject}. Hãy giải thích chi tiết, thân thiện, dễ hiểu, từng bước một.`;
+
+      const chatHistory = messages.map((m) => ({
+        role: m.role === "model" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+
+      // Thêm tin nhắn mới nhất của user vào lịch sử
+      chatHistory.push({
+        role: "user",
+        parts: [{ text: query }],
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Lỗi AI Tutor");
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: chatHistory,
+        config: {
+          systemInstruction: systemInstruction,
+        }
+      });
+
+      const replyText = response.text || "Xin lỗi, Thầy/Cô chưa nhận được câu trả lời. Em thử lại nhé!";
 
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "model",
-        content: data.reply || "Xin lỗi, Thầy/Cô đang cập nhật hệ thống. Em thử lại nhé!",
+        content: replyText,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
@@ -69,7 +88,7 @@ export const AITutorView: React.FC = () => {
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "model",
-        content: `⚠️ Có lỗi kết nối: ${err.message}. Em vui lòng thử lại nhé!`,
+        content: `⚠️ Lỗi kết nối AI: ${err.message}. Em kiểm tra lại API Key nhé!`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -103,7 +122,7 @@ export const AITutorView: React.FC = () => {
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <span>🤖 Gia Sư AI Tutor Thông Minh</span>
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                Gemini 3.6 Flash
+                Gemini 2.5 Flash
               </span>
             </h2>
             <p className="text-xs text-indigo-200 mt-0.5">
@@ -140,7 +159,6 @@ export const AITutorView: React.FC = () => {
                 key={msg.id}
                 className={`flex gap-3 max-w-3xl ${isAI ? "mr-auto" : "ml-auto flex-row-reverse"}`}
               >
-                {/* Avatar */}
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white font-bold text-xs shadow-sm ${isAI
                       ? "bg-gradient-to-tr from-indigo-600 to-blue-600"
@@ -150,7 +168,6 @@ export const AITutorView: React.FC = () => {
                   {isAI ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
                 </div>
 
-                {/* Bubble */}
                 <div className={`group relative space-y-1.5 ${isAI ? "items-start" : "items-end"} w-full`}>
                   <div className="flex items-center gap-2 text-[11px] text-slate-400 px-1">
                     <span className="font-bold text-slate-700">{isAI ? "AI Tutor" : "Học Sinh"}</span>
@@ -158,7 +175,6 @@ export const AITutorView: React.FC = () => {
                     <span>{msg.timestamp}</span>
                   </div>
 
-                  {/* 2. Sửa lại phần hiển thị tin nhắn ở đây */}
                   <div
                     className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm overflow-x-auto ${isAI
                         ? "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
@@ -172,18 +188,13 @@ export const AITutorView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Bọc ReactMarkdown để tự động dịch toán học và in đậm */}
                     <div className="prose prose-sm max-w-none text-slate-800">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkMath]}
-                        rehypePlugins={[rehypeKatex]}
-                      >
+                      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                         {msg.content}
                       </ReactMarkdown>
                     </div>
                   </div>
 
-                  {/* Copy Button */}
                   {isAI && (
                     <button
                       onClick={() => handleCopy(msg.id, msg.content)}
@@ -207,7 +218,6 @@ export const AITutorView: React.FC = () => {
             );
           })}
 
-          {/* Typing Indicator */}
           {isLoading && (
             <div className="flex gap-3 items-center max-w-md">
               <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
@@ -219,7 +229,6 @@ export const AITutorView: React.FC = () => {
               </div>
             </div>
           )}
-
           <div ref={messagesEndRef} />
         </div>
 
@@ -251,7 +260,7 @@ export const AITutorView: React.FC = () => {
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder={`Hỏi AI Tutor môn ${subject}... (VD: Giải bài tập, giải thích khái niệm, dịch thuật)`}
+            placeholder={`Hỏi AI Tutor môn ${subject}... (VD: Giải bài tập, giải thích khái niệm)`}
             className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
           />
           <button
