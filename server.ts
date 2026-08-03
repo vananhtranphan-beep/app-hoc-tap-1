@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -5,8 +6,14 @@ import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
+
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
 
 app.use(express.json());
 
@@ -57,7 +64,7 @@ Nhiệm vụ của bạn:
     ];
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents,
       config: {
         systemInstruction,
@@ -86,7 +93,7 @@ Môn học còn yếu cần tập trung: ${weakSubjects.join(", ") || "Chưa xá
 Hãy lập một thời khóa biểu & kế hoạch học tập tuần trong định dạng JSON chuẩn.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -160,7 +167,7 @@ Hãy đóng vai người lắng nghe ấm áp, bao dung, không phán xét. Xu�
 5. encouragement: Một thông điệp an ủi, ôm ấp tinh thần và tiếp thêm sức mạnh cho học sinh.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -203,7 +210,7 @@ Quy tắc:
     const prompt = `Học sinh tâm sự: "${story}"\n\nHãy phản hồi ngắn gọn (150-250 từ), vỗ về và cho em lời khuyên hữu ích nhất.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         systemInstruction,
@@ -234,7 +241,7 @@ Hãy xuất ra nhận xét JSON gồm:
 3. encouragementQuote: Câu châm ngôn tiếp sức mạnh.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -278,7 +285,7 @@ Hãy xuất ra phản hồi JSON:
 5. encouragementQuote: Câu nói truyền cảm hứng ngọt ngào.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -318,7 +325,7 @@ app.post("/api/ai/career", async (req, res) => {
 Hãy gợi ý các ngành nghề phù hợp, lộ trình rèn luyện kỹ năng và tổ hợp môn xét tuyển học bạ/thi ĐH tương ứng dưới định dạng JSON.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -363,7 +370,7 @@ app.post("/api/ai/quiz", async (req, res) => {
     const prompt = `Tạo bộ câu hỏi trắc nghiệm ${count} câu môn ${subject} (Lớp ${grade}), chủ đề "${topic}" theo chương trình giáo dục phổ thông Việt Nam. Format JSON.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -415,7 +422,7 @@ Bao gồm:
 3. 3 câu hỏi kiểm tra đọc hiểu có gợi ý đáp án.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
