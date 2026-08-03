@@ -23,7 +23,7 @@ Nhiệm vụ của bạn:
         }));
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-2.0-flash",
             contents: chatHistory,
             config: {
                 systemInstruction: systemInstruction,
