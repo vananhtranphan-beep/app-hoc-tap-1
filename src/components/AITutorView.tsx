@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, Send, Sparkles, RefreshCw, User, Copy, Check } from "lucide-react";
 import { ChatMessage } from "../types";
-import { GoogleGenAI } from "@google/genai";
 
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -44,34 +43,33 @@ export const AITutorView: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("Chưa cấu hình VITE_GEMINI_API_KEY trong Environment Variables của Vercel!");
+      const response = await fetch(
+        "https://app-hoc-tap-1-production.up.railway.app/api/ai/tutor",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: query,
+            subject,
+            history: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể kết nối AI");
       }
 
-      const ai = new GoogleGenAI({ apiKey });
-
-      const systemInstruction = `Bạn là AI Tutor - Gia sư ảo thông minh chuyên hỗ trợ học sinh cấp 2 (THCS) môn ${subject}. Hãy giải thích chi tiết, thân thiện, dễ hiểu, từng bước một.`;
-
-      const chatHistory = messages.map((m) => ({
-        role: m.role === "model" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
-
-      chatHistory.push({
-        role: "user",
-        parts: [{ text: query }],
-      });
-
-      const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: chatHistory,
-        config: {
-          systemInstruction: systemInstruction,
-        }
-      });
-
-      const replyText = response.text || "Xin lỗi, Thầy/Cô chưa nhận được câu trả lời. Em thử lại nhé!";
+      const replyText =
+        data.reply ||
+        "Xin lỗi, Thầy/Cô chưa nhận được câu trả lời. Em thử lại nhé!";
 
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -135,8 +133,8 @@ export const AITutorView: React.FC = () => {
               key={s}
               onClick={() => setSubject(s)}
               className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${subject === s
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-slate-300 hover:text-white hover:bg-white/10"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
             >
               {s}
@@ -158,8 +156,8 @@ export const AITutorView: React.FC = () => {
               >
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white font-bold text-xs shadow-sm ${isAI
-                      ? "bg-gradient-to-tr from-indigo-600 to-blue-600"
-                      : "bg-gradient-to-tr from-slate-700 to-slate-900"
+                    ? "bg-gradient-to-tr from-indigo-600 to-blue-600"
+                    : "bg-gradient-to-tr from-slate-700 to-slate-900"
                     }`}
                 >
                   {isAI ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
@@ -174,8 +172,8 @@ export const AITutorView: React.FC = () => {
 
                   <div
                     className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm overflow-x-auto ${isAI
-                        ? "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
-                        : "bg-indigo-600 text-white rounded-tr-none whitespace-pre-wrap"
+                      ? "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
+                      : "bg-indigo-600 text-white rounded-tr-none whitespace-pre-wrap"
                       }`}
                   >
                     {isAI && (
