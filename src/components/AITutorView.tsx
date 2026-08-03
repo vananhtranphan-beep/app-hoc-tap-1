@@ -112,8 +112,8 @@ export const AITutorView: React.FC = () => {
               key={s}
               onClick={() => setSubject(s)}
               className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${subject === s
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-slate-300 hover:text-white hover:bg-white/10"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
             >
               {s}
@@ -133,8 +133,8 @@ export const AITutorView: React.FC = () => {
               >
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white font-bold text-xs shadow-sm ${isAI
-                      ? "bg-gradient-to-tr from-indigo-600 to-blue-600"
-                      : "bg-gradient-to-tr from-slate-700 to-slate-900"
+                    ? "bg-gradient-to-tr from-indigo-600 to-blue-600"
+                    : "bg-gradient-to-tr from-slate-700 to-slate-900"
                     }`}
                 >
                   {isAI ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
@@ -149,8 +149,8 @@ export const AITutorView: React.FC = () => {
 
                   <div
                     className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm overflow-x-auto ${isAI
-                        ? "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
-                        : "bg-indigo-600 text-white rounded-tr-none whitespace-pre-wrap"
+                      ? "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
+                      : "bg-indigo-600 text-white rounded-tr-none whitespace-pre-wrap"
                       }`}
                   >
                     {isAI && (
