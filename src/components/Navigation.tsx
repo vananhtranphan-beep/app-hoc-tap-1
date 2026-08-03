@@ -23,15 +23,15 @@ export const NAV_ITEMS: {
   color: string;
   badge?: string;
 }[] = [
-  { id: "home", label: "Trang chủ", icon: Home, color: "text-blue-600" },
-  { id: "subjects", label: "Môn học THCS", icon: BookOpen, color: "text-emerald-600", badge: "Sách 6-9" },
-  { id: "mood", label: "Theo dõi tâm lý", icon: Smile, color: "text-rose-500", badge: "Ưu Tiên #1 ⭐" },
-  { id: "ai_tutor", label: "AI Tutor THCS", icon: Bot, color: "text-indigo-600", badge: "AI 24/7" },
-  { id: "planner", label: "Lập kế hoạch", icon: Calendar, color: "text-violet-600", badge: "Lịch 8 Ngày" },
-  { id: "progress", label: "Theo dõi tiến độ", icon: TrendingUp, color: "text-cyan-600", badge: "Mục Tiêu" },
-  { id: "career", label: "Hướng nghiệp THCS", icon: Target, color: "text-amber-600", badge: "Ôn Thi 10" },
-  { id: "videos", label: "Video bài giảng", icon: Video, color: "text-red-600" },
-];
+    { id: "home", label: "Trang chủ", icon: Home, color: "text-blue-600" },
+    { id: "subjects", label: "Môn học THCS", icon: BookOpen, color: "text-emerald-600", badge: "Sách 6-9" },
+    { id: "mood", label: "Theo dõi tâm lý", icon: Smile, color: "text-rose-500", badge: "Ưu Tiên #1 ⭐" },
+    { id: "ai_tutor", label: "AI Tutor THCS", icon: Bot, color: "text-indigo-600", badge: "AI 24/7" },
+    { id: "planner", label: "Lập kế hoạch", icon: Calendar, color: "text-violet-600", badge: "Lịch 8 Ngày" },
+    { id: "progress", label: "Theo dõi tiến độ", icon: TrendingUp, color: "text-cyan-600", badge: "Mục Tiêu" },
+    { id: "career", label: "Hướng nghiệp THCS", icon: Target, color: "text-amber-600", badge: "Ôn Thi 10" },
+    { id: "videos", label: "Video bài giảng", icon: Video, color: "text-red-600" },
+  ];
 
 export const Navigation: React.FC<NavigationProps> = ({
   currentSection,
@@ -52,27 +52,24 @@ export const Navigation: React.FC<NavigationProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectSection(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all cursor-pointer ${
-                  isActive
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all cursor-pointer ${isActive
                     ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/40"
                     : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon
-                    className={`w-5 h-5 ${
-                      isActive ? "text-white" : item.color
-                    }`}
+                    className={`w-5 h-5 ${isActive ? "text-white" : item.color
+                      }`}
                   />
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
                   <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      isActive
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive
                         ? "bg-white/20 text-white"
                         : "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                    }`}
+                      }`}
                   >
                     {item.badge}
                   </span>
@@ -92,9 +89,9 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
       </aside>
 
-      {/* Mobile Top Grid/Scroll Bar Navigation */}
-      <div className="lg:hidden bg-slate-900 border-b border-slate-800 p-2 overflow-x-auto scrollbar-none sticky top-[61px] z-20">
-        <div className="flex items-center gap-1.5 min-w-max px-2">
+      {/* Mobile Grid Menu - Đã fix gọn gàng ôm trọn màn hình điện thoại */}
+      <div className="lg:hidden bg-slate-900 border-b border-slate-800 p-2.5 sticky top-[61px] z-20">
+        <div className="grid grid-cols-2 gap-1.5">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = currentSection === item.id;
@@ -102,14 +99,20 @@ export const Navigation: React.FC<NavigationProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectSection(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                  isActive
-                    ? "bg-indigo-600 text-white"
+                className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${isActive
+                    ? "bg-indigo-600 text-white shadow"
                     : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                }`}
+                  }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-white" : item.color}`} />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-2 truncate">
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : item.color}`} />
+                  <span className="truncate">{item.label}</span>
+                </div>
+                {item.badge && (
+                  <span className={`text-[9px] px-1 py-0.5 rounded shrink-0 ${isActive ? "bg-white/20 text-white" : "bg-indigo-500/20 text-indigo-300"}`}>
+                    {item.badge.includes("⭐") ? "⭐" : item.badge.split(" ")[0]}
+                  </span>
+                )}
               </button>
             );
           })}
