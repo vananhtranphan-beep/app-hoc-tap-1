@@ -1,0 +1,8 @@
+{
+  "name": "Remix AI Study Hub",
+  "description": "Ứng dụng hỗ trợ học tập thông minh cho học sinh tích hợp AI Tutor, Lập kế hoạch, Hướng nghiệp, Theo dõi tâm lý, Sách giáo khoa \u0026 Bài tập.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
