@@ -36,7 +36,7 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch {}
+      } catch { }
     }
     return [INITIAL_DEMO_ACCOUNT];
   });
@@ -177,8 +177,8 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+      {/* Main Content Area - Đã fix responsive tối ưu cho điện thoại */}
+      <div className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto min-w-0">
         {/* Navigation Sidebar / Top bar for mobile */}
         <Navigation
           currentSection={currentSection}
@@ -189,7 +189,7 @@ export default function App() {
         />
 
         {/* View Router Workspace */}
-        <main className="flex-1 p-4 lg:p-8 min-w-0">
+        <main className="flex-1 p-4 lg:p-8 min-w-0 overflow-x-hidden">
           {currentSection === "home" && (
             <Dashboard
               onNavigate={(sec) => setCurrentSection(sec)}
