@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, Send, Sparkles, RefreshCw, User, Copy, Check } from "lucide-react";
 import { ChatMessage } from "../types";
-import { GoogleGenerativeAI } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -44,15 +44,13 @@ export const AITutorView: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Lấy API Key từ biến môi trường của Vite
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
         throw new Error("Chưa cấu hình VITE_GEMINI_API_KEY trong Environment Variables của Vercel!");
       }
 
-      const ai = new GoogleGenerativeAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey });
 
-      // Tạo ngữ cảnh hệ thống cho gia sư THCS
       const systemInstruction = `Bạn là AI Tutor - Gia sư ảo thông minh chuyên hỗ trợ học sinh cấp 2 (THCS) môn ${subject}. Hãy giải thích chi tiết, thân thiện, dễ hiểu, từng bước một.`;
 
       const chatHistory = messages.map((m) => ({
@@ -60,7 +58,6 @@ export const AITutorView: React.FC = () => {
         parts: [{ text: m.content }],
       }));
 
-      // Thêm tin nhắn mới nhất của user vào lịch sử
       chatHistory.push({
         role: "user",
         parts: [{ text: query }],
