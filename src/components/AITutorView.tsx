@@ -28,6 +28,7 @@ Nhiệm vụ của bạn:
             messages: chatHistory,
             model: "llama-3.3-70b-versatile",
             temperature: 0.7,
+            max_tokens: 1024,
         });
 
         return res.status(200).json({ reply: chatCompletion.choices[0].message.content });
