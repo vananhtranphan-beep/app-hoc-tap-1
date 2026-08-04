@@ -140,11 +140,11 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId }) => {
     setDays(updated);
   };
 
-  // Trigger AI Analysis
+  // Trigger AI Analysis - Trỏ thẳng về API tổng hợp /api/tutor
   const handleAnalyzePlannerWithAI = async () => {
     setIsAnalyzing(true);
     try {
-      const response = await fetch("/api/ai/plan-analyze", {
+      const response = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
