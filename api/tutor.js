@@ -26,7 +26,7 @@ Nhiệm vụ của bạn:
 
     const chatCompletion = await groq.chat.completions.create({
       messages: chatHistory,
-      model: "llama-3.1-70b-versatile",
+      model: "llama3-8b-8192",
       temperature: 0.7,
     });
 
