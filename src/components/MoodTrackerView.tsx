@@ -415,11 +415,11 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     ? Number((recent10Logs.reduce((acc, curr) => acc + curr.stressLevel, 0) / recent10Logs.length).toFixed(1))
     : 0;
 
-  // Trigger AI 30-Day Evaluation
+  // Trigger AI 30-Day Evaluation - Đã đổi sang /api/tutor
   const handleAnalyze30Days = async () => {
     setIsAnalyzing(true);
     try {
-      const response = await fetch("/api/ai/mood", {
+      const response = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -445,7 +445,7 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     }
   };
 
-  // Trigger AI Counselor Chat
+  // Trigger AI Counselor Chat - Đã đổi sang /api/tutor
   const handleAskCounselor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userStory.trim()) return;
@@ -454,7 +454,7 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     setCounselorReply(null);
 
     try {
-      const response = await fetch("/api/ai/mood-chat", {
+      const response = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
