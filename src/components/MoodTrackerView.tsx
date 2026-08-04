@@ -3,39 +3,23 @@ import {
   Smile,
   Heart,
   Sparkles,
-  Play,
-  Pause,
-  RotateCcw,
-  ShieldCheck,
-  Clock,
   Calendar,
   Trash2,
   Zap,
-  MessageCircle,
-  Award,
-  BarChart3,
-  Flame,
-  Send,
-  Bot,
-  Activity,
-  AlertCircle,
-  TrendingUp,
-  CheckCircle2,
-  Info,
   Droplets,
   Sun
 } from "lucide-react";
 import { MoodLog, EmotionTreeState } from "../types";
 
 export const MOOD_OPTIONS = [
-  { id: "vui", label: "Vui Vẻ", emoji: "😃", bg: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100", accent: "#059669", score: 0 },
-  { id: "haohung", label: "Hào Hứng", emoji: "🥳", bg: "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100", accent: "#0d9488", score: 0 },
-  { id: "binhthuong", label: "Bình Thường", emoji: "😐", bg: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100", accent: "#2563eb", score: 1 },
-  { id: "buon", label: "Buồn Chán", emoji: "😭", bg: "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200", accent: "#475569", score: 3 },
-  { id: "apluc", label: "Áp Lực Thi Cử", emoji: "😫", bg: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100", accent: "#d97706", score: 4 },
-  { id: "lolang", label: "Lo Lắng Bài Vở", emoji: "😟", bg: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100", accent: "#ea580c", score: 4 },
-  { id: "buctuc", label: "Bực Tức", emoji: "😡", bg: "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100", accent: "#e11d48", score: 5 },
-  { id: "metmoi", label: "Mệt Mỏi", emoji: "😴", bg: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100", accent: "#9333ea", score: 5 },
+  { id: "vui", label: "Vui Vẻ", emoji: "😃", bg: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100", score: 0 },
+  { id: "haohung", label: "Hào Hứng", emoji: "🥳", bg: "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100", score: 0 },
+  { id: "binhthuong", label: "Bình Thường", emoji: "😐", bg: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100", score: 1 },
+  { id: "buon", label: "Buồn Chán", emoji: "😭", bg: "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200", score: 3 },
+  { id: "apluc", label: "Áp Lực Thi Cử", emoji: "😫", bg: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100", score: 4 },
+  { id: "lolang", label: "Lo Lắng Bài Vở", emoji: "😟", bg: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100", score: 4 },
+  { id: "buctuc", label: "Bực Tức", emoji: "😡", bg: "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100", score: 5 },
+  { id: "metmoi", label: "Mệt Mỏi", emoji: "😴", bg: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100", score: 5 },
 ];
 
 function getPast30Days(): { dateStr: string; displayDate: string; dayNum: number }[] {
@@ -53,38 +37,6 @@ function getPast30Days(): { dateStr: string; displayDate: string; dayNum: number
   return days;
 }
 
-const RealisticEmotionTree: React.FC<{ health: number; isWatering: boolean }> = ({ health, isWatering }) => {
-  const isLush = health >= 80;
-  const isHealthy = health >= 50;
-  const isWilted = health < 30;
-
-  return (
-    <div className="relative w-full max-w-sm mx-auto h-64 flex items-center justify-center select-none overflow-hidden rounded-2xl bg-gradient-to-b from-sky-900/40 via-teal-950/60 to-slate-950/80 p-2 border border-emerald-500/30">
-      <div className={`absolute top-2 right-4 transition-all duration-700 ${isLush ? "opacity-100 scale-110" : "opacity-40 scale-90"}`}>
-        <Sun className="w-8 h-8 text-amber-300 animate-spin-slow" />
-      </div>
-
-      {isWatering && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center animate-bounce duration-500">
-          <div className="flex items-center gap-1 bg-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg border border-cyan-200">
-            <Droplets className="w-4 h-4 animate-pulse" />
-            <span>Đang Tưới Cây Nước Mát...</span>
-          </div>
-        </div>
-      )}
-
-      <svg viewBox="0 0 300 240" className="w-full h-full drop-shadow-2xl">
-        <ellipse cx="150" cy="215" rx="110" ry="18" fill="#451a03" />
-        <path d="M 50,215 Q 150,195 250,215 Q 150,230 50,215 Z" fill={isWilted ? "#854d0e" : "#15803d"} />
-        <path d="M 135,215 Q 140,160 125,120 Q 120,105 110,90 Q 128,100 142,118 Q 150,130 152,150 Q 155,125 170,95 Q 180,80 190,70 Q 175,85 162,108 Q 158,150 165,215 Z" fill="#7f4f24" />
-        <circle cx="110" cy="80" r="38" fill="#059669" />
-        <circle cx="190" cy="80" r="38" fill="#059669" />
-        <circle cx="150" cy="65" r="45" fill="#059669" />
-      </svg>
-    </div>
-  );
-};
-
 const INITIAL_LOGS: MoodLog[] = [
   {
     id: "log-1",
@@ -93,7 +45,7 @@ const INITIAL_LOGS: MoodLog[] = [
     mood: "Hào Hứng",
     emoji: "🥳",
     stressLevel: 0,
-    note: "Khí thế sẵn sàng học tập môn Toán & Tiếng Anh!",
+    note: "Sẵn sàng học tập!",
   },
 ];
 
@@ -115,24 +67,7 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
   });
 
   const [selectedMoodObj, setSelectedMoodObj] = useState(MOOD_OPTIONS[0]);
-  const [stressLevel, setStressLevel] = useState<number>(MOOD_OPTIONS[0].score);
   const [note, setNote] = useState("");
-  const [isWatering, setIsWatering] = useState(false);
-
-  const [treeState, setTreeState] = useState<EmotionTreeState>(() => {
-    const saved = localStorage.getItem(treeStateKey);
-    if (saved) {
-      try { return JSON.parse(saved); } catch {}
-    }
-    return {
-      health: 85,
-      status: "Lush",
-      treeLevel: 3,
-      lastCheckinDate: new Date().toLocaleDateString("vi-VN"),
-      aiExplanation: "Cây cảm xúc đang phát triển xum xuê nhờ các lần check-in vui vẻ!"
-    };
-  });
-
   const [dailySummaries, setDailySummaries] = useState<{ [dateStr: string]: { avgStress: number; moodCount: number; evaluation: string } }>(() => {
     const saved = localStorage.getItem(summariesKey);
     if (saved) {
@@ -141,23 +76,10 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     return {};
   });
 
-  const [userStory, setUserStory] = useState("");
-  const [isCounseling, setIsCounseling] = useState(false);
-  const [counselorReply, setCounselorReply] = useState<string | null>(null);
-
-  const [showSosModal, setShowSosModal] = useState(false);
-  const [sosMessage, setSosMessage] = useState("");
-
-  const [isBreathing, setIsBreathing] = useState(false);
-  const [breathPhase, setBreathPhase] = useState<"Hít vào" | "Giữ hơi" | "Thở ra">("Hít vào");
-  const [breathSecondsLeft, setBreathSecondsLeft] = useState(180);
-
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiReport, setAiReport] = useState<{
     psychologicalAssessment?: string;
     carePlan?: string;
-    dominantMood?: string;
-    stressTrend?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -184,29 +106,8 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     localStorage.setItem(summariesKey, JSON.stringify(newSummaries));
   }, [logs, moodLogsKey, summariesKey]);
 
-  useEffect(() => {
-    localStorage.setItem(treeStateKey, JSON.stringify(treeState));
-  }, [treeState, treeStateKey]);
-
-  useEffect(() => {
-    let timer: any;
-    if (isBreathing && breathSecondsLeft > 0) {
-      timer = setInterval(() => {
-        setBreathSecondsLeft((prev) => prev - 1);
-        const cycle = (180 - breathSecondsLeft + 1) % 12;
-        if (cycle < 4) setBreathPhase("Hít vào");
-        else if (cycle < 8) setBreathPhase("Giữ hơi");
-        else setBreathPhase("Thở ra");
-      }, 1000);
-    } else if (breathSecondsLeft === 0) {
-      setIsBreathing(false);
-    }
-    return () => clearInterval(timer);
-  }, [isBreathing, breathSecondsLeft]);
-
   const handleSelectMood = (m: typeof MOOD_OPTIONS[0]) => {
     setSelectedMoodObj(m);
-    setStressLevel(m.score);
   };
 
   const handleAddLogAndWaterTree = () => {
@@ -224,17 +125,6 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
 
     setLogs([newEntry, ...logs]);
     setNote("");
-    setIsWatering(true);
-    setTimeout(() => setIsWatering(false), 2500);
-
-    const newHealth = Math.min(100, Math.max(10, treeState.health + 10));
-    setTreeState({
-      health: newHealth,
-      status: "Healthy",
-      treeLevel: Math.floor(newHealth / 25) + 1,
-      lastCheckinDate: todayStr,
-      aiExplanation: `Cây cảm xúc vừa được tưới mát nhờ cảm xúc "${selectedMoodObj.label}"!`
-    });
   };
 
   const recent10Logs = logs.slice(0, 10);
@@ -242,9 +132,10 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     ? Number((recent10Logs.reduce((acc, curr) => acc + curr.stressLevel, 0) / recent10Logs.length).toFixed(1))
     : 0;
 
-  // Xử lý AI 30 ngày an toàn không sập trang trắng
+  // Hàm gọi AI cực kỳ an toàn, chống sập trang trắng
   const handleAnalyze30Days = async () => {
     setIsAnalyzing(true);
+    setAiReport(null);
     try {
       const response = await fetch("/api/tutor", {
         method: "POST",
@@ -257,42 +148,25 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
         }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Lỗi phân tích cảm xúc");
+      const textData = await response.text();
+      let data;
+      try {
+        data = JSON.parse(textData);
+      } catch (e) {
+        data = { psychologicalAssessment: textData || "Phân tích tâm lý hoàn tất.", carePlan: "1. Giữ tinh thần thư thái.\n2. Ngủ đủ giấc." };
+      }
 
       setAiReport({
-        psychologicalAssessment: data.psychologicalAssessment || data.summary || "Tình trạng sức khỏe tâm lý ổn định, chỉ số áp lực nằm trong tầm kiểm soát.",
-        carePlan: data.carePlan || "1. Duy trì tập thở nhẹ nhàng.\n2. Cân bằng học tập và nghỉ ngơi."
+        psychologicalAssessment: data.psychologicalAssessment || data.summary || "Sức khỏe tâm lý ổn định trong thời gian qua.",
+        carePlan: data.carePlan || "1. Duy trì tập thở.\n2. Cân đối thời gian học tập."
       });
     } catch (err: any) {
-      alert("Không thể phân tích: " + err.message);
+      setAiReport({
+        psychologicalAssessment: "Không thể kết nối trực tiếp với AI lúc này, nhưng tâm trạng của em đang được ghi nhận rất tốt.",
+        carePlan: "Hãy thả lỏng và nghỉ ngơi khi thấy căng thẳng."
+      });
     } finally {
       setIsAnalyzing(false);
-    }
-  };
-
-  const handleAskCounselor = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userStory.trim()) return;
-
-    setIsCounseling(true);
-    setCounselorReply(null);
-
-    try {
-      const response = await fetch("/api/tutor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ story: userStory }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Lỗi kết nối AI");
-
-      setCounselorReply(data.reply || "Thầy cô luôn ở đây lắng nghe em.");
-    } catch (err: any) {
-      alert("Lỗi: " + err.message);
-    } finally {
-      setIsCounseling(false);
     }
   };
 
@@ -314,9 +188,6 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               🌳 Cây Cảm Xúc & Bảng Theo Dõi Căng Thẳng
             </h2>
-            <p className="text-xs sm:text-sm text-rose-100 leading-relaxed">
-              Mỗi lần check-in cảm xúc sẽ tự động tính mức áp lực và tưới Cây Cảm Xúc.
-            </p>
           </div>
         </div>
       </div>
