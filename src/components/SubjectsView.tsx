@@ -38,8 +38,8 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   const cleanId = (userId || "").toLowerCase().trim();
   const isAdmin = cleanId === ADMIN_ID;
 
-  // Kho sách hệ thống chung (Admin sửa/add -> mọi người thấy)
-  const systemStorageKey = "system_admin_global_books_v6";
+  // 1. Kho lưu trữ HỆ THỐNG CHUNG (Dùng chung toàn bộ app - Admin add/sửa là mọi người thấy)
+  const systemStorageKey = "system_admin_global_books_v8";
   const [systemBooks, setSystemBooks] = useState<{ [subject: string]: { id: string; name: string; url: string; imageUrl: string }[] }>(() => {
     const saved = localStorage.getItem(systemStorageKey);
     if (saved) {
@@ -48,8 +48,8 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
     return INITIAL_SYSTEM_BOOKS;
   });
 
-  // Kho sách cá nhân của từng học sinh (Chỉ riêng tài khoản đó thấy)
-  const personalStorageKey = `user_${cleanId || "default"}_personal_books_v6`;
+  // 2. Kho lưu trữ CÁ NHÂN (Chỉ riêng tài khoản học sinh đó thấy)
+  const personalStorageKey = `user_${cleanId || "default"}_personal_books_v8`;
   const [personalBooks, setPersonalBooks] = useState<{ [subject: string]: { id: string; name: string; url: string; imageUrl: string }[] }>(() => {
     const saved = localStorage.getItem(personalStorageKey);
     if (saved) {
@@ -91,10 +91,10 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
     };
 
     if (isAdmin) {
-      // Admin add -> Vào kho chung toàn trường thấy
+      // Admin add -> Lưu vào hệ thống chung -> Toàn bộ học sinh thấy
       setSystemBooks({ ...systemBooks, [selectedSubject]: [...currentSystemList, newItem] });
     } else {
-      // Học sinh add -> Chỉ vào kho cá nhân
+      // Học sinh thường add -> Chỉ lưu kho cá nhân -> Chỉ riêng học sinh đó thấy
       setPersonalBooks({ ...personalBooks, [selectedSubject]: [...currentPersonalList, newItem] });
     }
 
@@ -118,7 +118,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
 
   const startEditing = (book: { id: string; name: string; url: string; imageUrl: string }) => {
     if (!isAdmin) {
-      alert("Chỉ tài khoản Admin (tranphanvananh) mới có quyền chỉnh sửa/gắn link tài liệu hệ thống!");
+      alert("Chỉ tài khoản Admin (tranphanvananh) mới có quyền chỉnh sửa link hệ thống!");
       return;
     }
     setEditingId(book.id);
@@ -154,7 +154,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold">Thư Viện Sách & Tài Liệu Môn Học</h2>
             <p className="text-xs text-indigo-200">
-              {isAdmin ? "⭐ Bạn đang đăng nhập quyền Admin (tranphanvananh): Hãy bấm nút Sửa trên từng sách để tự tay dán link Google Drive!" : "📚 Kho tài liệu chung của nhà trường & Tài liệu cá nhân của bạn."}
+              {isAdmin ? "⭐ Đang đăng nhập Admin (tranphanvananh): Mọi tài liệu bạn add hoặc sửa sẽ hiển thị cho toàn bộ hệ thống!" : "📚 Tài liệu chung của nhà trường & Tài liệu cá nhân của bạn."}
             </p>
           </div>
         </div>
@@ -191,14 +191,14 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
             className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            <span>{showAddForm ? "Đóng form" : isAdmin ? "➕ Thêm sách hệ thống mới" : "➕ Thêm tài liệu cá nhân"}</span>
+            <span>{showAddForm ? "Đóng form" : isAdmin ? "➕ Thêm sách hệ thống (Toàn trường thấy)" : "➕ Thêm tài liệu cá nhân"}</span>
           </button>
         </div>
 
         {showAddForm && (
           <form onSubmit={handleAddBook} className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-3">
             <h4 className="font-bold text-xs text-indigo-900">
-              {isAdmin ? "Thêm sách mới vào hệ thống chung (Tất cả học sinh sẽ thấy):" : "Thêm tài liệu riêng tư (Chỉ tài khoản của bạn thấy):"}
+              {isAdmin ? "Thêm tài liệu vào hệ thống chung (Tất cả học sinh đăng nhập đều thấy):" : "Thêm tài liệu riêng tư (Chỉ tài khoản của bạn thấy):"}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <input
@@ -231,9 +231,9 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
           </form>
         )}
 
-        {/* 1. HIỂN THỊ DANH SÁCH SÁCH HỆ THỐNG (MỌI NGƯỜI ĐỀU THẤY, CHỈ ADMIN MỚI SỬA/XÓA ĐƯỢC) */}
+        {/* 1. KHO HỆ THỐNG CHUNG (MỌI ACC ĐỀU THẤY, ADMIN SỬA/XÓA) */}
         <div className="space-y-3">
-          <h4 className="font-extrabold text-sm text-slate-700">📚 Tài liệu hệ thống chung</h4>
+          <h4 className="font-extrabold text-sm text-slate-700">📚 Tài liệu hệ thống chung (Toàn trường)</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {currentSystemList.map((book) => {
               const isEditing = editingId === book.id;
@@ -306,7 +306,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                           onClick={(e) => {
                             if (!book.url) {
                               e.preventDefault();
-                              alert(isAdmin ? "Cuốn sách này chưa có link! Hãy bấm nút hình cây bút để add link Google Drive vào." : "Sách này Admin chưa cập nhật link, vui lòng quay lại sau!");
+                              alert(isAdmin ? "Cuốn sách này chưa có link! Hãy bấm nút hình cây bút để add link Google Drive vào." : "Sách này Admin chưa cập nhật link!");
                             }
                           }}
                           className={`flex-1 py-2 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-sm transition ${
@@ -324,7 +324,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                               type="button"
                               onClick={() => startEditing(book)}
                               className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-700 transition cursor-pointer"
-                              title="Sửa link"
+                              title="Sửa"
                             >
                               <Edit3 className="w-4 h-4" />
                             </button>
@@ -332,7 +332,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                               type="button"
                               onClick={() => handleDeleteSystemBook(book.id)}
                               className="p-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 transition cursor-pointer"
-                              title="Xóa sách hệ thống"
+                              title="Xóa"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -347,7 +347,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
           </div>
         </div>
 
-        {/* 2. HIỂN THỊ DANH SÁCH TÀI LIỆU CÁ NHÂN (CHỈ RIÊNG ACC ĐÓ THẤY VÀ XÓA ĐƯỢC) */}
+        {/* 2. KHO CÁ NHÂN (CHỈ RIÊNG ACC ĐÓ THẤY) */}
         {currentPersonalList.length > 0 && (
           <div className="space-y-3 pt-6 border-t border-slate-200">
             <h4 className="font-extrabold text-sm text-amber-700">🔒 Tài liệu cá nhân của riêng bạn</h4>
