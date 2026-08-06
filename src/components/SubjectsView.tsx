@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, Download, ExternalLink, FileText, Trash2, Plus, Sparkles } from "lucide-react";
+import { BookOpen, ExternalLink, FileText, Trash2, Plus } from "lucide-react";
 
-// Sách do mày (giáo viên/admin) add sẵn - Mọi tài khoản học sinh đều thấy chung
+// 8 cuốn sách chuẩn cho các môn chính (Admin tranphanvananh add sẵn, mọi người đều thấy)
 const GLOBAL_DEFAULT_BOOKS: { [key: string]: { id: string; name: string; url: string }[] } = {
   "Ngữ văn": [
-    { id: "g-nv-1", name: "Sách Ngữ Văn Chuẩn (Tập 1)", url: "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID_1" },
+    { id: "nv-6-1", name: "Ngữ Văn lớp 6 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "nv-6-2", name: "Ngữ Văn lớp 6 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "nv-7-1", name: "Ngữ Văn lớp 7 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "nv-7-2", name: "Ngữ Văn lớp 7 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "nv-8-1", name: "Ngữ Văn lớp 8 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "nv-8-2", name: "Ngữ Văn lớp 8 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "nv-9-1", name: "Ngữ Văn lớp 9 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "nv-9-2", name: "Ngữ Văn lớp 9 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
   ],
   "Toán": [
-    { id: "g-toan-1", name: "Sách Toán Học Cơ Bản (Tập 1)", url: "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID_2" },
+    { id: "toan-6-1", name: "Toán lớp 6 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "toan-6-2", name: "Toán lớp 6 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "toan-7-1", name: "Toán lớp 7 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "toan-7-2", name: "Toán lớp 7 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "toan-8-1", name: "Toán lớp 8 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "toan-8-2", name: "Toán lớp 8 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "toan-9-1", name: "Toán lớp 9 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
+    { id: "toan-9-2", name: "Toán lớp 9 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
   ],
   "Tiếng Anh": [],
   "Khoa Học Tự Nhiên": [],
@@ -17,56 +31,85 @@ const GLOBAL_DEFAULT_BOOKS: { [key: string]: { id: string; name: string; url: st
   "Công Nghệ": [],
 };
 
+const ADMIN_ID = "tranphanvananh";
+
 export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>("Ngữ văn");
+  const isAdmin = userId?.toLowerCase() === ADMIN_ID;
 
-  // Key lưu riêng theo từng tài khoản học sinh
-  const userBooksKey = `user_${userId || "default"}_custom_books`;
-  
-  const [customBooks, setCustomBooks] = useState<{ [subject: string]: { id: string; name: string; url: string }[] }>(() => {
-    const saved = localStorage.getItem(userBooksKey);
+  // Key lưu tài liệu chung của Admin trên toàn hệ thống
+  const globalStorageKey = "system_admin_global_books";
+  const [globalBooks, setGlobalBooks] = useState<{ [subject: string]: { id: string; name: string; url: string }[] }>(() => {
+    const saved = localStorage.getItem(globalStorageKey);
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return GLOBAL_DEFAULT_BOOKS;
+  });
+
+  // Key lưu tài liệu cá nhân của riêng học sinh
+  const personalStorageKey = `user_${userId || "default"}_personal_books`;
+  const [personalBooks, setPersonalBooks] = useState<{ [subject: string]: { id: string; name: string; url: string }[] }>(() => {
+    const saved = localStorage.getItem(personalStorageKey);
     if (saved) {
       try { return JSON.parse(saved); } catch {}
     }
     return {};
   });
 
-  const [newBookName, setNewBookName] = useState("");
-  const [newBookUrl, setNewBookUrl] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newUrl, setNewUrl] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(userBooksKey, JSON.stringify(customBooks));
-  }, [customBooks, userBooksKey]);
+    localStorage.setItem(globalStorageKey, JSON.stringify(globalBooks));
+  }, [globalBooks]);
 
-  // Gộp sách hệ thống (chung) và sách học sinh tự add riêng cho môn đang chọn
-  const globalList = GLOBAL_DEFAULT_BOOKS[selectedSubject] || [];
-  const personalList = customBooks[selectedSubject] || [];
-  const currentBooks = [...globalList, ...personalList];
+  useEffect(() => {
+    localStorage.setItem(personalStorageKey, JSON.stringify(personalBooks));
+  }, [personalBooks, personalStorageKey]);
 
-  const handleAddCustomBook = (e: React.FormEvent) => {
+  const currentGlobal = globalBooks[selectedSubject] || [];
+  const currentPersonal = personalBooks[selectedSubject] || [];
+  const displayList = [...currentGlobal, ...currentPersonal];
+
+  const handleAddBook = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBookName.trim() || !newBookUrl.trim()) return;
+    if (!newName.trim() || !newUrl.trim()) return;
 
-    const newBook = {
-      id: "custom-" + Date.now(),
-      name: newBookName.trim(),
-      url: newBookUrl.trim(),
+    const newItem = {
+      id: "item-" + Date.now(),
+      name: newName.trim(),
+      url: newUrl.trim(),
     };
 
-    const updatedSubjectBooks = [...personalList, newBook];
-    const updatedAll = { ...customBooks, [selectedSubject]: updatedSubjectBooks };
+    if (isAdmin) {
+      // Admin add -> Tất cả mọi người đều thấy
+      const updatedGlobalSubj = [...currentGlobal, newItem];
+      setGlobalBooks({ ...globalBooks, [selectedSubject]: updatedGlobalSubj });
+    } else {
+      // Học sinh add -> Chỉ riêng học sinh đó thấy
+      const updatedPersonalSubj = [...currentPersonal, newItem];
+      setPersonalBooks({ ...personalBooks, [selectedSubject]: updatedPersonalSubj });
+    }
 
-    setCustomBooks(updatedAll);
-    setNewBookName("");
-    setNewBookUrl("");
+    setNewName("");
+    setNewUrl("");
     setShowAddForm(false);
   };
 
-  const handleDeleteCustomBook = (id: string) => {
-    const updatedSubjectBooks = personalList.filter((b) => b.id !== id);
-    const updatedAll = { ...customBooks, [selectedSubject]: updatedSubjectBooks };
-    setCustomBooks(updatedAll);
+  const handleDeleteBook = (id: string, isGlobalItem: boolean) => {
+    if (isGlobalItem) {
+      if (!isAdmin) {
+        alert("Chỉ tài khoản Quản trị viên (tranphanvananh) mới có quyền xóa tài liệu hệ thống này!");
+        return;
+      }
+      const updated = currentGlobal.filter((b) => b.id !== id);
+      setGlobalBooks({ ...globalBooks, [selectedSubject]: updated });
+    } else {
+      const updated = currentPersonal.filter((b) => b.id !== id);
+      setPersonalBooks({ ...personalBooks, [selectedSubject]: updated });
+    }
   };
 
   return (
@@ -78,11 +121,12 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold">Thư Viện Sách & Tài Liệu Môn Học</h2>
-            <p className="text-xs text-indigo-200">Chọn môn học để xem tài liệu. Học sinh có thể tự thêm và quản lý link riêng.</p>
+            <p className="text-xs text-indigo-200">
+              {isAdmin ? "⭐ Bạn đang đăng nhập bằng quyền Admin (tranphanvananh): Mọi thứ bạn thêm học sinh đều thấy." : "📚 Tài liệu chung từ Giáo viên & Tài liệu cá nhân của bạn."}
+            </p>
           </div>
         </div>
 
-        {/* Danh sách các nút chọn môn */}
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 pt-2">
           {Object.keys(GLOBAL_DEFAULT_BOOKS).map((subj) => {
             const isActive = selectedSubject === subj;
@@ -107,7 +151,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <h3 className="text-lg font-extrabold text-slate-900">Môn: {selectedSubject}</h3>
-            <p className="text-xs text-slate-500">Danh sách tài liệu học tập của môn này</p>
+            <p className="text-xs text-slate-500">Tổng cộng {displayList.length} tài liệu sẵn sàng</p>
           </div>
 
           <button
@@ -115,85 +159,78 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
             className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            <span>{showAddForm ? "Đóng form" : "➕ Thêm tài liệu của riêng tôi"}</span>
+            <span>{showAddForm ? "Đóng form" : isAdmin ? "➕ Thêm sách cho toàn trường" : "➕ Thêm tài liệu cá nhân"}</span>
           </button>
         </div>
 
-        {/* Form học sinh tự add link riêng */}
         {showAddForm && (
-          <form onSubmit={handleAddCustomBook} className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-3">
-            <h4 className="font-bold text-xs text-indigo-900">Thêm link tài liệu / sách mới cho môn {selectedSubject} (Chỉ tài khoản của bạn nhìn thấy):</h4>
+          <form onSubmit={handleAddBook} className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-3">
+            <h4 className="font-bold text-xs text-indigo-900">
+              {isAdmin ? "Thêm tài liệu hệ thống (Tất cả học sinh sẽ thấy):" : "Thêm tài liệu riêng tư (Chỉ tài khoản của bạn thấy):"}
+            </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
                 type="text"
-                placeholder="Tên tài liệu (Ví dụ: Sách nâng cao Toán lớp 8)..."
-                value={newBookName}
-                onChange={(e) => setNewBookName(e.target.value)}
+                placeholder="Tên tài liệu / Tên sách..."
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none"
                 required
               />
               <input
                 type="url"
-                placeholder="Dán link Google Drive hoặc link PDF vào đây..."
-                value={newBookUrl}
-                onChange={(e) => setNewBookUrl(e.target.value)}
+                placeholder="Dán link Google Drive hoặc PDF..."
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none"
                 required
               />
             </div>
             <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition cursor-pointer">
-              Lưu tài liệu cá nhân
+              Xác nhận thêm
             </button>
           </form>
         )}
 
-        {/* Lưới hiển thị danh sách sách */}
-        {currentBooks.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 text-xs">
-            Chưa có tài liệu nào cho môn này. Hãy bấm nút thêm ở trên để bổ sung!
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {currentBooks.map((book) => {
-              const isCustom = book.id.startsWith("custom-");
-              return (
-                <div key={book.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-indigo-300 hover:shadow-md transition flex flex-col justify-between space-y-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${isCustom ? "bg-amber-100 text-amber-800" : "bg-indigo-100 text-indigo-800"}`}>
-                        {isCustom ? "Tài liệu cá nhân" : "Tài liệu hệ thống"}
-                      </span>
-                    </div>
-                    <h4 className="font-extrabold text-slate-800 text-sm mt-1">{book.name}</h4>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-                    <a
-                      href={book.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition"
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>Mở / Tải file</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                    {/* Chỉ cho phép xóa tài liệu do chính học sinh đó tự add */}
-                    {isCustom && (
-                      <button
-                        onClick={() => handleDeleteCustomBook(book.id)}
-                        className="p-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 transition cursor-pointer"
-                        title="Xóa tài liệu này"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {displayList.map((book) => {
+            const isGlobal = currentGlobal.some((b) => b.id === book.id);
+            return (
+              <div key={book.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-indigo-300 hover:shadow-md transition flex flex-col justify-between space-y-4">
+                <div className="space-y-1">
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${isGlobal ? "bg-indigo-100 text-indigo-800" : "bg-amber-100 text-amber-800"}`}>
+                    {isGlobal ? "📚 Sách hệ thống (Chung)" : "🔒 Tài liệu cá nhân"}
+                  </span>
+                  <h4 className="font-extrabold text-slate-800 text-sm mt-1">{book.name}</h4>
                 </div>
-              );
-            })}
-          </div>
-        )}
+
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+                  <a
+                    href={book.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Mở / Tải file</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+
+                  {/* Quyền xóa: Admin xóa được tất cả, học sinh chỉ xóa được file cá nhân của mình */}
+                  {(isAdmin || !isGlobal) && (
+                    <button
+                      onClick={() => handleDeleteBook(book.id, isGlobal)}
+                      className="p-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 transition cursor-pointer"
+                      title="Xóa tài liệu này"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
