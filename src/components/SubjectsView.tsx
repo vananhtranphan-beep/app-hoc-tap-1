@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BookOpen, ExternalLink, FileText, Trash2, Plus, Edit3, Check, Image as ImageIcon } from "lucide-react";
 
-// Thêm sẵn mỗi môn 12 cuốn sách (mặc định trống link để mày tự dán link Google Drive vào)
 const INITIAL_SYSTEM_BOOKS: { [key: string]: { id: string; name: string; url: string; imageUrl: string }[] } = {
   "Ngữ văn": [
     { id: "nv-6-1", name: "Ngữ Văn lớp 6 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
@@ -77,7 +76,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   const cleanId = (userId || "").toLowerCase().trim();
   const isAdmin = cleanId === ADMIN_ID;
 
-  const systemStorageKey = "system_admin_global_books_v9";
+  const systemStorageKey = "system_admin_global_books_v10";
   const [systemBooks, setSystemBooks] = useState<{ [subject: string]: { id: string; name: string; url: string; imageUrl: string }[] }>(() => {
     const saved = localStorage.getItem(systemStorageKey);
     if (saved) {
@@ -86,7 +85,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
     return INITIAL_SYSTEM_BOOKS;
   });
 
-  const personalStorageKey = `user_${cleanId || "default"}_personal_books_v9`;
+  const personalStorageKey = `user_${cleanId || "default"}_personal_books_v10`;
   const [personalBooks, setPersonalBooks] = useState<{ [subject: string]: { id: string; name: string; url: string; imageUrl: string }[] }>(() => {
     const saved = localStorage.getItem(personalStorageKey);
     if (saved) {
@@ -267,7 +266,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
         )}
 
         <div className="space-y-3">
-          <h4 className="font-extrabold text-sm text-slate-700">📚 Tài liệu hệ thống chung (Toàn trường)</h4>
+          <h4 className="font-extrabold text-sm text-slate-700">📚 Tài liệu hệ thống chung</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {currentSystemList.map((book) => {
               const isEditing = editingId === book.id;
