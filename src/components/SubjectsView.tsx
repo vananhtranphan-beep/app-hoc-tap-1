@@ -1,49 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, ExternalLink, FileText, Trash2, Plus } from "lucide-react";
-
-// 8 cuốn sách chuẩn cho các môn chính (Admin tranphanvananh add sẵn, mọi người đều thấy)
-const GLOBAL_DEFAULT_BOOKS: { [key: string]: { id: string; name: string; url: string }[] } = {
-  "Ngữ văn": [
-    { id: "nv-6-1", name: "Ngữ Văn lớp 6 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "nv-6-2", name: "Ngữ Văn lớp 6 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "nv-7-1", name: "Ngữ Văn lớp 7 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "nv-7-2", name: "Ngữ Văn lớp 7 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "nv-8-1", name: "Ngữ Văn lớp 8 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "nv-8-2", name: "Ngữ Văn lớp 8 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "nv-9-1", name: "Ngữ Văn lớp 9 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "nv-9-2", name: "Ngữ Văn lớp 9 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-  ],
-  "Toán": [
-    { id: "toan-6-1", name: "Toán lớp 6 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "toan-6-2", name: "Toán lớp 6 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "toan-7-1", name: "Toán lớp 7 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "toan-7-2", name: "Toán lớp 7 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "toan-8-1", name: "Toán lớp 8 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "toan-8-2", name: "Toán lớp 8 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "toan-9-1", name: "Toán lớp 9 - Tập 1", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-    { id: "toan-9-2", name: "Toán lớp 9 - Tập 2", url: "https://drive.google.com/uc?export=download&id=SAMPLE_ID" },
-  ],
-  "Tiếng Anh": [],
-  "Khoa Học Tự Nhiên": [],
-  "Lịch Sử & Địa Lý": [],
-  "Giáo Dục Công Dân": [],
-  "Tin Học": [],
-  "Công Nghệ": [],
-};
-
-const ADMIN_ID = "tranphanvananh";
-
-export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
-  const [selectedSubject, setSelectedSubject] = useState<string>("Ngữ văn");
-  const isAdmin = userId?.toLowerCase() === ADMIN_ID;
-
-  // Key lưu tài liệu chung của Admin trên toàn hệ thống
-  const globalStorageKey = "system_admin_global_books";
-  const [globalBooks, setGlobalBooks] = useState<{ [subject: string]: { id: string; name: string; url: string }[] }>(() => {
-    const saved = localStorage.getItem(globalStorageKey);
-    if (saved) {
-      try { return JSON.parse(saved); } catch {}
-    }import React, { useState, useEffect } from "react";
 import { BookOpen, ExternalLink, FileText, Trash2, Plus, Image as ImageIcon } from "lucide-react";
 
 // 8 cuốn sách mặc định ban đầu cho hệ thống
@@ -296,5 +251,4 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
       </div>
     </div>
   );
-};
 };
