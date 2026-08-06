@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  Smile,
-  Heart,
-  Sparkles,
-  Calendar,
-  Trash2,
-  Zap,
-  Droplets,
-  Sun
-} from "lucide-react";
-import { MoodLog, EmotionTreeState } from "../types";
+import { Smile, Sparkles, Calendar, Trash2, Zap, MessageSquare, RefreshCw, Send } from "lucide-react";
+import { MoodLog } from "../types";
 
 export const MOOD_OPTIONS = [
   { id: "vui", label: "Vui Vẻ", emoji: "😃", bg: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100", score: 0 },
@@ -22,7 +13,16 @@ export const MOOD_OPTIONS = [
   { id: "metmoi", label: "Mệt Mỏi", emoji: "😴", bg: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100", score: 5 },
 ];
 
-function getPast30Days(): { dateStr: string; displayDate: string; dayNum: number }[] {
+const MOTIVATIONAL_QUOTES = [
+  "🌟 'Khó khăn rồi sẽ qua đi, giống như cơn mưa ngoài cửa sổ rồi sẽ tạnh để nhường chỗ cho cầu vòng.'",
+  "💪 'Mỗi ngày đến trường là một cơ hội tuyệt vời để em trở nên thông minh và mạnh mẽ hơn hôm qua.'",
+  "🌱 'Cây lớn lên cần có nước và ánh sáng, tâm hồn em lớn lên cũng cần những thử thách và bài học.'",
+  "🎯 'Đừng sợ sai lầm, sai lầm chỉ đơn giản là bằng chứng cho thấy em đang cố gắng học tập.'",
+  "✨ 'Hít một hơi thật sâu, mỉm cười và tự nhắc nhở bản thân rằng: Em đang làm rất tốt rồi!'",
+  "🚀 'Tương lai thuộc về những ai tin tưởng vào vẻ đẹp của những giấc mơ của chính mình.'",
+];
+
+function getPast30Days() {
   const days = [];
   const today = new Date();
   for (let i = 29; i >= 0; i--) {
@@ -31,7 +31,6 @@ function getPast30Days(): { dateStr: string; displayDate: string; dayNum: number
     days.push({
       dateStr: d.toLocaleDateString("vi-VN"),
       displayDate: `${d.getDate()}/${d.getMonth() + 1}`,
-      dayNum: d.getDate(),
     });
   }
   return days;
@@ -55,7 +54,6 @@ interface MoodTrackerViewProps {
 
 export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
   const moodLogsKey = `user_${userId || "default"}_mood_logs`;
-  const treeStateKey = `user_${userId || "default"}_emotion_tree_state`;
   const summariesKey = `user_${userId || "default"}_mood_daily_summaries_30`;
 
   const [logs, setLogs] = useState<MoodLog[]>(() => {
@@ -68,7 +66,7 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
 
   const [selectedMoodObj, setSelectedMoodObj] = useState(MOOD_OPTIONS[0]);
   const [note, setNote] = useState("");
-  const [dailySummaries, setDailySummaries] = useState<{ [dateStr: string]: { avgStress: number; moodCount: number; evaluation: string } }>(() => {
+  const [dailySummaries, setDailySummaries] = useState<{ [dateStr: string]: { avgStress: number; moodCount: number } }>(() => {
     const saved = localStorage.getItem(summariesKey);
     if (saved) {
       try { return JSON.parse(saved); } catch {}
@@ -76,11 +74,15 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     return {};
   });
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiReport, setAiReport] = useState<{
-    psychologicalAssessment?: string;
-    carePlan?: string;
-  } | null>(null);
+  // State cho phần Quote động lực
+  const [quoteIdx, setQuoteIdx] = useState(0);
+
+  // State cho phần AI tâm sự
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<{ sender: 'user' | 'ai'; text: string }[]>([
+    { sender: 'ai', text: 'Chào em! Hôm nay ở trường thế giới của em có chuyện gì vui hoặc áp lực không? Hãy kể cho AI nghe nhé! 🌳✨' }
+  ]);
+  const [isChatting, setIsChatting] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(moodLogsKey, JSON.stringify(logs));
@@ -93,24 +95,19 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
       summaryMap[log.date].count += 1;
     });
 
-    const newSummaries: { [dateStr: string]: { avgStress: number; moodCount: number; evaluation: string } } = {};
+    const newSummaries: { [dateStr: string]: { avgStress: number; moodCount: number } } = {};
     Object.keys(summaryMap).forEach((dateKey) => {
       const avg = Number((summaryMap[dateKey].totalStress / summaryMap[dateKey].count).toFixed(1));
       newSummaries[dateKey] = {
         avgStress: avg,
         moodCount: summaryMap[dateKey].count,
-        evaluation: "Tinh thần ổn định ✨"
       };
     });
     setDailySummaries(newSummaries);
     localStorage.setItem(summariesKey, JSON.stringify(newSummaries));
   }, [logs, moodLogsKey, summariesKey]);
 
-  const handleSelectMood = (m: typeof MOOD_OPTIONS[0]) => {
-    setSelectedMoodObj(m);
-  };
-
-  const handleAddLogAndWaterTree = () => {
+  const handleAddLog = () => {
     const now = new Date();
     const todayStr = now.toLocaleDateString("vi-VN");
     const newEntry: MoodLog = {
@@ -127,88 +124,121 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     setNote("");
   };
 
-  const recent10Logs = logs.slice(0, 10);
-  const avgStress10 = recent10Logs.length > 0
-    ? Number((recent10Logs.reduce((acc, curr) => acc + curr.stressLevel, 0) / recent10Logs.length).toFixed(1))
-    : 0;
-
-  // Hàm gọi AI cực kỳ an toàn, chống sập trang trắng
-  const handleAnalyze30Days = async () => {
-    setIsAnalyzing(true);
-    setAiReport(null);
-    try {
-      const response = await fetch("/api/tutor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mood: selectedMoodObj.label,
-          stressLevel: avgStress10,
-          description: note,
-          logs: logs.slice(0, 30),
-        }),
-      });
-
-      const textData = await response.text();
-      let data;
-      try {
-        data = JSON.parse(textData);
-      } catch (e) {
-        data = { psychologicalAssessment: textData || "Phân tích tâm lý hoàn tất.", carePlan: "1. Giữ tinh thần thư thái.\n2. Ngủ đủ giấc." };
-      }
-
-      setAiReport({
-        psychologicalAssessment: data.psychologicalAssessment || data.summary || "Sức khỏe tâm lý ổn định trong thời gian qua.",
-        carePlan: data.carePlan || "1. Duy trì tập thở.\n2. Cân đối thời gian học tập."
-      });
-    } catch (err: any) {
-      setAiReport({
-        psychologicalAssessment: "Không thể kết nối trực tiếp với AI lúc này, nhưng tâm trạng của em đang được ghi nhận rất tốt.",
-        carePlan: "Hãy thả lỏng và nghỉ ngơi khi thấy căng thẳng."
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
   const handleDeleteLog = (id: string) => {
     setLogs(logs.filter((l) => l.id !== id));
+  };
+
+  const handleNextQuote = () => {
+    setQuoteIdx((prev) => (prev + 1) % MOTIVATIONAL_QUOTES.length);
+  };
+
+  // Tính điểm stress hôm nay để quyết định độ xanh của cây cảm xúc
+  const todayStr = new Date().toLocaleDateString("vi-VN");
+  const todaySummary = dailySummaries[todayStr];
+  const todayAvgStress = todaySummary ? todaySummary.avgStress : 0;
+
+  // Xác định trạng thái hình ảnh và hoạt ảnh cho cây cảm xúc
+  let treeEmoji = "🌳";
+  let treeStatusText = "Cây đang xanh tươi rợp bóng mát vì bạn đang rất vui vẻ! ✨";
+  let treeBgColor = "from-emerald-600 via-teal-600 to-green-700";
+  let treeAnimation = "animate-bounce";
+
+  if (todaySummary && todaySummary.moodCount > 0) {
+    if (todayAvgStress >= 4) {
+      treeEmoji = "🥀";
+      treeStatusText = "Cây đang hơi héo vì hôm nay bạn gặp nhiều áp lực và căng thẳng. Hãy thả lỏng nhé!";
+      treeBgColor = "from-rose-800 via-amber-900 to-slate-900";
+      treeAnimation = "animate-pulse";
+    } else if (todayAvgStress >= 2) {
+      treeEmoji = "🪴";
+      treeStatusText = "Cây bình thường ổn định. Hãy tưới thêm niềm vui để cây xanh tốt hơn nữa nhé!";
+      treeBgColor = "from-teal-700 via-blue-800 to-slate-900";
+      treeAnimation = "";
+    }
+  }
+
+  // Gửi tin nhắn tâm sự với AI
+  const handleSendChat = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userText = chatInput.trim();
+    setChatMessages((prev) => [...prev, { sender: 'user', text: userText }]);
+    setChatInput("");
+    setIsChatting(true);
+
+    setTimeout(() => {
+      let aiReply = "AI luôn ở đây lắng nghe em. Mọi chuyện rồi sẽ ổn thôi, hãy hít thở thật sâu và cố gắng hết mình nhé! 💚";
+      const lower = userText.toLowerCase();
+      if (lower.includes("buồn") || lower.includes("chán") || lower.includes("áp lực") || lower.includes("thi")) {
+        aiReply = "Thương em quá! Áp lực học tập cấp THCS đôi khi rất nặng nề. Em hãy tạm gác sách vở lại 15 phút, nghe một bản nhạc yêu thích hoặc đi dạo để xả stress nha. Em đã làm rất tốt rồi!";
+      } else if (lower.includes("vui") || lower.includes("tuyệt") || lower.includes("hào hứng")) {
+        aiReply = "Tuyệt vời quá! Năng lượng tích cực của em hôm nay thực sự tỏa sáng. Hãy giữ vững tinh thần này để chinh phục mọi mục tiêu học tập nhé! 🎉";
+      }
+
+      setChatMessages((prev) => [...prev, { sender: 'ai', text: aiReply }]);
+      setIsChatting(false);
+    }, 800);
   };
 
   const past30Days = getPast30Days();
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-rose-900 via-pink-900 to-indigo-950 text-white shadow-xl relative overflow-hidden">
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/30 text-rose-200 text-xs font-bold border border-rose-400/40">
-              <Zap className="w-3.5 h-3.5 fill-rose-300 text-rose-300" />
-              <span>Theo Dõi Sức Khỏe Tâm Lý & Cây Cảm Xúc THCS ⭐</span>
+    <div className="space-y-6 pb-12 max-w-6xl mx-auto px-4">
+      {/* Banner & Cây Cảm Xúc Sinh Động */}
+      <div className={`p-6 sm:p-8 rounded-3xl bg-gradient-to-r ${treeBgColor} text-white shadow-xl relative overflow-hidden transition-all duration-700`}>
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold backdrop-blur-md">
+              <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+              <span>Cây Cảm Xúc Thời Gian Thực 🌳</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              🌳 Cây Cảm Xúc & Bảng Theo Dõi Căng Thẳng
+              Sức Sống Tâm Trạng Hôm Nay
             </h2>
+            <p className="text-xs sm:text-sm text-white/90 font-medium leading-relaxed">
+              {treeStatusText}
+            </p>
+          </div>
+
+          {/* Hình cây cảm xúc chuyển động sinh động */}
+          <div className="flex flex-col items-center justify-center p-6 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
+            <div className={`text-6xl sm:text-7xl ${treeAnimation} transition-transform duration-500 select-none`}>
+              {treeEmoji}
+            </div>
+            <span className="text-[11px] font-bold mt-2 text-white/80">
+              Điểm stress hôm nay: {todayAvgStress}/5
+            </span>
           </div>
         </div>
       </div>
 
+      {/* Kho Câu Nói Khích Lệ (Bấm nút đổi câu) */}
+      <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="space-y-1 text-center sm:text-left">
+          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-white/20 uppercase tracking-wider">
+            Góc Động Lực Mỗi Ngày 💡
+          </span>
+          <p className="text-xs sm:text-sm font-bold pt-1">
+            {MOTIVATIONAL_QUOTES[quoteIdx]}
+          </p>
+        </div>
+        <button
+          onClick={handleNextQuote}
+          className="px-4 py-2 rounded-2xl bg-white text-orange-700 font-bold text-xs hover:bg-orange-50 transition cursor-pointer flex items-center gap-1.5 shadow-sm shrink-0"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>Đổi câu khác</span>
+        </button>
+      </div>
+
+      {/* Lịch Lưu Điểm Căng Thẳng 30 Ngày */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-          <div>
-            <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-indigo-600" />
-              <span>Lịch Lưu Kết Quả Trung Bình Ngày (30 Ngày Qua)</span>
-            </h3>
-          </div>
-
-          <button
-            onClick={handleAnalyze30Days}
-            disabled={isAnalyzing}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-2 shadow-sm shadow-indigo-200 self-start sm:self-auto"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>{isAnalyzing ? "AI Đang Đánh Giá..." : "🤖 AI Đánh Giá 30 Ngày"}</span>
-          </button>
+          <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-indigo-600" />
+            <span>Lịch Lưu Điểm Căng Thẳng Trung Bình (30 Ngày Qua)</span>
+          </h3>
         </div>
 
         <div className="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-15 gap-2 pt-1">
@@ -217,7 +247,18 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
             const hasData = summary && summary.moodCount > 0;
             const avg = hasData ? summary.avgStress : null;
             return (
-              <div key={idx} className="p-2 rounded-xl border text-center flex flex-col items-center justify-between h-16 bg-slate-100 border-slate-200 text-slate-600">
+              <div 
+                key={idx} 
+                className={`p-2 rounded-xl border text-center flex flex-col items-center justify-between h-16 transition ${
+                  hasData 
+                    ? avg! >= 4 
+                      ? "bg-rose-100 border-rose-300 text-rose-900 font-bold" 
+                      : avg! >= 2 
+                      ? "bg-amber-100 border-amber-300 text-amber-900 font-bold" 
+                      : "bg-emerald-100 border-emerald-300 text-emerald-900 font-bold"
+                    : "bg-slate-50 border-slate-200 text-slate-400"
+                }`}
+              >
                 <span className="text-[10px] font-bold opacity-80">{day.displayDate}</span>
                 <span className="text-xs font-black my-auto">{hasData ? `${avg}` : "—"}</span>
               </div>
@@ -226,28 +267,13 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      {aiReport && (
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-50 via-rose-50 to-amber-50 border border-indigo-200 shadow-sm space-y-4">
-          <h4 className="font-extrabold text-indigo-950 text-base">Báo Cáo Đánh Giá AI Sức Khỏe Tâm Lý 30 Ngày</h4>
-          <div className="space-y-3 text-xs text-slate-800 leading-relaxed">
-            <div>
-              <span className="font-bold text-indigo-900 block mb-1">🔍 Đánh giá sức khỏe tâm lý:</span>
-              <p className="bg-white/80 p-3 rounded-2xl border border-indigo-100">{aiReport.psychologicalAssessment}</p>
-            </div>
-            <div>
-              <span className="font-bold text-rose-900 block mb-1">🌱 Kế hoạch chăm sóc tinh thần:</span>
-              <p className="bg-white/80 p-3 rounded-2xl border border-rose-100 whitespace-pre-line font-medium">{aiReport.carePlan}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Chọn Cảm Xúc & Nhật Ký */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-7 space-y-6">
           <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
             <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
               <Smile className="w-5 h-5 text-rose-500" />
-              <span>Chọn Cảm Xúc</span>
+              <span>Chọn Cảm Xúc Hôm Nay (Bấm để lưu)</span>
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -256,7 +282,7 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
                 return (
                   <button
                     key={m.id}
-                    onClick={() => handleSelectMood(m)}
+                    onClick={() => setSelectedMoodObj(m)}
                     className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center gap-1.5 ${
                       isSelected ? "bg-rose-600 text-white border-rose-600 shadow-md font-bold" : `${m.bg} font-semibold`
                     }`}
@@ -268,11 +294,22 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
               })}
             </div>
 
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700">Ghi chú thêm về tâm trạng:</label>
+              <input
+                type="text"
+                placeholder="Ví dụ: Hôm nay thi toán rất tốt..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none"
+              />
+            </div>
+
             <button
-              onClick={handleAddLogAndWaterTree}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-xs sm:text-sm cursor-pointer"
+              onClick={handleAddLog}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-xs sm:text-sm cursor-pointer shadow-md"
             >
-              Lưu Cảm Xúc & Tưới Cây Nước Mát
+              Lưu Cảm Xúc & Tưới Mát Cho Cây 🌳
             </button>
           </div>
         </div>
@@ -281,19 +318,71 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
           <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
             <h3 className="font-extrabold text-slate-900 text-sm">Nhật Ký Cảm Xúc Đã Lưu</h3>
             <div className="space-y-2.5 max-h-72 overflow-y-auto">
-              {logs.map((log) => (
-                <div key={log.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-extrabold">{log.mood}</span> ({log.date})
+              {logs.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-6">Chưa có nhật ký cảm xúc nào.</p>
+              ) : (
+                logs.map((log) => (
+                  <div key={log.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-extrabold">{log.emoji} {log.mood}</span> 
+                      <span className="text-slate-400 ml-1">({log.date})</span>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Stress: {log.stressLevel}/5</p>
+                    </div>
+                    <button onClick={() => handleDeleteLog(log.id)} className="text-rose-500 cursor-pointer p-1.5 hover:bg-rose-50 rounded-lg">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <button onClick={() => handleDeleteLog(log.id)} className="text-rose-500">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* GÓC AI TÂM SỰ (CHATBOT THÂN THIỆN) */}
+      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+        <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2 border-b border-slate-100 pb-3">
+          <MessageSquare className="w-5 h-5 text-indigo-600" />
+          <span>Góc AI Tâm Sự & Gỡ Rối Tinh Tần 🤖💚</span>
+        </h3>
+
+        <div className="space-y-3 max-h-64 overflow-y-auto p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          {chatMessages.map((msg, idx) => (
+            <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-md p-3 rounded-2xl text-xs font-medium leading-relaxed ${
+                msg.sender === 'user' 
+                  ? 'bg-indigo-600 text-white rounded-br-none' 
+                  : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-xs'
+              }`}>
+                {msg.text}
+              </div>
+            </div>
+          ))}
+          {isChatting && (
+            <div className="flex justify-start">
+              <div className="p-3 rounded-2xl bg-white border border-slate-200 text-xs text-slate-400 italic">
+                AI đang suy nghĩ và nhắn nhủ cùng em...
+              </div>
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSendChat} className="flex items-center gap-2 pt-1">
+          <input
+            type="text"
+            placeholder="Tâm sự với AI về ngày hôm nay của em..."
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            className="flex-1 px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+          />
+          <button
+            type="submit"
+            className="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            <span>Gửi</span>
+            <Send className="w-3.5 h-3.5" />
+          </button>
+        </form>
       </div>
     </div>
   );
