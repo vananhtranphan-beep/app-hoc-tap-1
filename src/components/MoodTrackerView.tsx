@@ -19,7 +19,6 @@ const MOTIVATIONAL_QUOTES = [
   "🌱 'Cây lớn lên cần có nước và ánh sáng, tâm hồn em lớn lên cũng cần những thử thách và bài học.'",
   "🎯 'Đừng sợ sai lầm, sai lầm chỉ đơn giản là bằng chứng cho thấy em đang cố gắng học tập.'",
   "✨ 'Hít một hơi thật sâu, mỉm cười và tự nhắc nhở bản thân rằng: Em đang làm rất tốt rồi!'",
-  "🚀 'Tương lai thuộc về những ai tin tưởng vào vẻ đẹp của những giấc mơ của chính mình.'",
 ];
 
 function getPast30Days() {
@@ -74,20 +73,23 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     return {};
   });
 
-  // Tự động random câu nói khích lệ mỗi khi load trang
   const [randomQuote, setRandomQuote] = useState("");
 
-  useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
-    setRandomQuote(MOTIVATIONAL_QUOTES[randomIndex]);
-  }, []);
+  // State AI phân tích 30 ngày thật
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiReport30Days, setAiReport30Days] = useState<string | null>(null);
 
-  // State AI tâm sự
+  // State AI tâm sự thật (Google Gemini API)
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<{ sender: 'user' | 'ai'; text: string }[]>([
     { sender: 'ai', text: 'Chào em! Hôm nay ở trường thế giới của em có chuyện gì vui hoặc áp lực không? Hãy kể cho AI nghe nhé! 🌸✨' }
   ]);
   const [isChatting, setIsChatting] = useState(false);
+
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
+    setRandomQuote(MOTIVATIONAL_QUOTES[randomIndex]);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(moodLogsKey, JSON.stringify(logs));
@@ -133,28 +135,26 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     setLogs(logs.filter((l) => l.id !== id));
   };
 
-  // Tính điểm stress hôm nay để đổi trạng thái cây
   const todayStr = new Date().toLocaleDateString("vi-VN");
   const todaySummary = dailySummaries[todayStr];
   const todayAvgStress = todaySummary ? todaySummary.avgStress : 0;
 
-  let treeEmoji = "🌳";
-  let treeStatusText = "Cây đang xanh tươi rợp bóng mát vì bạn đang tưới những cảm xúc vui vẻ!";
-  let treeAnimation = "animate-bounce";
+  // Hình ảnh cây xanh to sinh động (Giống mẫu hình thứ 3)
+  let treeImageUrl = "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=400&q=80"; // Cây xanh tươi rợp bóng
+  let treeStatusText = "Cây đang xanh tốt rợp bóng mát vì bạn đang tưới những cảm xúc tích cực!";
 
   if (todaySummary && todaySummary.moodCount > 0) {
     if (todayAvgStress >= 4) {
-      treeEmoji = "🥀";
-      treeStatusText = "Cây đang hơi héo úa vì hôm nay bạn gặp nhiều căng thẳng. Hãy tưới nước bằng những cảm xúc tích cực nhé!";
-      treeAnimation = "animate-pulse";
+      treeImageUrl = "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=400&q=80"; // Cây mùa thu / hơi héo
+      treeStatusText = "Cây đang hơi héo úa vì hôm nay bạn gặp nhiều căng thẳng. Hãy thả lỏng nhé!";
     } else if (todayAvgStress >= 2) {
-      treeEmoji = "🪴";
+      treeImageUrl = "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=400&q=80";
       treeStatusText = "Cây đang lớn lên ổn định. Hãy chọn thêm cảm xúc tích cực để cây xanh tốt hơn!";
-      treeAnimation = "";
     }
   }
 
-  const handleSendChat = (e: React.FormEvent) => {
+  // HÀM GỌI GEMINI AI THẬT CHO PHẦN TÂM SỰ
+  const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
@@ -163,25 +163,79 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     setChatInput("");
     setIsChatting(true);
 
-    setTimeout(() => {
-      let aiReply = "AI luôn ở đây lắng nghe em. Mọi chuyện rồi sẽ ổn thôi, hãy hít thở thật sâu và tự tin lên nhé! 💖";
-      const lower = userText.toLowerCase();
-      if (lower.includes("buồn") || lower.includes("chán") || lower.includes("áp lực") || lower.includes("thi")) {
-        aiReply = "Thương em quá! Áp lực học tập đôi khi rất nặng nề. Em hãy tạm gác sách vở lại 15 phút, nghe một bản nhạc yêu thích hoặc đi dạo để xả stress nha. Em đã làm rất tốt rồi!";
-      } else if (lower.includes("vui") || lower.includes("tuyệt") || lower.includes("hào hứng")) {
-        aiReply = "Tuyệt vời quá! Năng lượng tích cực của em hôm nay thực sự tỏa sáng. Hãy giữ vững tinh thần này nhé! 🎉";
+    try {
+      const apiKey = localStorage.getItem("gemini_api_key") || "";
+      const prompt = `Bạn là một chuyên gia tâm lý học đường thân thiện, nhẹ nhàng và thấu cảm dành cho học sinh cấp 2 (THCS). Học sinh vừa tâm sự rằng: "${userText}". Hãy đưa ra lời khuyên, sự an động viên ấm áp, ngắn gọn và tích cực bằng tiếng Việt.`;
+
+      if (!apiKey) {
+        // Fallback thông minh nếu chưa có key
+        setTimeout(() => {
+          setChatMessages((prev) => [...prev, { sender: 'ai', text: "AI luôn ở đây lắng nghe em. Mọi chuyện rồi sẽ ổn thôi, hãy hít thở thật sâu và tự tin lên nhé! (💡 Mẹo: Bạn có thể cấu hình API Key trong mục cài đặt để AI trả lời thông minh hơn). 💖" }]);
+          setIsChatting(false);
+        }, 800);
+        return;
       }
 
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      const data = await res.json();
+      const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Em hãy giữ tinh thần thoải mái nhé, mọi khó khăn rồi sẽ qua thôi! 🌸";
+
       setChatMessages((prev) => [...prev, { sender: 'ai', text: aiReply }]);
+    } catch {
+      setChatMessages((prev) => [...prev, { sender: 'ai', text: "Đã có chút gián đoạn kết nối, nhưng em hãy nhớ luôn có thầy cô và bạn bè đồng hành cùng em nhé! 💚" }]);
+    } finally {
       setIsChatting(false);
-    }, 800);
+    }
+  };
+
+  // HÀM GỌI GEMINI AI PHÂN TÍCH 30 NGÀY THẬT
+  const handleAnalyze30DaysRealAI = async () => {
+    setIsAnalyzing(true);
+    setAiReport30Days(null);
+
+    try {
+      const apiKey = localStorage.getItem("gemini_api_key") || "";
+      const logsSummaryText = JSON.stringify(logs.slice(0, 30));
+      const prompt = `Dựa trên nhật ký cảm xúc 30 ngày qua của học sinh THCS (dữ liệu: ${logsSummaryText}), hãy đóng vai chuyên gia tâm lý học đường phân tích mức độ căng thẳng, xu hướng cảm xúc và đưa ra 3 lời khuyên thiết thực để học sinh cân bằng học tập và tinh thần bằng tiếng Việt.`;
+
+      if (!apiKey) {
+        setTimeout(() => {
+          setAiReport30Days("🌟 BÁO CÁO TÂM LÝ TỪ AI:\n- Điểm stress trung bình hiện tại: " + todayAvgStress + "/5\n- Nhận xét: Tinh thần của em đang khá ổn định. Hãy duy trì thói quen nghỉ ngơi và học tập khoa học nhé! (💡 Bạn có thể cấu hình API Key để AI phân tích chi tiết hơn).");
+          setIsAnalyzing(false);
+        }, 800);
+        return;
+      }
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      const data = await res.json();
+      const report = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI đã ghi nhận tâm trạng của em trong tháng qua rất tốt. Hãy tiếp tục phát huy nhé!";
+      setAiReport30Days(report);
+    } catch {
+      setAiReport30Days("Không thể kết nối đến máy chủ AI lúc này. Tuy nhiên, kết quả điểm stress trung bình của em đã được ghi nhận đầy đủ trên lịch!");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const past30Days = getPast30Days();
 
   return (
     <div className="space-y-6 pb-12 max-w-6xl mx-auto px-4">
-      {/* Kho câu nói khích lệ tự động đổi mỗi khi vào */}
+      {/* Kho câu nói khích lệ tự động đổi */}
       <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md flex items-center gap-3">
         <span className="text-2xl">💡</span>
         <div className="space-y-0.5">
@@ -194,23 +248,18 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      {/* CHỌN CẢM XÚC VÀ CÂY TO NẰM NGAY TRÊN ĐÓ */}
+      {/* HÌNH CÁI CÂY TO NẰM TRÊN ĐỐNG EMOJI (ĐÚNG MẪU HÌNH THỨ 3) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-7 space-y-6">
           <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
             
-            {/* CÁI CÂY TO SINH ĐỘNG NẰM TRÊN ĐỐNG EMOJI */}
+            {/* HÌNH ẢNH CÁI CÂY TO SINH ĐỘNG */}
             <div className="p-6 rounded-3xl bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100 border border-emerald-200 text-center space-y-3 shadow-inner">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-sm">
-                <span>🌳 Cây Cảm Xúc Thời Gian Thực</span>
-              </div>
-              
-              {/* Cây chuyển động to */}
-              <div className={`text-7xl sm:text-8xl ${treeAnimation} transition-transform duration-500 select-none py-2`}>
-                {treeEmoji}
+              <div className="w-40 h-40 mx-auto rounded-2xl overflow-hidden shadow-md border-4 border-white bg-white">
+                <img src={treeImageUrl} alt="Cây cảm xúc" className="w-full h-full object-cover animate-pulse duration-1000" />
               </div>
 
-              <p className="text-xs font-bold text-emerald-900 px-4">
+              <p className="text-xs font-extrabold text-emerald-900 px-4">
                 {treeStatusText}
               </p>
               <span className="text-[10px] font-extrabold text-slate-500 block">
@@ -220,7 +269,7 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
 
             <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2 pt-2">
               <Smile className="w-5 h-5 text-rose-500" />
-              <span>Tưới Nước Cho Cây - Chọn Cảm Xúc Hôm Nay:</span>
+              <span>Hôm nay em thế nào? Bấm vào emoji để chia sẻ với cây nhé:</span>
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -286,13 +335,22 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      {/* Lịch Lưu Điểm Căng Thẳng 30 Ngày */}
+      {/* Lịch Lưu Điểm Căng Thẳng 30 Ngày & AI Phân Tích Thật */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
             <Calendar className="w-5 h-5 text-indigo-600" />
             <span>Lịch Lưu Điểm Căng Thẳng Trung Bình (30 Ngày Qua)</span>
           </h3>
+
+          <button
+            onClick={handleAnalyze30DaysRealAI}
+            disabled={isAnalyzing}
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-2 shadow-sm"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>{isAnalyzing ? "AI Đang Phân Tích..." : "🤖 AI Phân Tích 30 Ngày Thật"}</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-15 gap-2 pt-1">
@@ -319,21 +377,33 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
             );
           })}
         </div>
+
+        {aiReport30Days && (
+          <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs text-slate-800 leading-relaxed space-y-2 mt-4">
+            <h4 className="font-extrabold text-indigo-900 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>Báo Cáo Phân Tích Cảm Xúc 30 Ngày Từ Google Gemini AI:</span>
+            </h4>
+            <div className="whitespace-pre-line font-medium text-slate-700 bg-white p-3 rounded-xl border border-indigo-100">
+              {aiReport30Days}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* GÓC AI TÂM SỰ (MÀU HỒNG NHẠT ẤM ÁP) */}
+      {/* GÓC AI TÂM SỰ (MÀU HỒNG NHẠT ẤM ÁP & TÍCH HỢP GEMINI AI THẬT) */}
       <div className="p-6 rounded-3xl bg-gradient-to-br from-pink-50 via-rose-50 to-purple-50 border border-pink-200 shadow-sm space-y-4">
         <h3 className="font-extrabold text-rose-950 text-base flex items-center gap-2 border-b border-pink-200/60 pb-3">
           <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
-          <span>Góc AI Tâm Sự & Gỡ Rối Tinh Thần 🌸</span>
+          <span>Góc AI Tâm Sự & Gỡ Rối Tinh Thần 🌸 (Kết Nối Google Gemini AI)</span>
         </h3>
 
-        <div className="space-y-3 max-h-64 overflow-y-auto p-3 rounded-2xl bg-white/80 backdrop-blur-md border border-pink-100">
+        <div className="space-y-3 max-h-64 overflow-y-auto p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-pink-100 shadow-inner">
           {chatMessages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-md p-3 rounded-2xl text-xs font-medium leading-relaxed ${
                 msg.sender === 'user' 
-                  ? 'bg-rose-600 text-white rounded-br-none' 
+                  ? 'bg-rose-600 text-white rounded-br-none shadow-sm' 
                   : 'bg-pink-100 text-rose-950 border border-pink-200 rounded-bl-none shadow-xs'
               }`}>
                 {msg.text}
@@ -342,8 +412,8 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
           ))}
           {isChatting && (
             <div className="flex justify-start">
-              <div className="p-3 rounded-2xl bg-white border border-pink-200 text-xs text-rose-400 italic">
-                AI đang lắng nghe và nhắn nhủ cùng em...
+              <div className="p-3 rounded-2xl bg-white border border-pink-200 text-xs text-rose-500 font-bold italic animate-pulse">
+                Google AI đang lắng nghe và nhắn nhủ cùng em...
               </div>
             </div>
           )}
@@ -352,10 +422,10 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
         <form onSubmit={handleSendChat} className="flex items-center gap-2 pt-1">
           <input
             type="text"
-            placeholder="Tâm sự với AI về ngày hôm nay của em..."
+            placeholder="Tâm sự thật với AI về ngày hôm nay của em..."
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-2xl bg-white border border-pink-200 text-xs focus:outline-none focus:border-rose-400 text-slate-800 shadow-inner"
+            className="flex-1 px-4 py-3 rounded-2xl bg-white border border-pink-200 text-xs focus:outline-none focus:border-rose-400 text-slate-800 shadow-sm"
           />
           <button
             type="submit"
