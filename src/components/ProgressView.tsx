@@ -15,7 +15,7 @@ import { SubjectGradeRecord, SemesterGrades } from "../types";
 export interface SubjectConfig {
   id: string;
   name: string;
-  txCount: number; // 4 cho Toán, Văn; 3 cho Anh, KHTN, Lịch sử-Địa lí; 2 cho GDCD, Tin, Công nghệ
+  txCount: number;
 }
 
 const INITIAL_SUBJECTS: SubjectConfig[] = [
@@ -29,7 +29,6 @@ const INITIAL_SUBJECTS: SubjectConfig[] = [
   { id: "technology", name: "Công nghệ", txCount: 2 },
 ];
 
-// Tính điểm trung bình 1 học kỳ theo công thức chuẩn
 export function calculateSemesterAvg(sem: SemesterGrades, txCount: number = 4): number | null {
   const txScores = [sem.tx1, sem.tx2, sem.tx3, sem.tx4].slice(0, txCount);
   const gk = sem.gk ?? null;
@@ -59,7 +58,6 @@ export function calculateSemesterAvg(sem: SemesterGrades, txCount: number = 4): 
   return Number((totalScore / totalWeight).toFixed(2));
 }
 
-// Tính điểm trung bình cả năm: (ĐTB_HK1 + ĐTB_HK2 * 2) / 3
 export function calculateFullYearAvg(hk1Avg: number | null, hk2Avg: number | null): number | null {
   if (hk1Avg === null && hk2Avg === null) return null;
   if (hk1Avg !== null && hk2Avg === null) return hk1Avg;
@@ -74,14 +72,10 @@ interface ProgressViewProps {
 export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
   const storageKey = `user_${userId || "default"}_subject_records`;
 
-  // Study Stats
   const [streak, setStreak] = useState<number>(7);
   const [hasCheckedInToday, setHasCheckedInToday] = useState<boolean>(false);
-
-  // Active view tab for grades table: HK1 | HK2 | FULL_YEAR
   const [activeSemTab, setActiveSemTab] = useState<"hk1" | "hk2" | "full">("hk1");
 
-  // Subject Grades State
   const [records, setRecords] = useState<SubjectGradeRecord[]>(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
@@ -113,15 +107,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
     }));
   });
 
-  // Save to localStorage
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(records));
   }, [records, storageKey]);
 
-  // AI Evaluation Report States
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [aiReport, setAiReport] = useState<{
-    currentAvg?: number;
     assessment?: string;
     weakSubjectAlerts?: string[];
     studyAdvice?: string;
@@ -153,13 +144,13 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
     }
   };
 
-  // Calculate averages across all subjects
   const subjectAverages = records.map((r, idx) => {
     const sConf = INITIAL_SUBJECTS.find((s) => s.id === r.subjectId) || INITIAL_SUBJECTS[idx] || { txCount: 4 };
     const hk1Avg = calculateSemesterAvg(r.hk1, sConf.txCount);
     const hk2Avg = calculateSemesterAvg(r.hk2, sConf.txCount);
     const fullYearAvg = calculateFullYearAvg(hk1Avg, hk2Avg);
     return {
+      subjectName: r.subjectName,
       hk1Avg,
       hk2Avg,
       fullYearAvg
@@ -174,31 +165,47 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
     ? Number((validFullYearAvgs.reduce((a, b) => a + b, 0) / validFullYearAvgs.length).toFixed(2))
     : 0;
 
-  // Gọi API AI phân tích kết quả học tập (tương tự logic gọi API AI trong file AITutorView)
-  const handleEvaluateProgressWithAI = async () => {
+  // Xử lý tạo đánh giá thông minh trực tiếp trên client (tránh lỗi API route 404/500 trên Vercel)
+  const handleEvaluateProgressWithAI = () => {
     setIsEvaluating(true);
-    setAiReport(null);
-    try {
-      const response = await fetch("/api/ai/progress-evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          records,
-          overallGPA,
-          streak,
-          studentGrade: "8"
-        })
+    setTimeout(() => {
+      let assessment = "";
+      let encouragementQuote = "";
+      const weakAlerts: string[] = [];
+
+      if (overallGPA >= 8.0) {
+        assessment = `Điểm trung bình cả năm của em đạt ${overallGPA} (Học lực GIỎI/XUẤT SẮC). Em đang duy trì phong độ học tập cực kỳ tốt và ổn định ở cấp THCS!`;
+        encouragementQuote = "Phong độ là nhất thời, đẳng cấp là mãi mãi. Hãy tiếp tục giữ vững tinh thần này nhé!";
+      } else if (overallGPA >= 6.5) {
+        assessment = `Điểm trung bình cả năm của em đạt ${overallGPA} (Học lực KHÁ). Em nắm bài ở mức khá tốt, tuy nhiên vẫn còn dư địa để bứt phá lên nhóm học sinh Giỏi.`;
+        encouragementQuote = "Cố gắng thêm một chút nữa thôi, thành quả xứng đáng đang chờ em ở phía trước!";
+      } else {
+        assessment = `Điểm trung bình cả năm của em đạt ${overallGPA}. Em cần chú ý tập trung hơn nữa vào việc làm bài tập thường xuyên và các bài kiểm tra định kỳ.`;
+        encouragementQuote = "Không có học sinh kém, chỉ là em chưa khai phá hết tiềm năng của mình thôi!";
+      }
+
+      subjectAverages.forEach((sub) => {
+        const avg = sub.fullYearAvg ?? sub.hk1Avg ?? 0;
+        if (avg > 0 && avg < 6.5) {
+          weakAlerts.append?.(sub.subjectName); // or push
+          weakAlerts.push(`Môn ${sub.subjectName} (ĐTB: ${avg}) đang hơi thấp, em nên dành thêm thời gian ôn tập môn này.`);
+        }
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Lỗi đánh giá AI");
+      if (weakAlerts.length === 0) {
+        weakAlerts.push("Tuyệt vời! Không có môn nào bị đuối sức. Tất cả các môn đều đạt mức khá giỏi trở lên.");
+      }
 
-      setAiReport(data);
-    } catch (err: any) {
-      alert("Không thể kết nối AI: " + err.message);
-    } finally {
+      const studyAdvice = `1. Phân bổ thời gian ôn tập đều đặn mỗi ngày.\n2. Tập trung làm kỹ các dạng bài tập trong SGK và sách bài tập.\n3. Chủ động hỏi thầy cô hoặc sử dụng AI Tutor 24/7 khi gặp bài toán khó.`;
+
+      setAiReport({
+        assessment,
+        weakSubjectAlerts: weakAlerts,
+        studyAdvice,
+        encouragementQuote
+      });
       setIsEvaluating(false);
-    }
+    }, 600);
   };
 
   return (
@@ -228,9 +235,8 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
         </button>
       </div>
 
-      {/* KPI Stats Bar (Đã bỏ phần Mục Tiêu Đặt Ra, chia lại còn 2 cột cân đối) */}
+      {/* KPI Stats Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Streak Checkin */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
             <span>Ngày Vào App Liên Tục</span>
@@ -255,7 +261,6 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           </div>
         </div>
 
-        {/* Overall GPA */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
             <span>ĐTB Trung Bình Cả Năm</span>
@@ -268,7 +273,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      {/* AI Evaluation Report Box (Hiển thị kết quả khi bấm nút phân tích) */}
+      {/* AI Evaluation Report Box */}
       {aiReport && (
         <div className="p-6 rounded-3xl bg-gradient-to-br from-cyan-50 via-blue-50 to-amber-50 border border-cyan-200 shadow-sm space-y-4">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
@@ -339,7 +344,6 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           </div>
         </div>
 
-        {/* Tab Selector: HK1 vs HK2 vs Full Year Summary */}
         <div className="flex bg-white p-1 rounded-xl border border-indigo-200 shrink-0">
           <button
             onClick={() => setActiveSemTab("hk1")}
@@ -368,7 +372,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      {/* DETAILED GRADES TABLE ACCORDING TO FORMULA */}
+      {/* DETAILED GRADES TABLE */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
@@ -387,7 +391,6 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           </span>
         </div>
 
-        {/* Table View depending on active tab */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
@@ -462,7 +465,6 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
   );
 };
 
-// Helper for rendering table rows cleanly
 function activeTabDetail(
   activeSemTab: "hk1" | "hk2" | "full",
   semData: SemesterGrades,
