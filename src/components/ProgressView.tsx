@@ -2,23 +2,20 @@ import React, { useState, useEffect } from "react";
 import {
   TrendingUp,
   Award,
-  Clock,
-  Sparkles,
   Flame,
-  Target,
   BarChart3,
   BookOpen,
   AlertTriangle,
   Heart,
-  ChevronDown,
-  Info
+  Info,
+  Sparkles
 } from "lucide-react";
 import { SubjectGradeRecord, SemesterGrades } from "../types";
 
 export interface SubjectConfig {
   id: string;
   name: string;
-  txCount: number; // 4 for Math & Lit; 3 for English, KHTN, History/Geo; 2 for GDCD, IT, Tech
+  txCount: number; // 4 cho Toán, Văn; 3 cho Anh, KHTN, Lịch sử-Địa lí; 2 cho GDCD, Tin, Công nghệ
 }
 
 const INITIAL_SUBJECTS: SubjectConfig[] = [
@@ -32,16 +29,7 @@ const INITIAL_SUBJECTS: SubjectConfig[] = [
   { id: "technology", name: "Công nghệ", txCount: 2 },
 ];
 
-const DEFAULT_SEMESTER: SemesterGrades = {
-  tx1: null,
-  tx2: null,
-  tx3: null,
-  tx4: null,
-  gk: null,
-  ck: null
-};
-
-// Calculate 1 semester average score using exact formula based on entered scores & subject TX count
+// Tính điểm trung bình 1 học kỳ theo công thức chuẩn
 export function calculateSemesterAvg(sem: SemesterGrades, txCount: number = 4): number | null {
   const txScores = [sem.tx1, sem.tx2, sem.tx3, sem.tx4].slice(0, txCount);
   const gk = sem.gk ?? null;
@@ -71,8 +59,7 @@ export function calculateSemesterAvg(sem: SemesterGrades, txCount: number = 4): 
   return Number((totalScore / totalWeight).toFixed(2));
 }
 
-// Calculate Whole Year Average:
-// (ĐTB_HK1 + ĐTB_HK2 * 2) / 3
+// Tính điểm trung bình cả năm: (ĐTB_HK1 + ĐTB_HK2 * 2) / 3
 export function calculateFullYearAvg(hk1Avg: number | null, hk2Avg: number | null): number | null {
   if (hk1Avg === null && hk2Avg === null) return null;
   if (hk1Avg !== null && hk2Avg === null) return hk1Avg;
@@ -131,11 +118,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
     localStorage.setItem(storageKey, JSON.stringify(records));
   }, [records, storageKey]);
 
-  // Target Goal Setting
-  const [targetTitle, setTargetTitle] = useState<string>("Học sinh Giỏi / Thi Đậu Lớp 10");
-  const [targetScore, setTargetScore] = useState<number>(8.5);
-
-  // AI Evaluation Report
+  // AI Evaluation Report States
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [aiReport, setAiReport] = useState<{
     currentAvg?: number;
@@ -189,11 +172,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
 
   const overallGPA = validFullYearAvgs.length > 0
     ? Number((validFullYearAvgs.reduce((a, b) => a + b, 0) / validFullYearAvgs.length).toFixed(2))
-    : "0.00";
+    : 0;
 
-  // Trigger AI Evaluation
+  // Gọi API AI phân tích kết quả học tập (tương tự logic gọi API AI trong file AITutorView)
   const handleEvaluateProgressWithAI = async () => {
     setIsEvaluating(true);
+    setAiReport(null);
     try {
       const response = await fetch("/api/ai/progress-evaluate", {
         method: "POST",
@@ -201,8 +185,6 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
         body: JSON.stringify({
           records,
           overallGPA,
-          targetTitle,
-          targetScore,
           streak,
           studentGrade: "8"
         })
@@ -213,7 +195,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
 
       setAiReport(data);
     } catch (err: any) {
-      alert("Không thể đánh giá: " + err.message);
+      alert("Không thể kết nối AI: " + err.message);
     } finally {
       setIsEvaluating(false);
     }
@@ -239,15 +221,15 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
         <button
           onClick={handleEvaluateProgressWithAI}
           disabled={isEvaluating}
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-cyan-900/50 transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-cyan-300/30"
+          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-cyan-900/50 transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-cyan-300/30 disabled:opacity-50"
         >
           <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
-          <span>{isEvaluating ? "AI Đang Đánh Giá..." : "🤖 AI Đánh Giá Bảng Điểm"}</span>
+          <span>{isEvaluating ? "AI Đang Phân Tích..." : "🤖 AI Đánh Giá Bảng Điểm"}</span>
         </button>
       </div>
 
-      {/* KPI Stats Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* KPI Stats Bar (Đã bỏ phần Mục Tiêu Đặt Ra, chia lại còn 2 cột cân đối) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Streak Checkin */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
@@ -281,24 +263,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           </div>
           <div className="text-3xl font-extrabold text-indigo-700">{overallGPA}</div>
           <div className="text-[11px] text-slate-500 font-medium">
-            Tự động tính từ 8 môn học tính điểm THCS
-          </div>
-        </div>
-
-        {/* Target Goal */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-            <span>Mục Tiêu Đặt Ra</span>
-            <Target className="w-4 h-4 text-rose-500" />
-          </div>
-          <div className="text-3xl font-extrabold text-rose-600">{targetScore} / 10</div>
-          <div className="text-[11px] text-slate-600 font-bold line-clamp-1">
-            {targetTitle}
+            Tự động tính từ các môn học tính điểm THCS
           </div>
         </div>
       </div>
 
-      {/* AI Evaluation Report Box */}
+      {/* AI Evaluation Report Box (Hiển thị kết quả khi bấm nút phân tích) */}
       {aiReport && (
         <div className="p-6 rounded-3xl bg-gradient-to-br from-cyan-50 via-blue-50 to-amber-50 border border-cyan-200 shadow-sm space-y-4">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
@@ -364,7 +334,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           <div>
             <span className="font-bold">Công thức tính điểm chuẩn Bộ Giáo Dục:</span>
             <p className="text-[11px] text-indigo-700 mt-0.5">
-              ĐTB Học Kỳ = (4 Cột Thường Xuyên × 1 + Giữa Kỳ × 2 + Cuối Kỳ × 3) ÷ 9. | ĐTB Cả Năm = (ĐTB HK1 + ĐTB HK2 × 2) ÷ 3.
+              ĐTB Học Kỳ = (Cột Thường Xuyên × 1 + Giữa Kỳ × 2 + Cuối Kỳ × 3) ÷ Tổng Trọng Số. | ĐTB Cả Năm = (ĐTB HK1 + ĐTB HK2 × 2) ÷ 3.
             </p>
           </div>
         </div>
@@ -422,7 +392,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider">
-                <th className="p-3 rounded-l-xl">Môn Học (12 môn)</th>
+                <th className="p-3 rounded-l-xl">Môn Học</th>
 
                 {activeSemTab !== "full" ? (
                   <>
