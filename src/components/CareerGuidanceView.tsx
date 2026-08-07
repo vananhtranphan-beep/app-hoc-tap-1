@@ -1,6 +1,11 @@
-import React, { useState } from "react";
-import { Target, Sparkles, Compass, Award, ChevronRight, GraduationCap, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Sparkles, Compass, Award, ChevronRight, GraduationCap, Bot, User } from "lucide-react";
 import { CareerResult } from "../types";
+
+interface Message {
+  role: "user" | "model";
+  content: string;
+}
 
 export const CareerGuidanceView: React.FC = () => {
   const [interests, setInterests] = useState("Thích công nghệ, sáng tạo, giải quyết vấn đề và tư duy logic");
@@ -9,7 +14,9 @@ export const CareerGuidanceView: React.FC = () => {
   const [targetHighSchool, setTargetHighSchool] = useState("Trường THPT Chuyên / Top 1");
 
   const [isLoading, setIsLoading] = useState(false);
-  const [generalAdvice, setGeneralAdvice] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
   const [careers, setCareers] = useState<CareerResult[]>([
     {
       title: "Kỹ Sư Lập Trình & Trí Tuệ Nhân Tạo (AI Engineer)",
@@ -39,29 +46,53 @@ export const CareerGuidanceView: React.FC = () => {
     }
   ]);
 
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
+
   const handleConsultCareer = async () => {
+    if (isLoading) return;
     setIsLoading(true);
+
+    const promptText = `Học sinh có nguyện vọng hướng nghiệp như sau:
+- Mục tiêu trường THPT ước mơ: ${targetHighSchool}
+- Sở thích & đam mê: ${interests}
+- Điểm mạnh & kỹ năng: ${strengths}
+- Các môn học yêu thích ở cấp 2: ${favoriteSubjects.join(", ")}
+
+Hãy đóng vai trò là chuyên gia tư vấn hướng nghiệp THCS, phân tích bức tranh tổng thể về lộ trình học tập, khối thi phù hợp và gợi ý định hướng chọn trường, chọn nghề chi tiết nhất cho học sinh này.`;
+
+    const newMsgs: Message[] = [
+      {
+        role: "user",
+        content: "Hãy phân tích lộ trình hướng nghiệp dựa trên thông tin khảo sát của tôi."
+      }
+    ];
+
+    setMessages(newMsgs);
+
     try {
-      const response = await fetch("/api/ai/career", {
+      const response = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          interests,
-          strengths,
-          favoriteSubjects,
-          targetHighSchool
+          subject: "Hướng nghiệp THCS",
+          messages: [{ role: "user", content: promptText }]
         }),
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Lỗi tư vấn hướng nghiệp");
+      if (!response.ok) throw new Error(data.error || "Lỗi kết nối AI hướng nghiệp");
 
-      setGeneralAdvice(data.generalAdvice || "");
-      if (data.recommendedCareers && Array.isArray(data.recommendedCareers)) {
-        setCareers(data.recommendedCareers);
-      }
+      setMessages([
+        ...newMsgs,
+        { role: "model", content: data.reply }
+      ]);
     } catch (err: any) {
-      alert("Lỗi: " + err.message);
+      setMessages([
+        ...newMsgs,
+        { role: "model", content: "⚠️ Không thể kết nối AI: " + err.message + ". Em vui lòng thử lại sau nhé!" }
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +139,7 @@ export const CareerGuidanceView: React.FC = () => {
         <button
           onClick={handleConsultCareer}
           disabled={isLoading}
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-900/50 transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-amber-300/30"
+          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-900/50 transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-amber-300/30 disabled:opacity-50"
         >
           <Sparkles className="w-5 h-5 text-yellow-200 animate-pulse" />
           <span>{isLoading ? "AI Đang Phân Tích Lộ Trình..." : "🤖 AI Phân Tích Định Hướng"}</span>
@@ -190,7 +221,7 @@ export const CareerGuidanceView: React.FC = () => {
             <button
               onClick={handleConsultCareer}
               disabled={isLoading}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-extrabold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-amber-200"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-extrabold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-amber-200 disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
               <span>Phân Tích AI Định Hướng & Lựa Chọn Ngành</span>
@@ -200,19 +231,50 @@ export const CareerGuidanceView: React.FC = () => {
 
         {/* Results Showcase (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
-          {generalAdvice && (
-            <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-3xl text-xs text-amber-950 space-y-2 leading-relaxed shadow-sm">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span>AI chỉ có tính chất tham khảo</span>
+          {/* AI Chat Evaluation Output Box */}
+          {(messages.length > 0 || isLoading) && (
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-amber-50 via-orange-50 to-slate-50 border border-amber-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-amber-200/80 pb-3">
+                <div className="flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-amber-700" />
+                  <h3 className="font-extrabold text-amber-950 text-base">
+                    Báo Cáo Phân Tích Định Hướng Từ AI Chuyên Gia
+                  </h3>
+                </div>
+                <span className="px-3 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold text-xs">
+                  Mục tiêu: {targetHighSchool}
+                </span>
               </div>
-              <div className="font-extrabold text-amber-900 flex items-center gap-2 text-sm pt-1">
-                <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Bức Tranh Lộ Trình & Khối Thi Phù Hợp Cho Học Sinh:</span>
-              </div>
-              <p className="font-medium text-slate-800 whitespace-pre-line">{generalAdvice}</p>
-              <div className="text-[11px] text-slate-400 font-medium italic mt-2 text-center pt-2 border-t border-amber-200/60">
-                AI chỉ mang tính chất tham khảo.
+
+              <div className="space-y-4">
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${msg.role === "user" ? "bg-amber-600 text-white" : "bg-slate-900 text-amber-400"}`}>
+                      {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                    </div>
+                    <div className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${msg.role === "user" ? "bg-amber-600 text-white rounded-tr-none" : "bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs space-y-2"}`}>
+                      {msg.role === "model" && (
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold">
+                          <Sparkles className="w-3 h-3 text-amber-600" />
+                          <span>AI chỉ có tính chất tham khảo</span>
+                        </div>
+                      )}
+                      <div className="whitespace-pre-line font-medium">{msg.content}</div>
+                    </div>
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center">
+                      <Bot className="w-4 h-4 animate-spin" />
+                    </div>
+                    <div className="p-4 rounded-2xl bg-white border border-slate-200 text-xs text-slate-500 font-bold animate-pulse">
+                      AI Chuyên gia đang phân tích lộ trình hướng nghiệp cho em...
+                    </div>
+                  </div>
+                )}
+                <div ref={chatBottomRef} />
               </div>
             </div>
           )}
