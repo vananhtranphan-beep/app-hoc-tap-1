@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   TrendingUp,
   Award,
   Flame,
   BarChart3,
   BookOpen,
-  AlertTriangle,
-  Heart,
-  Info,
-  Sparkles
+  Sparkles,
+  Bot,
+  User,
+  Info
 } from "lucide-react";
 import { SubjectGradeRecord, SemesterGrades } from "../types";
 
@@ -65,6 +65,11 @@ export function calculateFullYearAvg(hk1Avg: number | null, hk2Avg: number | nul
   return Number(((hk1Avg! + hk2Avg! * 2) / 3).toFixed(2));
 }
 
+interface Message {
+  role: "user" | "model";
+  content: string;
+}
+
 interface ProgressViewProps {
   userId?: string;
 }
@@ -72,10 +77,14 @@ interface ProgressViewProps {
 export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
   const storageKey = `user_${userId || "default"}_subject_records`;
 
+  // Study Stats
   const [streak, setStreak] = useState<number>(7);
   const [hasCheckedInToday, setHasCheckedInToday] = useState<boolean>(false);
+
+  // Active view tab for grades table: HK1 | HK2 | FULL_YEAR
   const [activeSemTab, setActiveSemTab] = useState<"hk1" | "hk2" | "full">("hk1");
 
+  // Subject Grades State
   const [records, setRecords] = useState<SubjectGradeRecord[]>(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
@@ -107,17 +116,19 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
     }));
   });
 
+  // Save to localStorage
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(records));
   }, [records, storageKey]);
 
+  // AI Chat Evaluation State (Sử dụng API /api/tutor giống hệt AI Tutor View)
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
-  const [aiReport, setAiReport] = useState<{
-    assessment?: string;
-    weakSubjectAlerts?: string[];
-    studyAdvice?: string;
-    encouragementQuote?: string;
-  } | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isEvaluating]);
 
   const handleScoreChange = (
     subjIdx: number,
@@ -144,13 +155,14 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
     }
   };
 
+  // Calculate averages across all subjects
   const subjectAverages = records.map((r, idx) => {
     const sConf = INITIAL_SUBJECTS.find((s) => s.id === r.subjectId) || INITIAL_SUBJECTS[idx] || { txCount: 4 };
     const hk1Avg = calculateSemesterAvg(r.hk1, sConf.txCount);
     const hk2Avg = calculateSemesterAvg(r.hk2, sConf.txCount);
     const fullYearAvg = calculateFullYearAvg(hk1Avg, hk2Avg);
     return {
-      subjectName: r.subjectName,
+      name: r.subjectName,
       hk1Avg,
       hk2Avg,
       fullYearAvg
@@ -165,47 +177,51 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
     ? Number((validFullYearAvgs.reduce((a, b) => a + b, 0) / validFullYearAvgs.length).toFixed(2))
     : 0;
 
-  // Xử lý tạo đánh giá thông minh trực tiếp trên client (tránh lỗi API route 404/500 trên Vercel)
-  const handleEvaluateProgressWithAI = () => {
+  // Trigger AI Evaluation using /api/tutor endpoint
+  const handleEvaluateProgressWithAI = async () => {
+    if (isEvaluating) return;
     setIsEvaluating(true);
-    setTimeout(() => {
-      let assessment = "";
-      let encouragementQuote = "";
-      const weakAlerts: string[] = [];
 
-      if (overallGPA >= 8.0) {
-        assessment = `Điểm trung bình cả năm của em đạt ${overallGPA} (Học lực GIỎI/XUẤT SẮC). Em đang duy trì phong độ học tập cực kỳ tốt và ổn định ở cấp THCS!`;
-        encouragementQuote = "Phong độ là nhất thời, đẳng cấp là mãi mãi. Hãy tiếp tục giữ vững tinh thần này nhé!";
-      } else if (overallGPA >= 6.5) {
-        assessment = `Điểm trung bình cả năm của em đạt ${overallGPA} (Học lực KHÁ). Em nắm bài ở mức khá tốt, tuy nhiên vẫn còn dư địa để bứt phá lên nhóm học sinh Giỏi.`;
-        encouragementQuote = "Cố gắng thêm một chút nữa thôi, thành quả xứng đáng đang chờ em ở phía trước!";
-      } else {
-        assessment = `Điểm trung bình cả năm của em đạt ${overallGPA}. Em cần chú ý tập trung hơn nữa vào việc làm bài tập thường xuyên và các bài kiểm tra định kỳ.`;
-        encouragementQuote = "Không có học sinh kém, chỉ là em chưa khai phá hết tiềm năng của mình thôi!";
+    const summaryText = subjectAverages
+      .map((s) => `- ${s.name}: ĐTB HK1 = ${s.hk1Avg ?? "Chưa có"}, ĐTB HK2 = ${s.hk2Avg ?? "Chưa có"}, ĐTB Cả Năm = ${s.fullYearAvg ?? "Chưa có"}`)
+      .join("\n");
+
+    const promptText = `Em là học sinh lớp 8. Dưới đây là bảng điểm chi tiết các môn học của em, với điểm trung bình cả năm tổng kết là ${overallGPA}:\n${summaryText}\n\nHãy đóng vai trò là gia sư AI, phân tích giúp em lực học hiện tại, chỉ ra môn nào em cần cố gắng bứt phá hơn và đưa ra lời khuyên chiến lược học tập cụ thể cho em nhé!`;
+
+    const newMsgs: Message[] = [
+      {
+        role: "user",
+        content: "Hãy phân tích bảng điểm và đưa ra đánh giá tiến độ học tập cho tôi."
       }
+    ];
 
-      subjectAverages.forEach((sub) => {
-        const avg = sub.fullYearAvg ?? sub.hk1Avg ?? 0;
-        if (avg > 0 && avg < 6.5) {
-          weakAlerts.append?.(sub.subjectName); // or push
-          weakAlerts.push(`Môn ${sub.subjectName} (ĐTB: ${avg}) đang hơi thấp, em nên dành thêm thời gian ôn tập môn này.`);
-        }
+    setMessages(newMsgs);
+
+    try {
+      const response = await fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: "Đánh giá học tập",
+          messages: [{ role: "user", content: promptText }]
+        })
       });
 
-      if (weakAlerts.length === 0) {
-        weakAlerts.push("Tuyệt vời! Không có môn nào bị đuối sức. Tất cả các môn đều đạt mức khá giỏi trở lên.");
-      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Lỗi kết nối AI");
 
-      const studyAdvice = `1. Phân bổ thời gian ôn tập đều đặn mỗi ngày.\n2. Tập trung làm kỹ các dạng bài tập trong SGK và sách bài tập.\n3. Chủ động hỏi thầy cô hoặc sử dụng AI Tutor 24/7 khi gặp bài toán khó.`;
-
-      setAiReport({
-        assessment,
-        weakSubjectAlerts: weakAlerts,
-        studyAdvice,
-        encouragementQuote
-      });
+      setMessages([
+        ...newMsgs,
+        { role: "model", content: data.reply }
+      ]);
+    } catch (err: any) {
+      setMessages([
+        ...newMsgs,
+        { role: "model", content: "⚠️ Không thể kết nối AI: " + err.message + ". Em vui lòng thử lại sau nhé!" }
+      ]);
+    } finally {
       setIsEvaluating(false);
-    }, 600);
+    }
   };
 
   return (
@@ -235,8 +251,9 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
         </button>
       </div>
 
-      {/* KPI Stats Bar */}
+      {/* KPI Stats Bar (Đã bỏ mục tiêu đặt ra, giữ lại 2 cột cân đối) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Streak Checkin */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
             <span>Ngày Vào App Liên Tục</span>
@@ -261,6 +278,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           </div>
         </div>
 
+        {/* Overall GPA */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
             <span>ĐTB Trung Bình Cả Năm</span>
@@ -273,18 +291,14 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      {/* AI Evaluation Report Box */}
-      {aiReport && (
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-cyan-50 via-blue-50 to-amber-50 border border-cyan-200 shadow-sm space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>AI chỉ có tính chất tham khảo</span>
-          </div>
+      {/* AI Evaluation Report Box (Giao diện hiển thị kết quả giống khung chat AI Tutor) */}
+      {(messages.length > 0 || isEvaluating) && (
+        <div className="p-6 rounded-3xl bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 border border-cyan-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-cyan-200/80 pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-cyan-600" />
+              <Bot className="w-5 h-5 text-cyan-700" />
               <h3 className="font-extrabold text-cyan-950 text-base">
-                Báo Cáo Đánh Giá AI Về Bảng Điểm Học Tập
+                Báo Cáo Phân Tích & Đánh Giá Từ AI Tutor
               </h3>
             </div>
             <span className="px-3 py-0.5 rounded-full bg-cyan-200 text-cyan-900 font-bold text-xs">
@@ -292,42 +306,35 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
             </span>
           </div>
 
-          <div className="space-y-3 text-xs text-slate-800 leading-relaxed">
-            <div>
-              <span className="font-bold text-cyan-900 block mb-1">📊 Đánh giá lực học chung:</span>
-              <p className="bg-white/80 p-3.5 rounded-2xl border border-cyan-100 font-medium">{aiReport.assessment}</p>
-            </div>
-
-            {aiReport.weakSubjectAlerts && aiReport.weakSubjectAlerts.length > 0 && (
-              <div>
-                <span className="font-bold text-rose-900 block mb-1 flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4 text-rose-600" /> Môn học cần bứt phá nâng điểm:
-                </span>
-                <div className="space-y-1.5">
-                  {aiReport.weakSubjectAlerts.map((alertItem, aIdx) => (
-                    <div key={aIdx} className="bg-rose-50 p-2.5 rounded-xl border border-rose-200 text-rose-950 font-semibold">
-                      {alertItem}
+          <div className="space-y-4">
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${msg.role === "user" ? "bg-indigo-600 text-white" : "bg-slate-900 text-cyan-400"}`}>
+                  {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                </div>
+                <div className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${msg.role === "user" ? "bg-indigo-600 text-white rounded-tr-none" : "bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs space-y-2"}`}>
+                  {msg.role === "model" && (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold">
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>AI chỉ có tính chất tham khảo</span>
                     </div>
-                  ))}
+                  )}
+                  <div className="whitespace-pre-line font-medium">{msg.content}</div>
+                </div>
+              </div>
+            ))}
+
+            {isEvaluating && (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-slate-900 text-cyan-400 flex items-center justify-center">
+                  <Bot className="w-4 h-4 animate-spin" />
+                </div>
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 text-xs text-slate-500 font-bold animate-pulse">
+                  AI Tutor đang phân tích bảng điểm của em...
                 </div>
               </div>
             )}
-
-            {aiReport.studyAdvice && (
-              <div>
-                <span className="font-bold text-blue-900 block mb-1">💡 Chiến lược bứt phá cho các kỳ kiểm tra sắp tới:</span>
-                <p className="bg-white/80 p-3.5 rounded-2xl border border-blue-100 font-medium text-slate-700 whitespace-pre-line">
-                  {aiReport.studyAdvice}
-                </p>
-              </div>
-            )}
-
-            {aiReport.encouragementQuote && (
-              <div className="p-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 shadow-sm">
-                <Heart className="w-5 h-5 fill-white shrink-0" />
-                <span>"{aiReport.encouragementQuote}"</span>
-              </div>
-            )}
+            <div ref={chatBottomRef} />
           </div>
         </div>
       )}
@@ -344,6 +351,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           </div>
         </div>
 
+        {/* Tab Selector: HK1 vs HK2 vs Full Year Summary */}
         <div className="flex bg-white p-1 rounded-xl border border-indigo-200 shrink-0">
           <button
             onClick={() => setActiveSemTab("hk1")}
@@ -372,7 +380,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      {/* DETAILED GRADES TABLE */}
+      {/* DETAILED GRADES TABLE ACCORDING TO FORMULA */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
@@ -391,6 +399,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
           </span>
         </div>
 
+        {/* Table View depending on active tab */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
@@ -465,6 +474,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
   );
 };
 
+// Helper for rendering table rows cleanly
 function activeTabDetail(
   activeSemTab: "hk1" | "hk2" | "full",
   semData: SemesterGrades,
