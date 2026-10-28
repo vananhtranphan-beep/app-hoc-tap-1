@@ -13,8 +13,8 @@ export type SystemBook = { id: string; name: string; url: string; imageUrl: stri
 
 export const SYSTEM_BOOKS: Record<string, SystemBook[]> = {
   "Ngữ văn": [
-    { id: "nv-6-1", name: "Ngữ Văn lớp 6 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-6-2", name: "Ngữ Văn lớp 6 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
+    { id: "nv-6-1", name: "Ngữ Văn lớp 6 - Tập 1", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/sgk-ngu-van-6-tap-mot.4699839775#page=9", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
+    { id: "nv-6-2", name: "Ngữ Văn lớp 6 - Tập 2", url: "https://acrobat.adobe.com/id/urn:aaid:sc:AP:afecdd7f-b487-41a2-9c15-e3e64aa14c26", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
     { id: "nv-7-1", name: "Ngữ Văn lớp 7 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
     { id: "nv-7-2", name: "Ngữ Văn lớp 7 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
     { id: "nv-8-1", name: "Ngữ Văn lớp 8 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
@@ -27,7 +27,7 @@ export const SYSTEM_BOOKS: Record<string, SystemBook[]> = {
     { id: "nv-nc-4", name: "Tài liệu Nâng cao Ngữ Văn 9", url: "", imageUrl: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=300&q=80" },
   ],
   "Toán": [
-    { id: "toan-6-1", name: "Toán lớp 6 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
+    { id: "toan-6-1", name: "Toán lớp 6 - Tập 1", url: "https://drive.google.com/file/d/1ifItRyChuGPOiifAqZPwoh9BL6rbvkw5/view?usp=sharing", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
     { id: "toan-6-2", name: "Toán lớp 6 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
     { id: "toan-7-1", name: "Toán lớp 7 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
     { id: "toan-7-2", name: "Toán lớp 7 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
