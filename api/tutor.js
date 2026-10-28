@@ -1,5 +1,36 @@
 import Groq from "groq-sdk";
 
+// ============================================================
+// MODEL AI ĐANG DÙNG (của Groq)
+// Khi Groq gỡ model này (web báo lỗi "model_not_found"),
+// chỉ cần đổi tên model ở dòng dưới rồi Commit là xong.
+// Xem model nào còn dùng được: https://console.groq.com/docs/deprecations
+// ============================================================
+const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+
+// Nhắc AI cách xử lý khi học sinh gặp nguy hiểm (áp dụng cho mọi chức năng)
+const SAFETY_NOTE =
+    " Nếu học sinh nhắc tới ý định làm hại bản thân, bị bạo lực, bị xâm hại hoặc đang gặp nguy hiểm: hãy trấn an nhẹ nhàng, khuyên em nói ngay với bố mẹ, giáo viên chủ nhiệm hoặc người lớn em tin tưởng, và gọi Tổng đài quốc gia bảo vệ trẻ em 111 (miễn phí, 24/7).";
+
+// Gọi AI và lấy câu trả lời dạng chữ
+async function askAI(groq, messages) {
+    const options = {
+        model: MODEL,
+        messages,
+        temperature: 0.7,
+        max_completion_tokens: 4096,
+    };
+    // Model gpt-oss có bước "suy nghĩ" trước khi trả lời: để mức thấp cho nhanh
+    if (MODEL.startsWith("openai/gpt-oss")) {
+        options.reasoning_effort = "low";
+    }
+
+    const completion = await groq.chat.completions.create(options);
+    let text = completion.choices?.[0]?.message?.content || "";
+    text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim(); // bỏ phần suy nghĩ nếu model trả kèm
+    return text || "Xin lỗi, AI chưa trả lời được. Em thử lại sau nhé!";
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
@@ -15,13 +46,13 @@ export default async function handler(req, res) {
         // Trường hợp 1: Phân tích kế hoạch tuần
         if (days) {
             systemInstruction = "Bạn là Chuyên gia tư vấn phương pháp học tập thông minh cho học sinh THCS Việt Nam.";
-            promptContent = `Hãy phân tích thời khóa biểu tuần sau đây và đưa ra đánh giá, lời khuyên tối ưu hóa: ${JSON.stringify(days)}. 
+            promptContent = `Hãy phân tích thời khóa biểu tuần sau đây và đưa ra đánh giá, lời khuyên tối ưu hóa: ${JSON.stringify(days)}.
             Trả về kết quả dưới dạng JSON thuần túy gồm 3 trường: summary (đánh giá chung), recommendations (mảng các lời khuyên), encouragementQuote (câu danh ngôn động viên).`;
-        } 
+        }
         // Trường hợp 2: Đánh giá tâm lý / Cảm xúc
         else if (mood || logs) {
             systemInstruction = "Bạn là Chuyên gia tâm lý học đường thân thiện, thấu cảm với học sinh cấp 2.";
-            promptContent = `Học sinh check-in cảm xúc: ${mood}, mức độ áp lực hiện tại: ${stressLevel}/5. Ghi chú: ${description || "Không có"}. Dữ liệu các ngày qua: ${JSON.stringify(logs || [])}. 
+            promptContent = `Học sinh check-in cảm xúc: ${mood}, mức độ áp lực hiện tại: ${stressLevel}/5. Ghi chú: ${description || "Không có"}. Dữ liệu các ngày qua: ${JSON.stringify(logs || [])}.
             Hãy trả về JSON thuần túy gồm: psychologicalAssessment (đánh giá tâm lý) và carePlan (kế hoạch chăm sóc tinh thần).`;
         }
         // Trường hợp 3: Chat tư vấn tâm lý (Góc SOS)
@@ -35,30 +66,18 @@ export default async function handler(req, res) {
                 role: m.role === "model" ? "assistant" : "user",
                 content: m.content,
             }));
-            chatHistory.unshift({ role: "system", content: systemInstruction });
-            
-            const chatCompletion = await groq.chat.completions.create({
-                messages: chatHistory,
-                model: "llama-3.3-70b-versatile",
-                temperature: 0.7,
-                max_tokens: 1024,
-            });
-            return res.status(200).json({ reply: chatCompletion.choices[0].message.content });
+            chatHistory.unshift({ role: "system", content: systemInstruction + SAFETY_NOTE });
+
+            const reply = await askAI(groq, chatHistory);
+            return res.status(200).json({ reply });
         }
 
         // Xử lý các request phân tích trả về JSON
-        const completion = await groq.chat.completions.create({
-            messages: [
-                { role: "system", content: systemInstruction + " Trả về kết quả hoàn toàn bằng định dạng JSON nếu được yêu cầu." },
-                { role: "user", content: promptContent }
-            ],
-            model: "llama-3.3-70b-versatile",
-            temperature: 0.7,
-            max_tokens: 1024,
-        });
+        const textResult = await askAI(groq, [
+            { role: "system", content: systemInstruction + " Trả về kết quả hoàn toàn bằng định dạng JSON nếu được yêu cầu." + SAFETY_NOTE },
+            { role: "user", content: promptContent }
+        ]);
 
-        const textResult = completion.choices[0].message.content;
-        
         if (story) {
             return res.status(200).json({ reply: textResult });
         }
