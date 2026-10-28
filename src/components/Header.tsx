@@ -21,16 +21,17 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 py-2.5 transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         {/* Brand Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-rose-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-indigo-200 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-rose-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-indigo-200 shrink-0">
             <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold bg-gradient-to-r from-indigo-800 via-rose-600 to-indigo-600 bg-clip-text text-transparent">
+              {/* Trên điện thoại giữ tên web trên 1 dòng để thanh đầu trang không bị cao, che menu */}
+              <h1 className="text-base sm:text-xl font-extrabold whitespace-nowrap bg-gradient-to-r from-indigo-800 via-rose-600 to-indigo-600 bg-clip-text text-transparent">
                 AI Study Hub THCS
               </h1>
-              <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px]">
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] whitespace-nowrap">
                 Học Sinh Cấp 2
               </span>
             </div>

@@ -10,6 +10,7 @@ import {
   User,
   Info
 } from "lucide-react";
+import { MathMarkdown } from "./MathMarkdown";
 import { SubjectGradeRecord, SemesterGrades } from "../types";
 
 export interface SubjectConfig {
@@ -72,14 +73,13 @@ interface Message {
 
 interface ProgressViewProps {
   userId?: string;
+  /** Số ngày vào app liên tục (lấy từ hệ thống điểm danh tự động của App) */
+  streakCount?: number;
+  grade?: string;
 }
 
-export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
+export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount = 1, grade = "8" }) => {
   const storageKey = `user_${userId || "default"}_subject_records`;
-
-  // Study Stats
-  const [streak, setStreak] = useState<number>(7);
-  const [hasCheckedInToday, setHasCheckedInToday] = useState<boolean>(false);
 
   // Active view tab for grades table: HK1 | HK2 | FULL_YEAR
   const [activeSemTab, setActiveSemTab] = useState<"hk1" | "hk2" | "full">("hk1");
@@ -148,13 +148,6 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
     setRecords(updated);
   };
 
-  const handleDailyCheckIn = () => {
-    if (!hasCheckedInToday) {
-      setStreak((prev) => prev + 1);
-      setHasCheckedInToday(true);
-    }
-  };
-
   // Calculate averages across all subjects
   const subjectAverages = records.map((r, idx) => {
     const sConf = INITIAL_SUBJECTS.find((s) => s.id === r.subjectId) || INITIAL_SUBJECTS[idx] || { txCount: 4 };
@@ -186,7 +179,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
       .map((s) => `- ${s.name}: ĐTB HK1 = ${s.hk1Avg ?? "Chưa có"}, ĐTB HK2 = ${s.hk2Avg ?? "Chưa có"}, ĐTB Cả Năm = ${s.fullYearAvg ?? "Chưa có"}`)
       .join("\n");
 
-    const promptText = `Em là học sinh lớp 8. Dưới đây là bảng điểm chi tiết các môn học của em, với điểm trung bình cả năm tổng kết là ${overallGPA}:\n${summaryText}\n\nHãy đóng vai trò là gia sư AI, phân tích giúp em lực học hiện tại, chỉ ra môn nào em cần cố gắng bứt phá hơn và đưa ra lời khuyên chiến lược học tập cụ thể cho em nhé!`;
+    const promptText = `Em là học sinh lớp ${grade}. Dưới đây là bảng điểm chi tiết các môn học của em, với điểm trung bình cả năm tổng kết là ${overallGPA}:\n${summaryText}\n\nHãy đóng vai trò là gia sư AI, phân tích giúp em lực học hiện tại, chỉ ra môn nào em cần cố gắng bứt phá hơn và đưa ra lời khuyên chiến lược học tập cụ thể cho em nhé!`;
 
     const newMsgs: Message[] = [
       {
@@ -260,21 +253,13 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
             <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-3xl font-extrabold text-amber-600">{streak} Ngày</span>
-            <button
-              onClick={handleDailyCheckIn}
-              disabled={hasCheckedInToday}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-                hasCheckedInToday
-                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                  : "bg-amber-500 hover:bg-amber-600 text-white shadow-sm shadow-amber-200"
-              }`}
-            >
-              {hasCheckedInToday ? "Đã Điểm Danh" : "+ Tích Điểm"}
-            </button>
+            <span className="text-3xl font-extrabold text-amber-600">{streakCount} Ngày</span>
+            <span className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-100 text-emerald-700">
+              ✓ Đã điểm danh hôm nay
+            </span>
           </div>
           <div className="text-[11px] text-amber-800 font-semibold">
-            {hasCheckedInToday ? "Xuất sắc! Đã điểm danh hôm nay" : "Điểm danh hàng ngày để giữ ngọn lửa học tập"}
+            Hệ thống tự điểm danh mỗi ngày em vào app. Vào app mỗi ngày để giữ ngọn lửa học tập!
           </div>
         </div>
 
@@ -319,7 +304,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId }) => {
                       <span>AI chỉ có tính chất tham khảo</span>
                     </div>
                   )}
-                  <div className="whitespace-pre-line font-medium">{msg.content}</div>
+                  <MathMarkdown tone={msg.role === "user" ? "dark" : "light"}>{msg.content}</MathMarkdown>
                 </div>
               </div>
             ))}

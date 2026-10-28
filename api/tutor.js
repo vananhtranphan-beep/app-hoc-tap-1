@@ -12,6 +12,30 @@ const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 const SAFETY_NOTE =
     " Nếu học sinh nhắc tới ý định làm hại bản thân, bị bạo lực, bị xâm hại hoặc đang gặp nguy hiểm: hãy trấn an nhẹ nhàng, khuyên em nói ngay với bố mẹ, giáo viên chủ nhiệm hoặc người lớn em tin tưởng, và gọi Tổng đài quốc gia bảo vệ trẻ em 111 (miễn phí, 24/7).";
 
+// Quy định cách viết để web hiển thị đẹp (công thức toán, in đậm, gạch đầu dòng)
+const FORMAT_NOTE =
+    " Trình bày bằng Markdown: dùng **in đậm** cho ý chính, gạch đầu dòng hoặc đánh số cho các bước. " +
+    "Viết MỌI công thức toán bằng LaTeX: công thức trong dòng đặt giữa $...$ (ví dụ $2x - 1 = 3$), công thức riêng một dòng đặt giữa $$...$$. " +
+    "Không dùng \\( \\) hoặc \\[ \\]. Học sinh có thể gửi công thức LaTeX đặt giữa dấu $.";
+
+// Chọn vai trò AI theo chức năng đang dùng
+function tutorPersona(subject, grade) {
+    const lop = grade ? `lớp ${grade}` : "THCS";
+    const s = String(subject || "");
+    if (/tâm lý|tâm sự/i.test(s)) {
+        return `Bạn là chuyên gia tâm lý học đường ân cần, thấu cảm với học sinh ${lop}. Trả lời bằng tiếng Việt, ấm áp, ngắn gọn, xưng "thầy/cô" và gọi học sinh là "em".`;
+    }
+    if (/hướng nghiệp/i.test(s)) {
+        return `Bạn là chuyên gia tư vấn hướng nghiệp cho học sinh THCS Việt Nam (${lop}). Trả lời bằng tiếng Việt, cụ thể, thực tế.`;
+    }
+    if (/đánh giá học tập/i.test(s)) {
+        return `Bạn là gia sư AI phân tích kết quả học tập cho học sinh ${lop} Việt Nam. Trả lời bằng tiếng Việt, động viên và cụ thể.`;
+    }
+    return `Bạn là AI Tutor - gia sư ảo thân thiện, kiên nhẫn của học sinh ${lop} Việt Nam, đang dạy môn ${s || "Toán Học"}. ` +
+        "Giải thích từng bước rõ ràng, ngắn gọn, dễ hiểu bằng tiếng Việt, bám sát chương trình giáo dục phổ thông 2018. " +
+        "Với bài tập, hướng dẫn cách làm từng bước và nêu đáp số cuối cùng.";
+}
+
 // Gọi AI và lấy câu trả lời dạng chữ
 async function askAI(groq, messages) {
     const options = {
@@ -37,7 +61,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { subject = "Toán Học", messages = [], days, mood, stressLevel, description, logs, story } = req.body;
+        const { subject = "Toán Học", grade, messages = [], days, mood, stressLevel, description, logs, story } = req.body || {};
         const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
         let systemInstruction = "Bạn là AI Tutor - Gia sư ảo thông minh, thân thiện dành cho học sinh THCS.";
@@ -62,11 +86,18 @@ export default async function handler(req, res) {
         }
         // Trường hợp 4: Chat gia sư thông thường (AI Tutor)
         else {
-            const chatHistory = messages.map((m) => ({
-                role: m.role === "model" ? "assistant" : "user",
-                content: m.content,
-            }));
-            chatHistory.unshift({ role: "system", content: systemInstruction + SAFETY_NOTE });
+            // Chỉ lấy 12 tin nhắn gần nhất, mỗi tin tối đa 6000 ký tự
+            const chatHistory = (Array.isArray(messages) ? messages : [])
+                .slice(-12)
+                .filter((m) => m && typeof m.content === "string" && m.content.trim())
+                .map((m) => ({
+                    role: m.role === "model" ? "assistant" : "user",
+                    content: m.content.slice(0, 6000),
+                }));
+            if (chatHistory.length === 0) {
+                return res.status(400).json({ error: "Chưa có câu hỏi nào được gửi." });
+            }
+            chatHistory.unshift({ role: "system", content: tutorPersona(subject, grade) + FORMAT_NOTE + SAFETY_NOTE });
 
             const reply = await askAI(groq, chatHistory);
             return res.status(200).json({ reply });
@@ -74,7 +105,7 @@ export default async function handler(req, res) {
 
         // Xử lý các request phân tích trả về JSON
         const textResult = await askAI(groq, [
-            { role: "system", content: systemInstruction + " Trả về kết quả hoàn toàn bằng định dạng JSON nếu được yêu cầu." + SAFETY_NOTE },
+            { role: "system", content: systemInstruction + (story ? FORMAT_NOTE : " Trả về kết quả hoàn toàn bằng định dạng JSON nếu được yêu cầu.") + SAFETY_NOTE },
             { role: "user", content: promptContent }
         ]);
 

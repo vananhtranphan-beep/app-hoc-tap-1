@@ -1,1 +1,144 @@
 @import "tailwindcss";
+
+/* ============================================================
+   Hiệu ứng động dùng trong web (trước đây code có gọi nhưng chưa định nghĩa)
+   ============================================================ */
+@theme {
+  --animate-spin-slow: spin 14s linear infinite;
+  --animate-shake: shake 0.45s ease-in-out;
+  --animate-fadeIn: fadeIn 0.2s ease-out;
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* Ẩn thanh cuộn ngang (menu điện thoại, bàn phím công thức) */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ============================================================
+   Chữ có định dạng trong câu trả lời của AI (in đậm, danh sách, bảng, công thức)
+   ============================================================ */
+.md-content { overflow-wrap: anywhere; line-height: 1.65; }
+.md-content > * + * { margin-top: 0.6em; }
+.md-content p { margin: 0; }
+.md-content ul { list-style: disc; padding-left: 1.4em; }
+.md-content ol { list-style: decimal; padding-left: 1.4em; }
+.md-content li + li { margin-top: 0.25em; }
+.md-content li > p { margin: 0; }
+.md-content li::marker { color: #7c3aed; }
+.md-content strong { font-weight: 800; }
+.md-content em { font-style: italic; }
+.md-content h1, .md-content h2, .md-content h3, .md-content h4 { font-weight: 800; line-height: 1.35; margin-top: 0.9em; }
+.md-content h1 { font-size: 1.2em; }
+.md-content h2 { font-size: 1.12em; }
+.md-content h3, .md-content h4 { font-size: 1.05em; }
+.md-content code { background: rgb(15 23 42 / 0.07); padding: 0.1em 0.35em; border-radius: 0.35em; font-size: 0.9em; }
+.md-content pre { background: #0f172a; color: #e2e8f0; padding: 0.75em 1em; border-radius: 0.75em; overflow-x: auto; }
+.md-content pre code { background: transparent; padding: 0; }
+.md-content blockquote { border-left: 3px solid #a78bfa; padding-left: 0.8em; color: #475569; }
+.md-content hr { border: 0; border-top: 1px dashed #cbd5e1; }
+.md-content a { color: #6d28d9; text-decoration: underline; }
+.md-content table { display: block; width: max-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: 0.92em; }
+.md-content th, .md-content td { border: 1px solid #e2e8f0; padding: 0.4em 0.65em; text-align: left; vertical-align: top; }
+.md-content th { background: #f1f5f9; font-weight: 700; }
+.md-content .katex { font-size: 1.1em; }
+.md-content .katex-display {
+  margin: 0.5em 0;
+  padding: 0.55em 0.8em;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: rgb(124 58 237 / 0.06);
+  border-radius: 0.75em;
+}
+
+/* Tin nhắn của học sinh (nền tím, chữ trắng) */
+.md-dark li::marker { color: #ddd6fe; }
+.md-dark code { background: rgb(255 255 255 / 0.18); }
+.md-dark blockquote { border-left-color: rgb(255 255 255 / 0.6); color: inherit; }
+.md-dark a { color: #fff; }
+.md-dark th, .md-dark td { border-color: rgb(255 255 255 / 0.3); }
+.md-dark th { background: rgb(255 255 255 / 0.12); }
+.md-dark .katex-display { background: rgb(255 255 255 / 0.12); }
+
+/* Nút trên bàn phím công thức */
+.math-key .katex { font-size: 1em; }
+
+/* ============================================================
+   Cây cảm xúc: hiệu ứng sinh động (chỉ trang trí, không đổi chức năng)
+   ============================================================ */
+@keyframes treeSway { 0%, 100% { transform: rotate(-0.9deg); } 50% { transform: rotate(0.9deg); } }
+.tree-sway { transform-origin: 150px 215px; animation: treeSway 6s ease-in-out infinite; }
+
+@keyframes grassSway { 0%, 100% { transform: skewX(-6deg); } 50% { transform: skewX(6deg); } }
+.grass-sway { transform-box: fill-box; transform-origin: bottom; animation: grassSway 3s ease-in-out infinite; }
+
+@keyframes fireflyUp {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 0.95; }
+  50% { transform: translate(6px, -35px); }
+  100% { transform: translate(-4px, -75px); opacity: 0; }
+}
+.firefly { animation: fireflyUp 5.5s ease-in-out infinite; filter: drop-shadow(0 0 3px #fde68a); }
+
+@keyframes leafFall {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(35px, 125px) rotate(240deg); opacity: 0; }
+}
+.leaf-fall { transform-box: fill-box; transform-origin: center; animation: leafFall 6s ease-in infinite; }
+
+@keyframes rainDrop {
+  0% { transform: translateY(-20px); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(160px); opacity: 0; }
+}
+.rain-drop { animation: rainDrop 0.85s linear infinite; }
+
+@keyframes soilRipple { 0% { transform: scale(0.3); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
+.soil-ripple { transform-box: fill-box; transform-origin: center; animation: soilRipple 1.2s ease-out infinite; }
+
+@keyframes flutter { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.25); } }
+.butterfly-wing { transform-box: fill-box; transform-origin: center; animation: flutter 0.32s ease-in-out infinite; }
+
+@keyframes butterflyPath {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(45px, -25px); }
+  50% { transform: translate(90px, 0); }
+  75% { transform: translate(45px, 22px); }
+  100% { transform: translate(0, 0); }
+}
+.butterfly { animation: butterflyPath 11s ease-in-out infinite; }
+.butterfly-2 { animation-duration: 9s; animation-direction: reverse; }
+
+@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.fruit-twinkle { animation: twinkle 2.4s ease-in-out infinite; }
+
+@keyframes sunGlow { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.5); opacity: 0.25; } }
+.sun-glow { animation: sunGlow 3.5s ease-in-out infinite; }
+
+@keyframes cloudDrift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(28px); } }
+.cloud-drift { animation: cloudDrift 14s ease-in-out infinite; }
+.cloud-drift-slow { animation: cloudDrift 20s ease-in-out infinite reverse; }
+
+@keyframes shimmer { 0% { transform: translateX(-120%); } 100% { transform: translateX(260%); } }
+.bar-shimmer { animation: shimmer 3s ease-in-out infinite; }
+
+@keyframes reportPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.report-pop { animation: reportPop 0.35s ease-out; }
+
+/* Người dùng bật "giảm chuyển động" trong máy thì tắt hiệu ứng */
+@media (prefers-reduced-motion: reduce) {
+  .tree-sway, .grass-sway, .firefly, .leaf-fall, .rain-drop, .soil-ripple, .butterfly,
+  .butterfly-wing, .fruit-twinkle, .sun-glow, .cloud-drift, .cloud-drift-slow, .bar-shimmer,
+  .report-pop, .animate-spin-slow {
+    animation: none !important;
+  }
+}

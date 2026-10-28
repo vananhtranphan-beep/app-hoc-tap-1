@@ -81,9 +81,10 @@ const INITIAL_7_DAYS_PLAN: DayPlan[] = [
 
 interface StudyPlanViewProps {
   userId?: string;
+  grade?: string;
 }
 
-export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId }) => {
+export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8" }) => {
   const storageKey = `user_${userId || "default"}_planner_custom`;
 
   const [days, setDays] = useState<DayPlan[]>(() => {
@@ -111,33 +112,31 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId }) => {
   }, [days, storageKey]);
 
   // Add a task row to a specific day
+  // (Tạo bản sao mới thay vì sửa trực tiếp, để không làm hỏng dữ liệu mẫu của tài khoản khác)
   const handleAddTask = (dayIdx: number) => {
-    const updated = [...days];
     const newTask: PlanTaskItem = {
-      id: "task-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4),
+      id: "task-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
       taskName: "Bài tập / Nhiệm vụ mới",
       hours: 1,
       completed: false,
     };
-    updated[dayIdx].tasks.push(newTask);
-    setDays(updated);
+    setDays((prev) => prev.map((d, i) => (i === dayIdx ? { ...d, tasks: [...d.tasks, newTask] } : d)));
   };
 
   // Update task text/hours
   const handleUpdateTask = (dayIdx: number, taskIdx: number, field: "taskName" | "hours" | "completed", val: any) => {
-    const updated = [...days];
-    updated[dayIdx].tasks[taskIdx] = {
-      ...updated[dayIdx].tasks[taskIdx],
-      [field]: val,
-    };
-    setDays(updated);
+    setDays((prev) =>
+      prev.map((d, i) =>
+        i === dayIdx ? { ...d, tasks: d.tasks.map((t, j) => (j === taskIdx ? { ...t, [field]: val } : t)) } : d
+      )
+    );
   };
 
   // Delete task row
   const handleDeleteTask = (dayIdx: number, taskIdx: number) => {
-    const updated = [...days];
-    updated[dayIdx].tasks.splice(taskIdx, 1);
-    setDays(updated);
+    setDays((prev) =>
+      prev.map((d, i) => (i === dayIdx ? { ...d, tasks: d.tasks.filter((_, j) => j !== taskIdx) } : d))
+    );
   };
 
   // Trigger AI Analysis - Trỏ thẳng về API tổng hợp /api/tutor
@@ -149,7 +148,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           days,
-          studentGrade: "8",
+          studentGrade: grade,
         }),
       });
 

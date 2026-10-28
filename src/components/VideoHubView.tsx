@@ -2,29 +2,34 @@ import React, { useState, useEffect } from "react";
 import { Video, Search, ExternalLink, Plus, Trash2, Youtube, Play, Sparkles } from "lucide-react";
 import { CustomVideoItem } from "../types";
 
+// Lấy mã video từ mọi kiểu link YouTube: watch?v=, youtu.be/, /shorts/, /embed/, /live/
 function extractYoutubeId(url: string): string {
   try {
-    const parsed = new URL(url);
-    if (parsed.hostname.includes("youtube.com")) {
-      return parsed.searchParams.get("v") || "";
-    } else if (parsed.hostname.includes("youtube.com") && parsed.pathname.startsWith("/embed/")) {
-      return parsed.pathname.split("/embed/")[1] || "";
-    } else if (parsed.hostname.includes("youtu.be")) {
-      return parsed.pathname.slice(1);
+    const parsed = new URL(url.trim());
+    const host = parsed.hostname.replace(/^www\.|^m\./, "");
+    if (host === "youtu.be") {
+      return parsed.pathname.split("/")[1] || "";
+    }
+    if (host.endsWith("youtube.com") || host.endsWith("youtube-nocookie.com")) {
+      const v = parsed.searchParams.get("v");
+      if (v) return v;
+      const match = parsed.pathname.match(/^\/(shorts|embed|live|v)\/([^/?#]+)/);
+      if (match) return match[2];
     }
   } catch {
-    // ignore
+    // link không hợp lệ
   }
   return "";
 }
 
-export const VideoHubView: React.FC = () => {
+export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Custom Videos stored in LocalStorage
+  // Mỗi tài khoản có danh sách video riêng (đọc lại danh sách chung cũ nếu chưa có)
+  const storageKey = `user_${userId || "default"}_custom_videos`;
   const [customVideos, setCustomVideos] = useState<CustomVideoItem[]>(() => {
     try {
-      const saved = localStorage.getItem("user_custom_videos");
+      const saved = localStorage.getItem(storageKey) ?? localStorage.getItem("user_custom_videos");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -32,8 +37,10 @@ export const VideoHubView: React.FC = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem("user_custom_videos", JSON.stringify(customVideos));
-  }, [customVideos]);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(customVideos));
+    } catch {}
+  }, [customVideos, storageKey]);
 
   // Form states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -154,6 +161,8 @@ export const VideoHubView: React.FC = () => {
                         src={`https://www.youtube.com/embed/${vid.youtubeId}`}
                         title={vid.title}
                         className="w-full h-full border-0"
+                        loading="lazy"
+                        allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
                     </div>

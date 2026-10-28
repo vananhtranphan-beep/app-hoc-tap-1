@@ -40,6 +40,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const updated: StudentProfile = {
+      ...profile,
       fullName,
       dob,
       grade,

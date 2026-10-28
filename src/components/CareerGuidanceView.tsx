@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Compass, Award, ChevronRight, GraduationCap, Bot, User } from "lucide-react";
+import { MathMarkdown } from "./MathMarkdown";
 import { CareerResult } from "../types";
 
 interface Message {
@@ -259,7 +260,7 @@ Hãy đóng vai trò là chuyên gia tư vấn hướng nghiệp THCS, phân tí
                           <span>AI chỉ có tính chất tham khảo</span>
                         </div>
                       )}
-                      <div className="whitespace-pre-line font-medium">{msg.content}</div>
+                      <MathMarkdown tone={msg.role === "user" ? "dark" : "light"}>{msg.content}</MathMarkdown>
                     </div>
                   </div>
                 ))}

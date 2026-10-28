@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Bot, User, Sparkles, BookOpen, RefreshCw } from "lucide-react";
+import { Send, Bot, User, Sparkles, RefreshCw, Sigma } from "lucide-react";
+import { MathMarkdown } from "./MathMarkdown";
+import { MathKeyboard } from "./MathKeyboard";
 
 interface Message {
   role: "user" | "model";
@@ -8,35 +10,53 @@ interface Message {
 
 interface AITutorViewProps {
   userId?: string;
+  grade?: string;
+  /** Câu hỏi gửi sang từ ô "Hỏi AI Tutor Nhanh" ở Trang chủ */
+  initialQuestion?: string;
+  onInitialQuestionUsed?: () => void;
 }
 
-export const AITutorView: React.FC<AITutorViewProps> = ({ userId }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "model",
-      content: "Xin chào em! Thầy/Cô là **AI Tutor** - Gia sư ảo thông minh của AI Study Hub. 🤖\nEm có thể hỏi Thầy/Cô bất kỳ bài tập hay lý thuyết môn **Toán Học** hoặc các môn học khác. Thầy/Cô sẽ giải thích từng bước rõ ràng nhất cho em!",
-    },
-  ]);
+const WELCOME: Message = {
+  role: "model",
+  content:
+    "Xin chào em! Thầy/Cô là **AI Tutor** - Gia sư ảo thông minh của AI Study Hub. 🤖\n\nEm có thể hỏi bất kỳ bài tập hay lý thuyết môn **Toán Học** hoặc các môn học khác. Với bài Toán, em bấm các nút **∑ Công thức** phía dưới để gõ phân số, căn, mũ... thật dễ dàng nhé!",
+};
+
+// Chỉ gửi những tin nhắn gần nhất để AI trả lời nhanh và không vượt giới hạn
+const MAX_HISTORY = 12;
+
+export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion, onInitialQuestionUsed }) => {
+  const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [subject, setSubject] = useState("Toán Học");
+  const [showKeyboard, setShowKeyboard] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const initialSent = useRef(false);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages, isLoading]);
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+  // Ô nhập tự cao lên khi gõ nhiều dòng
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+  }, [inputMessage]);
 
-    const userMsg = inputMessage.trim();
-    setInputMessage("");
-    const newMessages: Message[] = [...messages, { role: "user", content: userMsg }];
+  // Môn Toán / KHTN thì mở sẵn bàn phím công thức
+  useEffect(() => {
+    setShowKeyboard(subject === "Toán Học" || subject === "Khoa Học Tự Nhiên");
+  }, [subject]);
+
+  const sendMessage = async (text: string, history: Message[]) => {
+    const userMsg = text.trim();
+    if (!userMsg || isLoading) return;
+
+    const newMessages: Message[] = [...history, { role: "user", content: userMsg }];
     setMessages(newMessages);
     setIsLoading(true);
 
@@ -46,11 +66,12 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ userId }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subject,
-          messages: newMessages,
+          grade,
+          messages: newMessages.slice(-MAX_HISTORY),
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Lỗi kết nối AI");
 
       setMessages([...newMessages, { role: "model", content: data.reply }]);
@@ -64,8 +85,40 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ userId }) => {
     }
   };
 
+  // Tự gửi câu hỏi được chuyển sang từ Trang chủ
+  useEffect(() => {
+    if (initialQuestion && !initialSent.current) {
+      initialSent.current = true;
+      sendMessage(initialQuestion, [WELCOME]);
+      onInitialQuestionUsed?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuestion]);
+
+  const handleSendMessage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!inputMessage.trim() || isLoading) return;
+    const text = inputMessage;
+    setInputMessage("");
+    sendMessage(text, messages);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter = gửi, Shift + Enter = xuống dòng
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleNewChat = () => {
+    if (isLoading) return;
+    setMessages([WELCOME]);
+    setInputMessage("");
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-5xl mx-auto p-2 sm:p-4 space-y-4">
+    <div className="flex flex-col h-[calc(100vh-8rem)] min-h-[560px] max-w-5xl mx-auto p-2 sm:p-4 space-y-3">
       {/* Header Bar */}
       <div className="p-4 rounded-3xl bg-gradient-to-r from-violet-900 via-indigo-950 to-slate-900 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -92,11 +145,20 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ userId }) => {
             <option value="Lịch Sử & Địa Lý">Lịch Sử & Địa Lý</option>
             <option value="Tin Học">Tin Học</option>
           </select>
+          <button
+            type="button"
+            onClick={handleNewChat}
+            disabled={isLoading}
+            title="Bắt đầu cuộc trò chuyện mới"
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
       {/* Chat Messages Box */}
-      <div className="flex-1 overflow-y-auto p-4 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -111,7 +173,7 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ userId }) => {
             </div>
 
             <div
-              className={`max-w-[80%] p-4 rounded-3xl text-xs sm:text-sm leading-relaxed ${
+              className={`max-w-[85%] min-w-0 p-4 rounded-3xl text-sm leading-relaxed ${
                 msg.role === "user"
                   ? "bg-violet-600 text-white rounded-tr-none shadow-md"
                   : "bg-slate-50 border border-slate-200/80 text-slate-800 rounded-tl-none shadow-xs space-y-2"
@@ -123,7 +185,7 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ userId }) => {
                   <span>AI chỉ có tính chất tham khảo</span>
                 </div>
               )}
-              <div className="whitespace-pre-line font-medium">{msg.content}</div>
+              <MathMarkdown tone={msg.role === "user" ? "dark" : "light"}>{msg.content}</MathMarkdown>
             </div>
           </div>
         ))}
@@ -141,21 +203,38 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ userId }) => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Bàn phím công thức toán */}
+      {showKeyboard && (
+        <MathKeyboard textareaRef={textareaRef} value={inputMessage} onChange={setInputMessage} />
+      )}
+
       {/* Input Bar */}
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <input
-          type="text"
+      <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+        <button
+          type="button"
+          onClick={() => setShowKeyboard((v) => !v)}
+          title={showKeyboard ? "Ẩn bàn phím công thức" : "Hiện bàn phím công thức"}
+          className={`h-12 w-12 rounded-2xl border shadow-sm transition cursor-pointer flex items-center justify-center shrink-0 ${
+            showKeyboard ? "bg-violet-600 border-violet-600 text-white" : "bg-white border-slate-200 text-violet-700 hover:bg-violet-50"
+          }`}
+        >
+          <Sigma className="w-5 h-5" />
+        </button>
+        <textarea
+          ref={textareaRef}
+          rows={1}
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder={`Hỏi AI Tutor về bài tập môn ${subject}...`}
-          className="flex-1 px-4 py-3.5 rounded-2xl bg-white border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm font-medium text-slate-800"
+          onKeyDown={handleKeyDown}
+          placeholder={`Hỏi AI Tutor về bài tập môn ${subject}... (Shift + Enter để xuống dòng)`}
+          className="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm font-medium text-slate-800 resize-none leading-relaxed"
         />
         <button
           type="submit"
           disabled={isLoading || !inputMessage.trim()}
-          className="px-6 py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm shadow-md transition cursor-pointer flex items-center gap-2 shrink-0"
+          className="h-12 px-5 rounded-2xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-extrabold text-sm shadow-md transition cursor-pointer flex items-center gap-2 shrink-0"
         >
-          <span>Gửi</span>
+          <span className="hidden sm:inline">Gửi</span>
           <Send className="w-4 h-4" />
         </button>
       </form>

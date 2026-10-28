@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { MathMarkdown } from "./MathMarkdown";
 import {
   Smile,
   Heart,
@@ -17,7 +18,8 @@ import {
   Send,
   Bot,
   Droplets,
-  Sun
+  Sun,
+  X
 } from "lucide-react";
 import { MoodLog, EmotionTreeState } from "../types";
 
@@ -54,8 +56,13 @@ const RealisticEmotionTree: React.FC<{ health: number; isWatering: boolean }> = 
 
   return (
     <div className="relative w-full max-w-sm mx-auto h-64 flex items-center justify-center select-none overflow-hidden rounded-2xl bg-gradient-to-b from-sky-900/40 via-teal-950/60 to-slate-950/80 p-2 border border-emerald-500/30">
+      {/* Mây trôi nhẹ trên trời (chỉ để trang trí) */}
+      <div className="absolute top-5 left-4 w-16 h-4 rounded-full bg-white/10 blur-[1px] cloud-drift pointer-events-none" />
+      <div className="absolute top-10 left-24 w-10 h-3 rounded-full bg-white/10 blur-[1px] cloud-drift-slow pointer-events-none" />
+
       <div className={`absolute top-2 right-4 transition-all duration-700 ${isLush ? "opacity-100 scale-110" : "opacity-40 scale-90"}`}>
-        <Sun className="w-8 h-8 text-amber-300 animate-spin-slow" />
+        {isLush && <div className="absolute inset-0 rounded-full bg-amber-300/40 blur-md sun-glow" />}
+        <Sun className="relative w-8 h-8 text-amber-300 animate-spin-slow" />
       </div>
 
       {isWatering && (
@@ -101,13 +108,24 @@ const RealisticEmotionTree: React.FC<{ health: number; isWatering: boolean }> = 
         <ellipse cx="150" cy="215" rx="110" ry="18" fill="url(#soilGrad)" />
         <path d="M 50,215 Q 150,195 250,215 Q 150,230 50,215 Z" fill={isWilted ? "#854d0e" : "#15803d"} />
 
-        {!isWilted && (
-          <g fill="#22c55e">
-            <path d="M 80,210 Q 82,200 85,210 M 83,210 Q 86,198 89,210" stroke="#22c55e" strokeWidth="2" />
-            <path d="M 210,210 Q 212,200 215,210 M 213,210 Q 216,198 219,210" stroke="#22c55e" strokeWidth="2" />
+        {/* Vòng nước loang trên đất khi đang tưới */}
+        {isWatering && (
+          <g fill="none" stroke="#67e8f9" strokeWidth="1.5">
+            <ellipse className="soil-ripple" cx="120" cy="214" rx="14" ry="4" />
+            <ellipse className="soil-ripple" style={{ animationDelay: "0.4s" }} cx="180" cy="214" rx="14" ry="4" />
+            <ellipse className="soil-ripple" style={{ animationDelay: "0.8s" }} cx="150" cy="218" rx="18" ry="5" />
           </g>
         )}
 
+        {!isWilted && (
+          <g fill="#22c55e">
+            <path className="grass-sway" d="M 80,210 Q 82,200 85,210 M 83,210 Q 86,198 89,210" stroke="#22c55e" strokeWidth="2" />
+            <path className="grass-sway" style={{ animationDelay: "0.7s" }} d="M 210,210 Q 212,200 215,210 M 213,210 Q 216,198 219,210" stroke="#22c55e" strokeWidth="2" />
+          </g>
+        )}
+
+        {/* Cả thân và tán cây đung đưa nhẹ theo gió */}
+        <g className="tree-sway">
         <g id="treeTrunk">
           <path d="M 135,215 Q 140,160 125,120 Q 120,105 110,90 Q 128,100 142,118 Q 150,130 152,150 Q 155,125 170,95 Q 180,80 190,70 Q 175,85 162,108 Q 158,150 165,215 Z" fill="url(#trunkGrad)" />
           <path d="M 135,215 Q 120,222 105,225" stroke="#3a1e05" strokeWidth="4" strokeLinecap="round" />
@@ -124,10 +142,10 @@ const RealisticEmotionTree: React.FC<{ health: number; isWatering: boolean }> = 
               <circle cx="190" cy="80" r="38" fill="url(#lushFoliage)" />
               <circle cx="150" cy="65" r="45" fill="url(#lushFoliage)" />
               <circle cx="150" cy="95" r="35" fill="url(#lushFoliage)" />
-              <circle cx="120" cy="65" r="5" fill="#f43f5e" />
-              <circle cx="175" cy="70" r="5" fill="#f43f5e" />
-              <circle cx="145" cy="45" r="5.5" fill="#fbbf24" />
-              <circle cx="190" cy="95" r="5" fill="#fbbf24" />
+              <circle className="fruit-twinkle" cx="120" cy="65" r="5" fill="#f43f5e" />
+              <circle className="fruit-twinkle" style={{ animationDelay: "0.6s" }} cx="175" cy="70" r="5" fill="#f43f5e" />
+              <circle className="fruit-twinkle" style={{ animationDelay: "1.2s" }} cx="145" cy="45" r="5.5" fill="#fbbf24" />
+              <circle className="fruit-twinkle" style={{ animationDelay: "1.8s" }} cx="190" cy="95" r="5" fill="#fbbf24" />
             </>
           ) : isHealthy ? (
             <>
@@ -144,6 +162,75 @@ const RealisticEmotionTree: React.FC<{ health: number; isWatering: boolean }> = 
             </>
           )}
         </g>
+        </g>
+
+        {/* Hiệu ứng trang trí theo trạng thái cây (không ảnh hưởng chức năng) */}
+        {(isLush || isHealthy) && (
+          <g fill="#fde68a">
+            {[
+              { x: 70, y: 150, d: "0s" },
+              { x: 230, y: 140, d: "1.4s" },
+              { x: 95, y: 120, d: "2.6s" },
+              { x: 205, y: 175, d: "3.6s" },
+              ...(isLush ? [{ x: 150, y: 165, d: "0.8s" }, { x: 255, y: 110, d: "2s" }, { x: 45, y: 100, d: "3s" }] : []),
+            ].map((p, i) => (
+              <circle key={i} className="firefly" style={{ animationDelay: p.d }} cx={p.x} cy={p.y} r="2.2" opacity="0" />
+            ))}
+          </g>
+        )}
+
+        {isLush && (
+          <>
+            <g transform="translate(40 120)">
+              <g className="butterfly">
+                <path className="butterfly-wing" d="M0,0 C-8,-10 -14,-2 -6,4 Z M0,0 C8,-10 14,-2 6,4 Z" fill="#f9a8d4" />
+                <rect x="-0.8" y="-4" width="1.6" height="8" rx="0.8" fill="#831843" />
+              </g>
+            </g>
+            <g transform="translate(230 60)">
+              <g className="butterfly butterfly-2">
+                <path className="butterfly-wing" d="M0,0 C-7,-9 -12,-2 -5,3 Z M0,0 C7,-9 12,-2 5,3 Z" fill="#fde047" />
+                <rect x="-0.7" y="-3.5" width="1.4" height="7" rx="0.7" fill="#713f12" />
+              </g>
+            </g>
+          </>
+        )}
+
+        {isWilted && (
+          <g>
+            {[
+              { x: 125, y: 95, d: "0s", c: "#f59e0b" },
+              { x: 170, y: 90, d: "2.2s", c: "#d97706" },
+              { x: 148, y: 75, d: "4s", c: "#b45309" },
+            ].map((l, i) => (
+              <path
+                key={i}
+                className="leaf-fall"
+                style={{ animationDelay: l.d }}
+                d={`M ${l.x},${l.y} q 5,-6 10,0 q -5,6 -10,0 Z`}
+                fill={l.c}
+                opacity="0"
+              />
+            ))}
+          </g>
+        )}
+
+        {/* Mưa nước mát rơi xuống tán cây khi bấm tưới */}
+        {isWatering && (
+          <g stroke="#a5f3fc" strokeWidth="2" strokeLinecap="round">
+            {[95, 115, 135, 155, 175, 195, 210, 125, 165, 145].map((x, i) => (
+              <line
+                key={i}
+                className="rain-drop"
+                style={{ animationDelay: `${(i % 5) * 0.15}s` }}
+                x1={x}
+                y1={20}
+                x2={x - 2}
+                y2={30}
+              />
+            ))}
+          </g>
+        )}
       </svg>
     </div>
   );
@@ -345,11 +432,37 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
     ? Number((recent10Logs.reduce((acc, curr) => acc + curr.stressLevel, 0) / recent10Logs.length).toFixed(1))
     : 0;
 
+  // Khung báo cáo 30 ngày nằm ngay dưới cây cảm xúc
+  const reportRef = useRef<HTMLDivElement>(null);
+  const scrollToReport = () => {
+    setTimeout(() => reportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  };
+
   // HÀM GỌI API /api/tutor CHUẨN XÁC CHO PHẦN ĐÁNH GIÁ 30 NGÀY
   const handleAnalyze30Days = async () => {
     setIsAnalyzing(true);
+    scrollToReport();
     try {
-      const promptText = `Là một chuyên gia tâm lý học đường THCS, hãy đánh giá sức khỏe tâm lý 30 ngày qua của học sinh dựa trên dữ liệu điểm stress trung bình gần nhất là ${avgStress10}/5 và tổng số ${logs.length} bản ghi nhật ký cảm xúc. Đưa ra lời khuyên ngắn gọn, ấm áp bằng tiếng Việt.`;
+      // Gửi kèm dữ liệu thật của 30 ngày để AI đánh giá sát hơn
+      const days30 = getPast30Days();
+      const dateSet = new Set(days30.map((d) => d.dateStr));
+      const dailyText = days30
+        .filter((d) => dailySummaries[d.dateStr])
+        .map((d) => `${d.displayDate}: TB ${dailySummaries[d.dateStr].avgStress}/5 (${dailySummaries[d.dateStr].moodCount} lần)`)
+        .join("; ");
+      const moodCount: Record<string, number> = {};
+      logs.filter((l) => dateSet.has(l.date)).forEach((l) => {
+        moodCount[l.mood] = (moodCount[l.mood] || 0) + 1;
+      });
+      const moodText = Object.entries(moodCount).map(([m, c]) => `${m}: ${c} lần`).join(", ");
+
+      const promptText = `Đánh giá sức khỏe tâm lý 30 ngày qua của một học sinh THCS dựa trên nhật ký cảm xúc (thang áp lực 0-5):
+- Điểm áp lực trung bình 10 lần check-in gần nhất: ${avgStress10}/5
+- Tổng số lần check-in: ${logs.length}
+- Điểm trung bình từng ngày: ${dailyText || "chưa có"}
+- Số lần mỗi cảm xúc: ${moodText || "chưa có"}
+
+Hãy viết báo cáo ngắn gọn, ấm áp bằng tiếng Việt, xưng "thầy/cô" và gọi học sinh là "em", gồm: **Nhận xét chung**, **Điểm tích cực**, **Điều cần lưu ý**, và **3 lời khuyên cụ thể**. Dùng gạch đầu dòng cho dễ đọc.`;
 
       const response = await fetch("/api/tutor", {
         method: "POST",
@@ -367,6 +480,7 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
         psychologicalAssessment: data.reply,
         carePlan: "1. Thực hiện bài tập thở sâu 3 phút khi căng thẳng.\n2. Chia sẻ với bạn bè hoặc thầy cô khi gặp áp lực bài vở.\n3. Duy trì check-in cảm xúc mỗi ngày để tưới cây tinh thần."
       });
+      scrollToReport();
     } catch (err: any) {
       alert("Không thể phân tích: " + err.message);
     } finally {
@@ -476,9 +590,11 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
               </div>
               <div className="w-full bg-slate-800 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
                 <div
-                  className="bg-gradient-to-r from-amber-500 via-emerald-400 to-teal-300 h-full rounded-full transition-all duration-700"
+                  className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-emerald-400 to-teal-300 h-full rounded-full transition-all duration-700"
                   style={{ width: `${treeState.health}%` }}
-                ></div>
+                >
+                  <span className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent bar-shimmer" />
+                </div>
               </div>
               <p className="text-[11px] text-slate-400 italic">
                 Tưới cây tự động mỗi khi bạn bấm chọn cảm xúc vui vẻ & áp lực thấp!
@@ -499,6 +615,69 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
             <p className="pl-4 border-l-2 border-emerald-400 font-medium text-slate-200">
               {treeState.aiExplanation}
             </p>
+          </div>
+        )}
+      </div>
+
+      {/* BÁO CÁO AI 30 NGÀY: hiện ngay dưới cây cảm xúc */}
+      <div ref={reportRef} className="scroll-mt-24">
+        {isAnalyzing && !aiReport && (
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-50 via-rose-50 to-amber-50 border border-indigo-200 shadow-sm flex items-center gap-3">
+            <Bot className="w-6 h-6 text-indigo-600 animate-spin" />
+            <span className="text-sm font-bold text-indigo-900 animate-pulse">
+              AI đang đọc nhật ký cảm xúc 30 ngày của em để viết báo cáo...
+            </span>
+          </div>
+        )}
+
+        {aiReport && (
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-50 via-rose-50 to-amber-50 border border-indigo-200 shadow-sm space-y-4 report-pop">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>AI chỉ mang tính chất tham khảo</span>
+                </div>
+                <h4 className="font-extrabold text-indigo-950 text-base">
+                  🤖 Báo Cáo Đánh Giá AI Sức Khỏe Tâm Lý 30 Ngày
+                </h4>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleAnalyze30Days}
+                  disabled={isAnalyzing}
+                  className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-bold text-[11px] transition cursor-pointer disabled:opacity-50"
+                >
+                  {isAnalyzing ? "Đang đánh giá..." : "Đánh giá lại"}
+                </button>
+                <button
+                  onClick={() => setAiReport(null)}
+                  title="Ẩn báo cáo"
+                  className="p-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-500 transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm text-slate-800 leading-relaxed">
+              {aiReport.psychologicalAssessment && (
+                <div className="lg:col-span-2">
+                  <span className="font-bold text-indigo-900 block mb-1.5 text-xs">🔍 Đánh giá sức khỏe tâm lý:</span>
+                  <div className="bg-white/80 p-4 rounded-2xl border border-indigo-100 text-slate-800">
+                    <MathMarkdown>{aiReport.psychologicalAssessment}</MathMarkdown>
+                  </div>
+                </div>
+              )}
+              {aiReport.carePlan && (
+                <div>
+                  <span className="font-bold text-rose-900 block mb-1.5 text-xs">🌱 Kế hoạch chăm sóc tinh thần:</span>
+                  <p className="bg-white/80 p-4 rounded-2xl border border-rose-100 text-rose-950 whitespace-pre-line font-medium">
+                    {aiReport.carePlan}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -704,44 +883,12 @@ export const MoodTrackerView: React.FC<MoodTrackerViewProps> = ({ userId }) => {
                   <Bot className="w-4 h-4 text-rose-600" />
                   <span>Lời Chia Sẻ Từ Chuyên Gia Tâm Lý AI:</span>
                 </div>
-                <p className="leading-relaxed font-medium text-slate-700 whitespace-pre-line pl-4 border-l-2 border-rose-400">
-                  {counselorReply}
-                </p>
+                <div className="leading-relaxed font-medium text-slate-700 pl-4 border-l-2 border-rose-400 text-sm">
+                  <MathMarkdown>{counselorReply}</MathMarkdown>
+                </div>
               </div>
             )}
           </div>
-
-          {/* AI 30-Day Psychological Report Box */}
-          {aiReport && (
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-50 via-rose-50 to-amber-50 border border-indigo-200 shadow-sm space-y-4">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>AI chỉ mang tính chất tham khảo</span>
-              </div>
-              <h4 className="font-extrabold text-indigo-950 text-base">
-                Báo Cáo Đánh Giá AI Sức Khỏe Tâm Lý 30 Ngày
-              </h4>
-
-              <div className="space-y-3 text-xs text-slate-800 leading-relaxed">
-                {aiReport.psychologicalAssessment && (
-                  <div>
-                    <span className="font-bold text-indigo-900 block mb-1">🔍 Đánh giá sức khỏe tâm lý:</span>
-                    <p className="bg-white/80 p-3 rounded-2xl border border-indigo-100 text-slate-800 whitespace-pre-line">
-                      {aiReport.psychologicalAssessment}
-                    </p>
-                  </div>
-                )}
-                {aiReport.carePlan && (
-                  <div>
-                    <span className="font-bold text-rose-900 block mb-1">🌱 Kế hoạch chăm sóc tinh thần:</span>
-                    <p className="bg-white/80 p-3 rounded-2xl border border-rose-100 text-rose-950 whitespace-pre-line font-medium">
-                      {aiReport.carePlan}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="lg:col-span-5 space-y-6">

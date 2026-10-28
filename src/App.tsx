@@ -27,8 +27,10 @@ const INITIAL_DEMO_ACCOUNT: StudentProfile = {
 
 export default function App() {
   const [currentSection, setCurrentSection] = useState<NavSection>("home");
-  const [streakCount, setStreakCount] = useState(7);
+  const [streakCount, setStreakCount] = useState(1);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  // Câu hỏi gõ ở ô "Hỏi AI Tutor Nhanh" (Trang chủ) để chuyển sang AI Tutor
+  const [pendingQuestion, setPendingQuestion] = useState("");
 
   const [accounts, setAccounts] = useState<StudentProfile[]>(() => {
     const saved = localStorage.getItem("ai_study_hub_accounts_list");
@@ -185,7 +187,15 @@ export default function App() {
 
           {currentSection === "home" && (
             <Dashboard
-              onNavigate={(sec) => setCurrentSection(sec)}
+              onNavigate={(sec) => {
+                setCurrentSection(sec);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onAskAI={(question) => {
+                setPendingQuestion(question);
+                setCurrentSection("ai_tutor");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               streakCount={streakCount}
             />
           )}
@@ -198,23 +208,37 @@ export default function App() {
             <MoodTrackerView key={activeUserId} userId= {activeUserId} />
           )}
 
-          {currentSection === "ai_tutor" && <AITutorView />}
+          {currentSection === "ai_tutor" && (
+            <AITutorView
+              key={activeUserId}
+              userId={activeUserId}
+              grade={activeProfile.grade}
+              initialQuestion={pendingQuestion}
+              onInitialQuestionUsed={() => setPendingQuestion("")}
+            />
+          )}
 
           {currentSection === "planner" && (
-            <StudyPlanView key={activeUserId} userId={activeUserId} />
+            <StudyPlanView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />
           )}
 
           {currentSection === "progress" && (
-            <ProgressView key={activeUserId} userId={activeUserId} />
+            <ProgressView
+              key={activeUserId}
+              userId={activeUserId}
+              streakCount={streakCount}
+              grade={activeProfile.grade}
+            />
           )}
 
           {currentSection === "career" && <CareerGuidanceView />}
 
-          {currentSection === "videos" && <VideoHubView />}
+          {currentSection === "videos" && <VideoHubView key={activeUserId} userId={activeUserId} />}
         </main>
       </div>
 
       <StudentProfileModal
+        key={activeUserId}
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         profile={activeProfile}

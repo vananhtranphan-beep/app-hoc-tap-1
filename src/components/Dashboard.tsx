@@ -19,11 +19,14 @@ import { NavSection } from "../types";
 
 interface DashboardProps {
   onNavigate: (section: NavSection) => void;
+  /** Mở AI Tutor và tự gửi câu hỏi */
+  onAskAI?: (question: string) => void;
   streakCount: number;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
   onNavigate,
+  onAskAI,
   streakCount,
 }) => {
   const [quickQuestion, setQuickQuestion] = useState("");
@@ -108,11 +111,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
     },
   ];
 
+  // Chuyển sang AI Tutor KÈM câu hỏi (trước đây câu hỏi bị mất khi chuyển trang)
+  const askAI = (question: string) => {
+    if (!question.trim()) return;
+    if (onAskAI) onAskAI(question.trim());
+    else onNavigate("ai_tutor");
+  };
+
   const handleQuickAsk = (e: React.FormEvent) => {
     e.preventDefault();
-    if (quickQuestion.trim()) {
-      onNavigate("ai_tutor");
-    }
+    askAI(quickQuestion);
   };
 
   return (
@@ -161,7 +169,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">
-            9 Chức Năng Chính
+            {menuCards.length} Chức Năng Chính
           </span>
         </div>
 
@@ -220,7 +228,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               type="text"
               value={quickQuestion}
               onChange={(e) => setQuickQuestion(e.target.value)}
-              placeholder="VD: Cho em biết công thức tính phương trình bậc 2 hoặc Phân tích tác phẩm Chí Phèo..."
+              placeholder="VD: Giải phương trình 2x - 1 = 3, hoặc Phân tích nhân vật Lão Hạc..."
               className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
             />
             <button
@@ -236,19 +244,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex flex-wrap gap-2 text-xs text-slate-600 pt-1">
             <span className="font-semibold text-slate-400">Gợi ý câu hỏi:</span>
             <button
-              onClick={() => {
-                setQuickQuestion("Giải thích định luật bảo toàn khối lượng môn Hóa lớp 8");
-                onNavigate("ai_tutor");
-              }}
+              onClick={() => askAI("Giải thích định luật bảo toàn khối lượng môn Hóa lớp 8")}
               className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer"
             >
               💡 Định luật bảo toàn khối lượng
             </button>
             <button
-              onClick={() => {
-                setQuickQuestion("Cách phân biệt Thì Present Simple và Present Continuous");
-                onNavigate("ai_tutor");
-              }}
+              onClick={() => askAI("Giải phương trình $2x - 1 = 3$")}
+              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer"
+            >
+              ➗ Giải phương trình 2x − 1 = 3
+            </button>
+            <button
+              onClick={() => askAI("Cách phân biệt Thì Present Simple và Present Continuous")}
               className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer"
             >
               🇬🇧 Phân biệt Thì Tiếng Anh
