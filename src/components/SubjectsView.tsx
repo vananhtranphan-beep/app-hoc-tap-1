@@ -1,74 +1,55 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, ExternalLink, FileText, Trash2, Plus, Edit3, Check, Image as ImageIcon } from "lucide-react";
-
-const INITIAL_SYSTEM_BOOKS: { [key: string]: { id: string; name: string; url: string; imageUrl: string }[] } = {
-  "Ngữ văn": [
-    { id: "nv-6-1", name: "Ngữ Văn lớp 6 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-6-2", name: "Ngữ Văn lớp 6 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-7-1", name: "Ngữ Văn lớp 7 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-7-2", name: "Ngữ Văn lớp 7 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-8-1", name: "Ngữ Văn lớp 8 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-8-2", name: "Ngữ Văn lớp 8 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-9-1", name: "Ngữ Văn lớp 9 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-9-2", name: "Ngữ Văn lớp 9 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-nc-1", name: "Tài liệu Nâng cao Ngữ Văn 6", url: "", imageUrl: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-nc-2", name: "Tài liệu Nâng cao Ngữ Văn 7", url: "", imageUrl: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-nc-3", name: "Tài liệu Nâng cao Ngữ Văn 8", url: "", imageUrl: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=300&q=80" },
-    { id: "nv-nc-4", name: "Tài liệu Nâng cao Ngữ Văn 9", url: "", imageUrl: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=300&q=80" },
-  ],
-  "Toán": [
-    { id: "toan-6-1", name: "Toán lớp 6 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-6-2", name: "Toán lớp 6 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-7-1", name: "Toán lớp 7 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-7-2", name: "Toán lớp 7 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-8-1", name: "Toán lớp 8 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-8-2", name: "Toán lớp 8 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-9-1", name: "Toán lớp 9 - Tập 1", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-9-2", name: "Toán lớp 9 - Tập 2", url: "", imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-nc-1", name: "Tham khảo Nâng cao Toán 6", url: "", imageUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-nc-2", name: "Tham khảo Nâng cao Toán 7", url: "", imageUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-nc-3", name: "Tham khảo Nâng cao Toán 8", url: "", imageUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=300&q=80" },
-    { id: "toan-nc-4", name: "Tham khảo Nâng cao Toán 9", url: "", imageUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=300&q=80" },
-  ],
-  "Tiếng Anh": [
-    { id: "ta-6", name: "Tiếng Anh lớp 6", url: "", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
-    { id: "ta-7", name: "Tiếng Anh lớp 7", url: "", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
-    { id: "ta-8", name: "Tiếng Anh lớp 8", url: "", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
-    { id: "ta-9", name: "Tiếng Anh lớp 9", url: "", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
-  ],
-  "Khoa Học Tự Nhiên": [
-    { id: "khtn-6", name: "KHTN lớp 6", url: "", imageUrl: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=300&q=80" },
-    { id: "khtn-7", name: "KHTN lớp 7", url: "", imageUrl: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=300&q=80" },
-    { id: "khtn-8", name: "KHTN lớp 8", url: "", imageUrl: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=300&q=80" },
-    { id: "khtn-9", name: "KHTN lớp 9", url: "", imageUrl: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=300&q=80" },
-  ],
-  "Lịch Sử & Địa Lý": [
-    { id: "lsdl-6", name: "Lịch Sử & Địa Lý lớp 6", url: "", imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=300&q=80" },
-    { id: "lsdl-7", name: "Lịch Sử & Địa Lý lớp 7", url: "", imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=300&q=80" },
-    { id: "lsdl-8", name: "Lịch Sử & Địa Lý lớp 8", url: "", imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=300&q=80" },
-    { id: "lsdl-9", name: "Lịch Sử & Địa Lý lớp 9", url: "", imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=300&q=80" },
-  ],
-  "Giáo Dục Công Dân": [
-    { id: "gdcd-6", name: "GDCD lớp 6", url: "", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
-    { id: "gdcd-7", name: "GDCD lớp 7", url: "", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
-    { id: "gdcd-8", name: "GDCD lớp 8", url: "", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
-    { id: "gdcd-9", name: "GDCD lớp 9", url: "", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
-  ],
-  "Tin Học": [
-    { id: "tin-6", name: "Tin học lớp 6", url: "", imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=300&q=80" },
-    { id: "tin-7", name: "Tin học lớp 7", url: "", imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=300&q=80" },
-    { id: "tin-8", name: "Tin học lớp 8", url: "", imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=300&q=80" },
-    { id: "tin-9", name: "Tin học lớp 9", url: "", imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=300&q=80" },
-  ],
-  "Công Nghệ": [
-    { id: "cn-6", name: "Công nghệ lớp 6", url: "", imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80" },
-    { id: "cn-7", name: "Công nghệ lớp 7", url: "", imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80" },
-    { id: "cn-8", name: "Công nghệ lớp 8", url: "", imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80" },
-    { id: "cn-9", name: "Công nghệ lớp 9", url: "", imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80" },
-  ],
-};
+import { BookOpen, ExternalLink, FileText, Trash2, Plus, Edit3, Check, Upload, Copy, RotateCcw } from "lucide-react";
+import { SYSTEM_BOOKS, SystemBook } from "../data/systemBooks";
 
 const ADMIN_ID = "tranphanvananh";
+
+// Link mở thẳng trang sửa file danh sách sách trên GitHub
+const GITHUB_EDIT_URL = "https://github.com/vananhtranphan-beep/app-hoc-tap-1/edit/main/src/data/systemBooks.ts";
+
+// Bản nháp của admin (chỉ lưu trên trình duyệt của admin cho tới khi "Đăng cho học sinh")
+const ADMIN_DRAFT_KEY = "system_admin_books_draft_v11";
+const OLD_ADMIN_KEY = "system_admin_global_books_v10"; // key cũ, đọc lại để không mất link đã nhập
+
+type BooksBySubject = Record<string, SystemBook[]>;
+
+const loadAdminDraft = (): BooksBySubject | null => {
+  try {
+    const raw = localStorage.getItem(ADMIN_DRAFT_KEY) ?? localStorage.getItem(OLD_ADMIN_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+};
+
+// Tạo nội dung file src/data/systemBooks.ts từ danh sách sách hiện tại
+const buildSystemBooksFile = (books: BooksBySubject): string => {
+  const s = (v: string) => JSON.stringify(v ?? "");
+  const subjects = Object.entries(books)
+    .map(([subject, list]) => {
+      const lines = list
+        .map((b) => `    { id: ${s(b.id)}, name: ${s(b.name)}, url: ${s(b.url)}, imageUrl: ${s(b.imageUrl)} },`)
+        .join("\n");
+      return `  ${s(subject)}: [\n${lines}\n  ],`;
+    })
+    .join("\n");
+  return `// ============================================================
+// DANH SÁCH SÁCH HỆ THỐNG (tất cả học sinh đều thấy)
+// ------------------------------------------------------------
+// Cách cập nhật dễ nhất: đăng nhập web bằng tài khoản admin,
+// vào "Môn học THCS", sửa link sách, rồi bấm "Đăng cho học sinh"
+// và làm theo hướng dẫn (copy code -> dán đè vào file này -> Commit).
+//
+// Cũng có thể sửa tay: dán link Google Drive vào giữa hai dấu ""
+// sau chữ url:  ví dụ  url: "https://drive.google.com/..."
+// ============================================================
+
+export type SystemBook = { id: string; name: string; url: string; imageUrl: string };
+
+export const SYSTEM_BOOKS: Record<string, SystemBook[]> = {
+${subjects}
+};
+`;
+};
 
 export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>("Ngữ văn");
@@ -76,14 +57,17 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   const cleanId = (userId || "").toLowerCase().trim();
   const isAdmin = cleanId === ADMIN_ID;
 
-  const systemStorageKey = "system_admin_global_books_v10";
-  const [systemBooks, setSystemBooks] = useState<{ [subject: string]: { id: string; name: string; url: string; imageUrl: string }[] }>(() => {
-    const saved = localStorage.getItem(systemStorageKey);
-    if (saved) {
-      try { return JSON.parse(saved); } catch {}
-    }
-    return INITIAL_SYSTEM_BOOKS;
+  // Học sinh: luôn thấy danh sách đã đăng trong code (file systemBooks.ts)
+  // Admin: thấy bản nháp của mình (nếu có), để sửa xong rồi mới đăng
+  const [systemBooks, setSystemBooks] = useState<BooksBySubject>(() => {
+    if (isAdmin) return loadAdminDraft() || SYSTEM_BOOKS;
+    return SYSTEM_BOOKS;
   });
+
+  const hasUnpublished = isAdmin && JSON.stringify(systemBooks) !== JSON.stringify(SYSTEM_BOOKS);
+  const [showPublish, setShowPublish] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const publishCode = buildSystemBooksFile(systemBooks);
 
   const personalStorageKey = `user_${cleanId || "default"}_personal_books_v10`;
   const [personalBooks, setPersonalBooks] = useState<{ [subject: string]: { id: string; name: string; url: string; imageUrl: string }[] }>(() => {
@@ -105,8 +89,35 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   const [editImageUrl, setEditImageUrl] = useState("");
 
   useEffect(() => {
-    localStorage.setItem(systemStorageKey, JSON.stringify(systemBooks));
-  }, [systemBooks]);
+    if (!isAdmin) return;
+    try {
+      localStorage.removeItem(OLD_ADMIN_KEY);
+      if (hasUnpublished) {
+        localStorage.setItem(ADMIN_DRAFT_KEY, JSON.stringify(systemBooks));
+      } else {
+        localStorage.removeItem(ADMIN_DRAFT_KEY); // đã giống bản đăng -> không cần nháp
+      }
+    } catch {}
+  }, [systemBooks, isAdmin, hasUnpublished]);
+
+  const copyPublishCode = async () => {
+    try {
+      await navigator.clipboard.writeText(publishCode);
+    } catch {
+      const ta = document.getElementById("publish-code-box") as HTMLTextAreaElement | null;
+      ta?.select();
+      document.execCommand("copy");
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const discardDraft = () => {
+    if (!window.confirm("Bỏ hết các thay đổi chưa đăng và quay về danh sách học sinh đang thấy?")) return;
+    setSystemBooks(SYSTEM_BOOKS);
+    setEditingId(null);
+    setShowPublish(false);
+  };
 
   useEffect(() => {
     localStorage.setItem(personalStorageKey, JSON.stringify(personalBooks));
@@ -194,7 +205,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 pt-2">
-          {Object.keys(INITIAL_SYSTEM_BOOKS).map((subj) => {
+          {Object.keys(SYSTEM_BOOKS).map((subj) => {
             const isActive = selectedSubject === subj;
             return (
               <button
@@ -212,6 +223,83 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
           })}
         </div>
       </div>
+
+      {isAdmin && (
+        <div className={`p-5 rounded-3xl border shadow-sm space-y-4 ${hasUnpublished ? "bg-amber-50 border-amber-300" : "bg-emerald-50 border-emerald-300"}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p className={`font-extrabold text-sm ${hasUnpublished ? "text-amber-800" : "text-emerald-800"}`}>
+                {hasUnpublished
+                  ? "⚠️ Bạn có thay đổi CHƯA đăng: hiện chỉ trình duyệt này thấy, học sinh chưa thấy."
+                  : "✅ Học sinh đang thấy đúng danh sách sách như bạn thấy."}
+              </p>
+              <p className="text-xs text-slate-600 mt-1">
+                Sửa link xong ở các cuốn sách bên dưới → bấm "Đăng cho học sinh" để tất cả học sinh đều thấy.
+              </p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              {hasUnpublished && (
+                <button
+                  type="button"
+                  onClick={discardDraft}
+                  className="px-3 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Bỏ thay đổi</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowPublish(!showPublish)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                <Upload className="w-4 h-4" />
+                <span>{showPublish ? "Đóng hướng dẫn" : "📤 Đăng cho học sinh"}</span>
+              </button>
+            </div>
+          </div>
+
+          {showPublish && (
+            <div className="p-4 rounded-2xl bg-white border border-indigo-200 space-y-3">
+              <ol className="list-decimal pl-5 space-y-1.5 text-xs text-slate-700">
+                <li>Bấm nút <b>"Sao chép code"</b> bên dưới.</li>
+                <li>Bấm <b>"Mở file trên GitHub"</b> (cần đăng nhập GitHub). Trang sửa file sẽ mở ra.</li>
+                <li>Trong ô code của GitHub: bấm <b>Ctrl + A</b> rồi <b>Ctrl + V</b> để dán đè toàn bộ.</li>
+                <li>Bấm nút xanh <b>"Commit changes..."</b> rồi bấm <b>"Commit changes"</b> lần nữa.</li>
+                <li>Đợi 1–2 phút để Vercel cập nhật. Học sinh tải lại trang là thấy link mới.</li>
+              </ol>
+              <p className="text-[11px] text-amber-700 font-bold">
+                💡 Nhớ chia sẻ file trên Google Drive ở chế độ "Bất kỳ ai có đường liên kết" thì học sinh mới mở được.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={copyPublishCode}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <span>{copied ? "Đã sao chép!" : "Sao chép code"}</span>
+                </button>
+                <a
+                  href={GITHUB_EDIT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Mở file trên GitHub</span>
+                </a>
+              </div>
+              <textarea
+                id="publish-code-box"
+                readOnly
+                value={publishCode}
+                className="w-full h-40 p-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[10px] text-slate-600"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
