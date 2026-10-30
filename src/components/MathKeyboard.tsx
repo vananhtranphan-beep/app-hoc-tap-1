@@ -131,16 +131,16 @@ export const MathKeyboard: React.FC<MathKeyboardProps> = ({ textareaRef, value, 
   };
 
   return (
-    <div className="rounded-2xl bg-white border border-violet-200 shadow-sm p-2.5 space-y-2">
+    <div className="rounded-2xl bg-white border border-teal-soft shadow-sm p-2.5 space-y-2">
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-        <span className="text-[10px] font-extrabold text-violet-700 shrink-0 pr-1">∑ Công thức:</span>
+        <span className="text-[10px] font-extrabold text-teal-deep shrink-0 pr-1">∑ Công thức:</span>
         {GROUPS.map((g, i) => (
           <button
             key={g.name}
             type="button"
             onClick={() => setGroupIdx(i)}
             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0 transition cursor-pointer ${
-              i === groupIdx ? "bg-violet-600 text-white shadow-sm" : "bg-violet-50 text-violet-700 hover:bg-violet-100"
+              i === groupIdx ? "bg-teal text-white shadow-sm" : "bg-mist/60 text-teal-deep hover:bg-mist"
             }`}
           >
             {g.name}
@@ -157,19 +157,19 @@ export const MathKeyboard: React.FC<MathKeyboardProps> = ({ textareaRef, value, 
             aria-label={k.title}
             onPointerDown={(e) => e.preventDefault()} // giữ con trỏ trong ô nhập
             onClick={() => insertKey(k)}
-            className="math-key min-w-[2.75rem] h-10 px-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-violet-50 hover:border-violet-300 active:scale-95 text-slate-800 transition cursor-pointer flex items-center justify-center"
+            className="math-key min-w-[2.75rem] h-10 px-2 rounded-xl bg-cream border border-line hover:bg-mist/60 hover:border-teal/50 active:scale-95 text-ink transition cursor-pointer flex items-center justify-center"
             dangerouslySetInnerHTML={{ __html: renderLabel(k.label) }}
           />
         ))}
       </div>
 
       {value.includes("$") ? (
-        <div className="rounded-xl bg-violet-50/70 border border-violet-100 px-3 py-2">
-          <div className="text-[10px] font-extrabold text-violet-700 mb-0.5">👀 Xem trước:</div>
+        <div className="rounded-xl bg-mist/60 border border-line px-3 py-2">
+          <div className="text-[10px] font-extrabold text-teal-deep mb-0.5">👀 Xem trước:</div>
           <MathMarkdown className="text-sm">{value}</MathMarkdown>
         </div>
       ) : (
-        <p className="text-[10px] text-slate-500 px-1">
+        <p className="text-[10px] text-muted px-1">
           Bấm nút để chèn công thức vào chỗ con trỏ. Bôi đen chữ rồi bấm nút (VD: căn) để bọc chữ đó lại.
         </p>
       )}

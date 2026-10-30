@@ -1,92 +1,67 @@
 import React from "react";
-import { Sparkles, Zap, User, Heart, ShieldCheck, LogOut } from "lucide-react";
+import { LogOut, Cloud, CloudOff, Loader2, HardDrive } from "lucide-react";
 import { StudentProfile } from "../types";
+import { CompassLogo } from "./CompassLogo";
 
 interface HeaderProps {
-  streakCount: number;
+  /** Trạng thái lưu dữ liệu học tập lên máy chủ */
+  cloudStatus?: "local" | "saving" | "saved" | "error";
   profile: StudentProfile;
   onOpenProfile: () => void;
-  onNavigateToMood: () => void;
+  onGoHome: () => void;
   onLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  streakCount,
-  profile,
-  onOpenProfile,
-  onNavigateToMood,
-  onLogout,
-}) => {
+const CLOUD_BADGE = {
+  saved: { Icon: Cloud, text: "Đã lưu", cls: "text-teal-deep bg-teal-soft/70 border-teal-soft", title: "Dữ liệu học tập và hướng nghiệp đã lưu lên máy chủ. Nhật ký cảm xúc chỉ lưu trên máy này." },
+  saving: { Icon: Loader2, text: "Đang lưu", cls: "text-navy bg-mist border-line", title: "Đang lưu dữ liệu học tập lên máy chủ" },
+  error: { Icon: CloudOff, text: "Chưa lưu được", cls: "text-rose-700 bg-rose-50 border-rose-200", title: "Chưa lưu được lên máy chủ (có thể do mất mạng). Dữ liệu vẫn còn trên máy này." },
+  local: { Icon: HardDrive, text: "Lưu trên máy", cls: "text-muted bg-white border-line", title: "Dữ liệu chỉ lưu trên máy đang dùng" },
+};
+
+export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, onOpenProfile, onGoHome, onLogout }) => {
+  const badge = CLOUD_BADGE[cloudStatus];
+  const BadgeIcon = badge.Icon;
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 py-2.5 transition-all">
+    <header className="sticky top-0 z-30 bg-cream/90 backdrop-blur-md border-b border-line px-4 lg:px-8 py-2.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-        {/* Brand Logo */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-rose-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-indigo-200 shrink-0">
-            <Sparkles className="w-5 h-5 animate-pulse" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              {/* Trên điện thoại giữ tên web trên 1 dòng để thanh đầu trang không bị cao, che menu */}
-              <h1 className="text-base sm:text-xl font-extrabold whitespace-nowrap bg-gradient-to-r from-indigo-800 via-rose-600 to-indigo-600 bg-clip-text text-transparent">
-                AI Study Hub THCS
-              </h1>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] whitespace-nowrap">
-                Học Sinh Cấp 2
-              </span>
-            </div>
-          </div>
-        </div>
+        <button onClick={onGoHome} className="flex items-center gap-2.5 min-w-0 cursor-pointer" aria-label="Về trang chủ">
+          <CompassLogo size={36} animate />
+          <span className="text-base sm:text-lg font-extrabold text-navy whitespace-nowrap tracking-tight">AI Youth Compass</span>
+        </button>
 
-        {/* Header Quick Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Direct Mood Tracker Shortcut Button */}
-          <button
-            onClick={onNavigateToMood}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold border border-rose-200 transition shadow-sm cursor-pointer animate-bounce"
-            title="Góc Theo Dõi Tâm Lý AI #1"
-          >
-            <Heart className="w-4 h-4 text-rose-600 fill-rose-500" />
-            <span className="hidden sm:inline">Theo Dõi Tâm Lý AI</span>
-          </button>
+        <div className="flex items-center gap-2">
+          {profile.isGuest ? (
+            <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full border border-line bg-white text-xs font-semibold text-muted">
+              Chế độ khách
+            </span>
+          ) : (
+            <span title={badge.title} className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${badge.cls}`}>
+              <BadgeIcon className={`w-3.5 h-3.5 ${cloudStatus === "saving" ? "animate-spin" : ""}`} />
+              {badge.text}
+            </span>
+          )}
 
-          {/* Continuous App Entry Counter */}
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
-            <Zap className="w-4 h-4 fill-amber-500 text-amber-500" />
-            <span>Vào app liên tục: {streakCount} ngày</span>
-          </div>
-
-          {/* Student Profile Trigger Button */}
           <button
             onClick={onOpenProfile}
-            className="flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 transition cursor-pointer text-left"
+            className="flex items-center gap-2 min-h-11 p-1 pr-1 sm:pr-3 rounded-full bg-white border border-line hover:border-teal transition cursor-pointer"
+            aria-label="Hồ sơ của bạn"
           >
-            {profile.avatar ? (
-              <img
-                src={profile.avatar}
-                alt={profile.fullName}
-                className="w-8 h-8 rounded-xl object-cover border border-indigo-500"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
-                <User className="w-4 h-4" />
-              </div>
-            )}
-            <div className="hidden sm:block text-left">
-              <div className="text-xs font-extrabold text-slate-800 line-clamp-1">{profile.fullName}</div>
-              <div className="text-[10px] text-indigo-600 font-bold flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" />
-                Lớp {profile.grade} THCS
-              </div>
-            </div>
+            <span className="w-9 h-9 rounded-full bg-mist flex items-center justify-center text-lg" aria-hidden>
+              {profile.avatar}
+            </span>
+            <span className="hidden sm:block text-left leading-tight">
+              <span className="block text-xs font-bold text-navy max-w-36 truncate">{profile.nickname}</span>
+              <span className="block text-[11px] text-muted">Lớp {profile.grade}</span>
+            </span>
           </button>
 
-          {/* Logout button */}
           {onLogout && (
             <button
               onClick={onLogout}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-600 border border-slate-200 transition cursor-pointer"
-              title="Đăng xuất khỏi tài khoản"
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-line text-muted hover:text-rose-600 hover:border-rose-200 transition cursor-pointer"
+              aria-label={profile.isGuest ? "Thoát chế độ khách" : "Đăng xuất"}
+              title={profile.isGuest ? "Thoát chế độ khách" : "Đăng xuất"}
             >
               <LogOut className="w-4 h-4" />
             </button>

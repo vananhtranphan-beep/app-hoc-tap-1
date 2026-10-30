@@ -1,330 +1,199 @@
-import React, { useState } from "react";
-import { X, User, Lock, Calendar, BookOpen, Key, CheckCircle, LogOut, ShieldCheck, Sparkles, School } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { X, RefreshCw, LogOut, Check, ShieldCheck } from "lucide-react";
 import { StudentProfile } from "../types";
+import { AVATARS, generateNickname } from "../lib/profile";
 
+// ============================================================
+// HỒ SƠ ẨN DANH: biệt danh, biểu tượng, khối lớp
+// Không có họ tên thật, ngày sinh, trường lớp, mật khẩu
+// ============================================================
 interface StudentProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   profile: StudentProfile;
   onSaveProfile: (newProfile: StudentProfile) => void;
   onLogout: () => void;
-  onSwitchAccount: () => void;
+  onOpenPrivacy?: () => void;
 }
 
-export const AVATAR_OPTIONS = [
-  { id: "avatar-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80", label: "Nữ sinh năng động" },
-  { id: "avatar-2", url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80", label: "Nam sinh thông minh" },
-  { id: "avatar-3", url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80", label: "Học sinh vui vẻ" },
-  { id: "avatar-4", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80", label: "Học sinh chuyên cần" },
-];
+const GRADES: StudentProfile["grade"][] = ["6", "7", "8", "9"];
 
-export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
-  isOpen,
-  onClose,
-  profile,
-  onSaveProfile,
-  onLogout,
-  onSwitchAccount,
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [fullName, setFullName] = useState(profile.fullName);
-  const [dob, setDob] = useState(profile.dob);
-  const [grade, setGrade] = useState<"6" | "7" | "8" | "9">(profile.grade);
+export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ isOpen, onClose, profile, onSaveProfile, onLogout, onOpenPrivacy }) => {
+  const [nickname, setNickname] = useState(profile.nickname);
   const [avatar, setAvatar] = useState(profile.avatar);
-  const [studentId, setStudentId] = useState(profile.studentId);
-  const [password, setPassword] = useState(profile.password || "123456");
-  const [schoolName, setSchoolName] = useState(profile.schoolName || "THCS Nguyễn Du");
+  const [grade, setGrade] = useState(profile.grade);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  // Mỗi lần mở hộp: lấy lại hồ sơ hiện tại
+  useEffect(() => {
+    if (!isOpen) return;
+    setNickname(profile.nickname);
+    setAvatar(profile.avatar);
+    setGrade(profile.grade);
+    setSaved(false);
+    setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Bấm Esc để đóng
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeRef.current();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    const updated: StudentProfile = {
-      ...profile,
-      fullName,
-      dob,
-      grade,
-      avatar,
-      studentId,
-      password,
-      schoolName,
-      isLoggedIn: true,
-    };
-    onSaveProfile(updated);
-    setIsEditing(false);
-  };
+  const changed = nickname.trim() !== profile.nickname || avatar !== profile.avatar || grade !== profile.grade;
 
-  const handleLogout = () => {
-    const loggedOut: StudentProfile = {
-      ...profile,
-      isLoggedIn: false,
-    };
-    onSaveProfile(loggedOut);
+  const handleSave = () => {
+    const name = nickname.trim();
+    if (name.length < 2) return setError("Biệt danh cần ít nhất 2 ký tự.");
+    onSaveProfile({ ...profile, nickname: name.slice(0, 40), avatar, grade });
+    setError("");
+    setSaved(true);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
-        {/* Modal Header */}
-        <div className="p-6 bg-gradient-to-r from-indigo-900 via-blue-900 to-slate-900 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-              <User className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold">Hồ Sơ & Đăng Nhập Học Sinh THCS</h3>
-              <p className="text-xs text-indigo-200">Quản lý tài khoản học tập Cấp 2</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
-          >
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-navy-deep/50 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Hồ sơ của bạn"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full sm:max-w-md max-h-[92vh] overflow-y-auto bg-cream rounded-t-3xl sm:rounded-3xl shadow-2xl animate-rise"
+      >
+        <div className="flex items-center justify-between px-5 pt-5">
+          <h2 className="text-lg font-extrabold text-navy">Hồ sơ của bạn</h2>
+          <button onClick={onClose} className="w-11 h-11 rounded-full flex items-center justify-center text-muted hover:bg-mist cursor-pointer" aria-label="Đóng">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-          {!profile.isLoggedIn ? (
-            /* Login / Quick Register Form */
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 text-xs text-indigo-950 flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-indigo-600 shrink-0" />
-                <span>Chào mừng em đến với AI Study Hub THCS! Đăng nhập để lưu tiến độ & nhật ký tâm lý.</span>
+        <div className="p-5 space-y-5">
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-line">
+            <span className="w-16 h-16 rounded-full bg-mist flex items-center justify-center text-3xl shrink-0" aria-hidden>
+              {avatar}
+            </span>
+            <div className="min-w-0">
+              <div className="font-extrabold text-navy text-lg truncate">{nickname || profile.nickname}</div>
+              <div className="text-sm text-muted">
+                Lớp {grade} · {profile.isGuest ? "Chế độ khách" : `Tên đăng nhập: ${profile.studentId}`}
               </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Họ và Tên Học Sinh:</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="VD: Trần Nguyễn Minh Anh"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Ngày Tháng Năm Sinh:</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                    placeholder="VD: 15/08/2012"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Khối Lớp (THCS):</span>
-                  </label>
-                  <select
-                    value={grade}
-                    onChange={(e) => setGrade(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 font-bold text-indigo-700"
-                  >
-                    <option value="6">Lớp 6 (THCS)</option>
-                    <option value="7">Lớp 7 (THCS)</option>
-                    <option value="8">Lớp 8 (THCS)</option>
-                    <option value="9">Lớp 9 (THCS - Ôn thi 10)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <School className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Trường Trung Học Cơ Sở:</span>
-                </label>
-                <input
-                  type="text"
-                  value={schoolName}
-                  onChange={(e) => setSchoolName(e.target.value)}
-                  placeholder="VD: THCS Chu Văn An"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>ID Học Sinh:</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 font-mono font-bold text-slate-800"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Mật Khẩu:</span>
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
-                  />
-                </div>
-              </div>
-
-              {/* Avatar Selector */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700">Chọn Hình Đại Diện Học Sinh:</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {AVATAR_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setAvatar(opt.url)}
-                      className={`p-1.5 rounded-2xl border transition cursor-pointer flex flex-col items-center gap-1 ${
-                        avatar === opt.url
-                          ? "border-indigo-600 ring-2 ring-indigo-500 bg-indigo-50"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <img src={opt.url} alt={opt.label} className="w-12 h-12 rounded-xl object-cover" />
-                      <span className="text-[10px] font-semibold text-slate-600 text-center line-clamp-1">{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shadow-md shadow-indigo-200 cursor-pointer flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span>Đăng Nhập / Tạo Hồ Sơ Học Sinh</span>
-              </button>
-            </form>
-          ) : (
-            /* Logged In Profile View */
-            <div className="space-y-5">
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-4">
-                <img
-                  src={profile.avatar || AVATAR_OPTIONS[0].url}
-                  alt={profile.fullName}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-indigo-600 shadow-sm"
-                />
-                <div className="space-y-1">
-                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[11px]">
-                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-                    Học sinh THCS - Lớp {profile.grade}
-                  </div>
-                  <h4 className="text-lg font-extrabold text-slate-900">{profile.fullName}</h4>
-                  <p className="text-xs text-slate-500">ID: {profile.studentId} • {profile.schoolName || "THCS Nguyễn Du"}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-slate-500 block">Ngày sinh:</span>
-                  <span className="font-bold text-slate-800 text-sm">{profile.dob}</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-slate-500 block">Khối học:</span>
-                  <span className="font-bold text-indigo-700 text-sm">THCS Cấp 2 (Lớp {profile.grade})</span>
-                </div>
-              </div>
-
-              {isEditing ? (
-                <form onSubmit={handleSave} className="space-y-3 pt-2 border-t border-slate-100">
-                  <h5 className="font-bold text-xs text-slate-800">Cập nhật thông tin học sinh:</h5>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Họ tên"
-                    className="w-full px-3 py-2 rounded-xl border text-xs"
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      value={dob}
-                      onChange={(e) => setDob(e.target.value)}
-                      placeholder="Ngày sinh"
-                      className="px-3 py-2 rounded-xl border text-xs"
-                    />
-                    <select
-                      value={grade}
-                      onChange={(e) => setGrade(e.target.value as any)}
-                      className="px-3 py-2 rounded-xl border text-xs font-bold text-indigo-700"
-                    >
-                      <option value="6">Lớp 6</option>
-                      <option value="7">Lớp 7</option>
-                      <option value="8">Lớp 8</option>
-                      <option value="9">Lớp 9</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      className="flex-1 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs"
-                    >
-                      Lưu Thay Đổi
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-semibold"
-                    >
-                      Hủy
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="flex-1 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition cursor-pointer"
-                    >
-                      Chỉnh Sửa Hồ Sơ
-                    </button>
-                    <button
-                      onClick={() => {
-                        onClose();
-                        onSwitchAccount();
-                      }}
-                      className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 transition cursor-pointer"
-                    >
-                      Đổi Tài Khoản
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => {
-                      onClose();
-                      onLogout();
-                    }}
-                    className="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Đăng Xuất Khỏi Tài Khoản Hiện Tại</span>
-                  </button>
-                </div>
-              )}
             </div>
+          </div>
+
+          <label className="block space-y-1.5">
+            <span className="text-sm font-semibold text-ink">Biệt danh</span>
+            <div className="flex gap-2">
+              <input
+                value={nickname}
+                onChange={(e) => {
+                  setNickname(e.target.value);
+                  setSaved(false);
+                }}
+                maxLength={40}
+                className="flex-1 min-w-0 min-h-11 px-3.5 rounded-xl bg-white border border-line text-sm focus:outline-none focus:ring-2 focus:ring-teal"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setNickname((n) => generateNickname(n));
+                  setSaved(false);
+                }}
+                className="min-h-11 px-3 rounded-xl bg-white border border-line hover:border-teal text-navy text-sm font-semibold flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4" /> Đổi
+              </button>
+            </div>
+            <span className="block text-xs text-muted">Biệt danh chỉ để hiển thị trong web. Bạn đừng dùng tên thật nhé.</span>
+          </label>
+
+          <div className="space-y-1.5">
+            <span className="text-sm font-semibold text-ink">Biểu tượng</span>
+            <div className="flex flex-wrap gap-1.5">
+              {AVATARS.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => {
+                    setAvatar(a);
+                    setSaved(false);
+                  }}
+                  aria-label={`Biểu tượng ${a}`}
+                  className={`w-11 h-11 rounded-full text-xl flex items-center justify-center border transition cursor-pointer ${
+                    avatar === a ? "border-teal bg-teal-soft" : "border-line bg-white hover:border-teal"
+                  }`}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <span className="text-sm font-semibold text-ink">Khối lớp</span>
+            <div className="grid grid-cols-4 gap-2">
+              {GRADES.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => {
+                    setGrade(g);
+                    setSaved(false);
+                  }}
+                  className={`min-h-11 rounded-xl border text-sm font-bold transition cursor-pointer ${
+                    grade === g ? "bg-navy border-navy text-cream" : "bg-white border-line text-ink hover:border-teal"
+                  }`}
+                >
+                  Lớp {g}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && <p className="text-sm text-rose-700 font-medium">{error}</p>}
+          {saved && !changed && (
+            <p role="status" className="text-sm text-teal-deep font-semibold flex items-center gap-1.5">
+              <Check className="w-4 h-4" /> Đã lưu hồ sơ.
+            </p>
           )}
+
+          <button
+            onClick={handleSave}
+            disabled={!changed}
+            className="w-full min-h-12 rounded-xl bg-teal hover:bg-teal-deep disabled:bg-line disabled:text-muted disabled:cursor-not-allowed text-white font-bold text-sm transition cursor-pointer"
+          >
+            Lưu thay đổi
+          </button>
+
+          <p className="flex items-start gap-1.5 text-xs text-muted">
+            <ShieldCheck className="w-4 h-4 text-teal shrink-0" />
+            {profile.isGuest
+              ? "Chế độ khách: mọi dữ liệu chỉ lưu trên máy này. Đổi máy hoặc xóa lịch sử trình duyệt sẽ mất dữ liệu."
+              : "Hồ sơ chỉ gồm tên đăng nhập, biệt danh, biểu tượng và khối lớp. Nhật ký cảm xúc không được gửi lên máy chủ."}
+          </p>
+
+          {onOpenPrivacy && (
+            <button
+              onClick={onOpenPrivacy}
+              className="w-full min-h-11 rounded-xl border border-line bg-white hover:border-teal text-navy text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-2"
+            >
+              <ShieldCheck className="w-4 h-4 text-teal" /> Quyền riêng tư, mã PIN và xóa dữ liệu
+            </button>
+          )}
+
+          <button
+            onClick={onLogout}
+            className="w-full min-h-11 rounded-xl border border-line bg-white hover:border-rose-200 hover:text-rose-700 text-muted text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            {profile.isGuest ? "Thoát chế độ khách" : "Đăng xuất"}
+          </button>
         </div>
       </div>
     </div>

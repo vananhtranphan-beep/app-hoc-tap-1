@@ -94,26 +94,9 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
         // default
       }
     }
-    return INITIAL_SUBJECTS.map((s) => ({
-      subjectId: s.id,
-      subjectName: s.name,
-      hk1: {
-        tx1: 8,
-        tx2: 8.5,
-        tx3: s.txCount >= 3 ? 9 : null,
-        tx4: s.txCount >= 4 ? 8 : null,
-        gk: 8.5,
-        ck: 9.0
-      },
-      hk2: {
-        tx1: 8.5,
-        tx2: 9,
-        tx3: s.txCount >= 3 ? 8.5 : null,
-        tx4: s.txCount >= 4 ? 9 : null,
-        gk: 9.0,
-        ck: 9.5
-      }
-    }));
+    // Tài khoản mới: bảng điểm trống (không có điểm mẫu)
+    const empty = { tx1: null, tx2: null, tx3: null, tx4: null, gk: null, ck: null };
+    return INITIAL_SUBJECTS.map((s) => ({ subjectId: s.id, subjectName: s.name, hk1: { ...empty }, hk2: { ...empty } }));
   });
 
   // Save to localStorage
@@ -171,8 +154,11 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
     : 0;
 
   // Trigger AI Evaluation using /api/tutor endpoint
+  const hasGrades = validFullYearAvgs.length > 0;
+  const gpaText = hasGrades ? overallGPA : "—";
+
   const handleEvaluateProgressWithAI = async () => {
-    if (isEvaluating) return;
+    if (isEvaluating || !hasGrades) return;
     setIsEvaluating(true);
 
     const summaryText = subjectAverages
@@ -220,35 +206,36 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
   return (
     <div className="space-y-6 pb-12">
       {/* Top Banner Header */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-cyan-900 via-blue-950 to-slate-900 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-6 rounded-2xl bg-navy text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/30 text-cyan-200 text-xs font-bold border border-cyan-400/30">
-            <TrendingUp className="w-3.5 h-3.5 text-cyan-300" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal/30 text-mist text-xs font-bold border border-teal/40">
+            <TrendingUp className="w-3.5 h-3.5 text-teal-soft" />
             <span>Sổ Điểm Điện Tử & Bảng Tính Điểm Chuẩn THCS ⭐</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             📈 Theo Dõi Bảng Điểm & Tiến Độ Học Tập
           </h2>
-          <p className="text-xs sm:text-sm text-cyan-100 leading-relaxed">
+          <p className="text-xs sm:text-sm text-mist leading-relaxed">
             Nhập 4 cột điểm Thường xuyên (x1), 1 cột Giữa kỳ (x2), 1 cột Cuối kỳ (x3) cho 2 Học Kỳ. Hệ thống tự tính chính xác ĐTB Học Kỳ và ĐTB Cả Năm!
           </p>
         </div>
 
         <button
           onClick={handleEvaluateProgressWithAI}
-          disabled={isEvaluating}
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-cyan-900/50 transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-cyan-300/30 disabled:opacity-50"
+          disabled={isEvaluating || !hasGrades}
+          title={hasGrades ? undefined : "Nhập điểm trước để AI đánh giá"}
+          className="px-6 py-3.5 rounded-2xl bg-teal hover:bg-teal-deep text-white font-extrabold text-xs sm:text-sm shadow-lg transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-teal/50 disabled:opacity-50"
         >
           <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
-          <span>{isEvaluating ? "AI Đang Phân Tích..." : "🤖 AI Đánh Giá Bảng Điểm"}</span>
+          <span>{isEvaluating ? "AI Đang Phân Tích..." : hasGrades ? "🤖 AI Đánh Giá Bảng Điểm" : "Nhập điểm để AI đánh giá"}</span>
         </button>
       </div>
 
       {/* KPI Stats Bar (Đã bỏ mục tiêu đặt ra, giữ lại 2 cột cân đối) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Streak Checkin */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+        <div className="p-5 rounded-2xl bg-white border border-line shadow-sm space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-muted">
             <span>Ngày Vào App Liên Tục</span>
             <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
           </div>
@@ -264,13 +251,13 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
         </div>
 
         {/* Overall GPA */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+        <div className="p-5 rounded-2xl bg-white border border-line shadow-sm space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-muted">
             <span>ĐTB Trung Bình Cả Năm</span>
-            <Award className="w-4 h-4 text-indigo-600" />
+            <Award className="w-4 h-4 text-teal-deep" />
           </div>
-          <div className="text-3xl font-extrabold text-indigo-700">{overallGPA}</div>
-          <div className="text-[11px] text-slate-500 font-medium">
+          <div className="text-3xl font-extrabold text-teal-deep">{gpaText}</div>
+          <div className="text-[11px] text-muted font-medium">
             Tự động tính từ các môn học tính điểm THCS
           </div>
         </div>
@@ -278,26 +265,26 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
 
       {/* AI Evaluation Report Box (Giao diện hiển thị kết quả giống khung chat AI Tutor) */}
       {(messages.length > 0 || isEvaluating) && (
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 border border-cyan-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-cyan-200/80 pb-3">
+        <div className="p-6 rounded-2xl bg-mist border border-teal-soft shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-teal-soft/80 pb-3">
             <div className="flex items-center gap-2">
-              <Bot className="w-5 h-5 text-cyan-700" />
-              <h3 className="font-extrabold text-cyan-950 text-base">
+              <Bot className="w-5 h-5 text-teal-deep" />
+              <h3 className="font-extrabold text-navy text-base">
                 Báo Cáo Phân Tích & Đánh Giá Từ AI Tutor
               </h3>
             </div>
-            <span className="px-3 py-0.5 rounded-full bg-cyan-200 text-cyan-900 font-bold text-xs">
-              ĐTB Tổng Cả Năm: {overallGPA}
+            <span className="px-3 py-0.5 rounded-full bg-teal-soft text-navy font-bold text-xs">
+              ĐTB Tổng Cả Năm: {gpaText}
             </span>
           </div>
 
           <div className="space-y-4">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${msg.role === "user" ? "bg-indigo-600 text-white" : "bg-slate-900 text-cyan-400"}`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${msg.role === "user" ? "bg-teal text-white" : "bg-navy text-teal"}`}>
                   {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                 </div>
-                <div className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${msg.role === "user" ? "bg-indigo-600 text-white rounded-tr-none" : "bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs space-y-2"}`}>
+                <div className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${msg.role === "user" ? "bg-teal text-white rounded-tr-none" : "bg-white border border-line text-ink rounded-tl-none shadow-xs space-y-2"}`}>
                   {msg.role === "model" && (
                     <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold">
                       <Sparkles className="w-3 h-3 text-amber-600" />
@@ -311,10 +298,10 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
 
             {isEvaluating && (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-slate-900 text-cyan-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-navy text-teal flex items-center justify-center">
                   <Bot className="w-4 h-4 animate-spin" />
                 </div>
-                <div className="p-4 rounded-2xl bg-white border border-slate-200 text-xs text-slate-500 font-bold animate-pulse">
+                <div className="p-4 rounded-2xl bg-white border border-line text-xs text-muted font-bold animate-pulse">
                   AI Tutor đang phân tích bảng điểm của em...
                 </div>
               </div>
@@ -325,23 +312,23 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
       )}
 
       {/* Formula Explanation Banner */}
-      <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="p-4 rounded-2xl bg-mist/60 border border-teal-soft text-xs text-navy flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Info className="w-5 h-5 text-indigo-600 shrink-0" />
+          <Info className="w-5 h-5 text-teal-deep shrink-0" />
           <div>
             <span className="font-bold">Công thức tính điểm chuẩn Bộ Giáo Dục:</span>
-            <p className="text-[11px] text-indigo-700 mt-0.5">
+            <p className="text-[11px] text-teal-deep mt-0.5">
               ĐTB Học Kỳ = (Cột Thường Xuyên × 1 + Giữa Kỳ × 2 + Cuối Kỳ × 3) ÷ Tổng Trọng Số. | ĐTB Cả Năm = (ĐTB HK1 + ĐTB HK2 × 2) ÷ 3.
             </p>
           </div>
         </div>
 
         {/* Tab Selector: HK1 vs HK2 vs Full Year Summary */}
-        <div className="flex bg-white p-1 rounded-xl border border-indigo-200 shrink-0">
+        <div className="flex bg-white p-1 rounded-xl border border-teal-soft shrink-0">
           <button
             onClick={() => setActiveSemTab("hk1")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-              activeSemTab === "hk1" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
+              activeSemTab === "hk1" ? "bg-teal text-white shadow-sm" : "text-muted hover:bg-mist"
             }`}
           >
             Học Kỳ 1
@@ -349,7 +336,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
           <button
             onClick={() => setActiveSemTab("hk2")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-              activeSemTab === "hk2" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
+              activeSemTab === "hk2" ? "bg-teal text-white shadow-sm" : "text-muted hover:bg-mist"
             }`}
           >
             Học Kỳ 2
@@ -357,7 +344,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
           <button
             onClick={() => setActiveSemTab("full")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-              activeSemTab === "full" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
+              activeSemTab === "full" ? "bg-teal text-white shadow-sm" : "text-muted hover:bg-mist"
             }`}
           >
             Tổng Kết Cả Năm
@@ -366,10 +353,10 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
       </div>
 
       {/* DETAILED GRADES TABLE ACCORDING TO FORMULA */}
-      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-indigo-600" />
+      <div className="p-6 rounded-2xl bg-white border border-line shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-line pb-3">
+          <h3 className="font-extrabold text-navy text-base flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-teal-deep" />
             <span>
               {activeSemTab === "hk1"
                 ? "Bảng Điểm Chi Tiết - Học Kỳ 1"
@@ -379,8 +366,8 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
             </span>
           </h3>
 
-          <span className="text-xs font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-            ĐTB Cả Năm Tổng: {overallGPA}
+          <span className="text-xs font-extrabold text-teal-deep bg-mist/60 px-3 py-1 rounded-full border border-line">
+            ĐTB Cả Năm Tổng: {gpaText}
           </span>
         </div>
 
@@ -388,7 +375,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider">
+              <tr className="bg-mist text-ink font-bold uppercase tracking-wider">
                 <th className="p-3 rounded-l-xl">Môn Học</th>
 
                 {activeSemTab !== "full" ? (
@@ -397,17 +384,17 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
                     <th className="p-2 text-center">TX 2 (x1)</th>
                     <th className="p-2 text-center">TX 3 (x1)</th>
                     <th className="p-2 text-center">TX 4 (x1)</th>
-                    <th className="p-2 text-center bg-indigo-50 text-indigo-900">Giữa Kỳ (x2)</th>
-                    <th className="p-2 text-center bg-purple-50 text-purple-900">Cuối Kỳ (x3)</th>
-                    <th className="p-3 text-center rounded-r-xl bg-slate-800 text-white">
+                    <th className="p-2 text-center bg-mist/60 text-navy">Giữa Kỳ (x2)</th>
+                    <th className="p-2 text-center bg-mist/60 text-navy">Cuối Kỳ (x3)</th>
+                    <th className="p-3 text-center rounded-r-xl bg-navy-soft text-white">
                       ĐTB {activeSemTab === "hk1" ? "Học Kỳ 1" : "Học Kỳ 2"}
                     </th>
                   </>
                 ) : (
                   <>
-                    <th className="p-3 text-center bg-indigo-50 text-indigo-900">ĐTB Học Kỳ 1</th>
-                    <th className="p-3 text-center bg-purple-50 text-purple-900">ĐTB Học Kỳ 2 (x2)</th>
-                    <th className="p-3 text-center rounded-r-xl bg-slate-900 text-amber-300 font-black text-sm">
+                    <th className="p-3 text-center bg-mist/60 text-navy">ĐTB Học Kỳ 1</th>
+                    <th className="p-3 text-center bg-mist/60 text-navy">ĐTB Học Kỳ 2 (x2)</th>
+                    <th className="p-3 text-center rounded-r-xl bg-navy text-amber-300 font-black text-sm">
                       ĐTB Cả Năm
                     </th>
                   </>
@@ -415,7 +402,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100 font-medium">
+            <tbody className="divide-y divide-line font-medium">
               {records.map((r, idx) => {
                 const hk1Avg = subjectAverages[idx].hk1Avg;
                 const hk2Avg = subjectAverages[idx].hk2Avg;
@@ -426,12 +413,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount 
                 const sConf = INITIAL_SUBJECTS.find((s) => s.id === r.subjectId) || INITIAL_SUBJECTS[idx] || { txCount: 4 };
 
                 return (
-                  <tr key={r.subjectId} className="hover:bg-slate-50 transition">
-                    <td className="p-3 font-extrabold text-slate-900 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <tr key={r.subjectId} className="hover:bg-cream transition">
+                    <td className="p-3 font-extrabold text-navy flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-teal-deep shrink-0" />
                       <div>
                         <div>{r.subjectName}</div>
-                        <div className="text-[10px] text-slate-400 font-normal">
+                        <div className="text-[10px] text-muted font-normal">
                           {sConf.txCount} cột Thường Xuyên
                         </div>
                       </div>
@@ -474,10 +461,10 @@ function activeTabDetail(
   if (activeSemTab === "full") {
     return (
       <>
-        <td className="p-3 text-center font-bold text-slate-800 bg-indigo-50/50">
+        <td className="p-3 text-center font-bold text-ink bg-mist/60">
           {hk1Avg !== null ? hk1Avg : "—"}
         </td>
-        <td className="p-3 text-center font-bold text-slate-800 bg-purple-50/50">
+        <td className="p-3 text-center font-bold text-ink bg-mist/60">
           {hk2Avg !== null ? hk2Avg : "—"}
         </td>
         <td className="p-3 text-center font-black text-sm">
@@ -486,10 +473,10 @@ function activeTabDetail(
               fullAvg && fullAvg >= 8.0
                 ? "bg-emerald-100 text-emerald-800"
                 : fullAvg && fullAvg >= 6.5
-                ? "bg-blue-100 text-blue-800"
+                ? "bg-mist text-navy"
                 : fullAvg
                 ? "bg-amber-100 text-amber-800"
-                : "bg-slate-100 text-slate-500"
+                : "bg-mist text-muted"
             }`}
           >
             {fullAvg !== null ? fullAvg : "—"}
@@ -519,7 +506,7 @@ function activeTabDetail(
 
         if (isDisabledTx) {
           return (
-            <td key={colKey} className="p-2 text-center bg-slate-50/50 text-slate-300 font-bold select-none">
+            <td key={colKey} className="p-2 text-center bg-cream/50 text-mist font-bold select-none">
               —
             </td>
           );
@@ -529,7 +516,7 @@ function activeTabDetail(
           <td
             key={colKey}
             className={`p-2 text-center ${
-              isGk ? "bg-indigo-50/60" : isCk ? "bg-purple-50/60" : ""
+              isGk ? "bg-mist/60" : isCk ? "bg-mist/60" : ""
             }`}
           >
             <input
@@ -540,13 +527,13 @@ function activeTabDetail(
               value={val !== null ? val : ""}
               onChange={(e) => handleScoreChange(idx, semKey, colKey, e.target.value)}
               placeholder="0"
-              className="w-12 px-1.5 py-1 rounded-lg border border-slate-200 bg-white text-center font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-12 px-1.5 py-1 rounded-lg border border-line bg-white text-center font-bold text-navy focus:outline-none focus:ring-2 focus:ring-teal"
             />
           </td>
         );
       })}
 
-      <td className="p-3 text-center font-black text-xs bg-slate-800 text-white">
+      <td className="p-3 text-center font-black text-xs bg-navy-soft text-white">
         {currentAvg !== null ? currentAvg : "—"}
       </td>
     </>

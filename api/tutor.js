@@ -1,4 +1,5 @@
 import Groq from "groq-sdk";
+import { detectSafety, SAFETY_REPLY } from "./_safety.js";
 
 // ============================================================
 // MODEL AI ĐANG DÙNG (của Groq)
@@ -18,15 +19,37 @@ const FORMAT_NOTE =
     "Viết MỌI công thức toán bằng LaTeX: công thức trong dòng đặt giữa $...$ (ví dụ $2x - 1 = 3$), công thức riêng một dòng đặt giữa $$...$$. " +
     "Không dùng \\( \\) hoặc \\[ \\]. Học sinh có thể gửi công thức LaTeX đặt giữa dấu $.";
 
+// Góc tâm sự: AI đồng hành cảm xúc (KHÔNG chẩn đoán, KHÔNG thay thế chuyên gia)
+function counselorPersona(lop) {
+    return `Bạn là "người bạn đồng hành" trong Góc tâm sự của một ứng dụng dành cho học sinh ${lop}. Xưng "mình", gọi học sinh là "bạn", nói tiếng Việt tự nhiên, ấm áp, câu ngắn.
+Cách trò chuyện:
+1. Lắng nghe điều bạn ấy chủ động chia sẻ; nhắc lại ngắn gọn để bạn ấy thấy được lắng nghe; công nhận cảm xúc, không phán xét, không chế giễu, không phủ nhận.
+2. Phân biệt rõ điều bạn ấy đã kể với điều bạn chỉ đang đoán (dùng "có thể", "mình chưa biết chắc").
+3. Đặt MỘT câu hỏi mở ngắn để bạn ấy tự hiểu mình hơn, hoặc hỏi bạn ấy muốn kể thêm hay muốn thử một cách cho dễ chịu hơn.
+4. Nếu bạn ấy muốn, gợi ý 1–2 việc nhỏ, thực tế, hợp tuổi THCS. Tôn trọng khi bạn ấy không muốn nghe lời khuyên.
+Không được: chẩn đoán trầm cảm, rối loạn lo âu hay bất kỳ bệnh nào; chấm điểm sức khỏe tâm thần; tự nhận là chuyên gia, bác sĩ hay thay thế người lớn; ép bạn ấy kể chuyện riêng tư; nói kiểu "chắc chắn sẽ ổn", "chỉ cần suy nghĩ tích cực"; khiến bạn ấy nghĩ chỉ có AI hiểu mình. Thỉnh thoảng nhắc nhẹ rằng bố mẹ, thầy cô, bạn bè tin cậy cũng có thể lắng nghe.
+Không dùng tiêu đề, không viết dài quá 120 chữ.`;
+}
+
 // Chọn vai trò AI theo chức năng đang dùng
 function tutorPersona(subject, grade) {
     const lop = grade ? `lớp ${grade}` : "THCS";
     const s = String(subject || "");
-    if (/tâm lý|tâm sự/i.test(s)) {
-        return `Bạn là chuyên gia tâm lý học đường ân cần, thấu cảm với học sinh ${lop}. Trả lời bằng tiếng Việt, ấm áp, ngắn gọn, xưng "thầy/cô" và gọi học sinh là "em".`;
+    if (/tâm sự/i.test(s)) {
+        return counselorPersona(lop);
+    }
+    if (/tâm lý/i.test(s)) {
+        return `Bạn là chuyên gia tâm lý học đường ân cần, thấu cảm với học sinh ${lop}. Trả lời bằng tiếng Việt, ấm áp, ngắn gọn, xưng "thầy/cô" và gọi học sinh là "em". Luôn mở đầu bằng sự ghi nhận và đồng cảm với cảm xúc của em trước khi nhận xét hay khuyên.`;
     }
     if (/hướng nghiệp/i.test(s)) {
-        return `Bạn là chuyên gia tư vấn hướng nghiệp cho học sinh THCS Việt Nam (${lop}). Trả lời bằng tiếng Việt, cụ thể, thực tế.`;
+        return `Bạn là người đồng hành hướng nghiệp cho học sinh ${lop} Việt Nam, trò chuyện nhiều lượt. Xưng "mình", gọi học sinh là "bạn", trả lời bằng tiếng Việt, ngắn gọn, dễ hiểu.
+Quy tắc bắt buộc:
+- Tin nhắn đầu tiên có bản tóm tắt sở thích (mô hình RIASEC của Holland) và DANH MỤC NGHỀ ĐƯỢC PHÉP GỢI Ý. Chỉ gợi ý nghề có trong danh mục đó. Nếu học sinh hỏi về nghề ngoài danh mục, có thể giải thích chung nhưng nói rõ nghề đó chưa có trong danh mục của web.
+- Không bịa số liệu (lương, điểm chuẩn, tỉ lệ việc làm, tên trường cụ thể). Nếu học sinh hỏi, khuyên hỏi thầy cô hoặc tra trang chính thức của trường.
+- Mỗi gợi ý phải kèm lý do dựa trên điều học sinh đã chọn. Phân biệt rõ điều học sinh đã nói với điều bạn đang đoán; dùng "có thể", "bạn thử xem" khi chưa chắc.
+- Không khẳng định nghề nào là lựa chọn chắc chắn đúng. Không suy diễn IQ, bệnh lý, tính cách hay giá trị của học sinh.
+- Nhấn mạnh: chưa cần chọn nghề ngay, sở thích có thể thay đổi; khuyến khích thử hoạt động trải nghiệm và hỏi thầy cô, bố mẹ.
+- Kết thúc bằng một câu hỏi mở ngắn để học sinh hỏi tiếp nếu muốn.`;
     }
     if (/đánh giá học tập/i.test(s)) {
         return `Bạn là gia sư AI phân tích kết quả học tập cho học sinh ${lop} Việt Nam. Trả lời bằng tiếng Việt, động viên và cụ thể.`;
@@ -61,8 +84,9 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { subject = "Toán Học", grade, messages = [], days, mood, stressLevel, description, logs, story } = req.body || {};
-        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+        const { subject = "Toán Học", grade, messages = [], days } = req.body || {};
+        // Tạo kết nối AI khi thật sự cần (để lớp an toàn vẫn chạy kể cả khi chưa có khóa AI)
+        const groq = () => new Groq({ apiKey: process.env.GROQ_API_KEY });
 
         let systemInstruction = "Bạn là AI Tutor - Gia sư ảo thông minh, thân thiện dành cho học sinh THCS.";
         let promptContent = "";
@@ -72,17 +96,6 @@ export default async function handler(req, res) {
             systemInstruction = "Bạn là Chuyên gia tư vấn phương pháp học tập thông minh cho học sinh THCS Việt Nam.";
             promptContent = `Hãy phân tích thời khóa biểu tuần sau đây và đưa ra đánh giá, lời khuyên tối ưu hóa: ${JSON.stringify(days)}.
             Trả về kết quả dưới dạng JSON thuần túy gồm 3 trường: summary (đánh giá chung), recommendations (mảng các lời khuyên), encouragementQuote (câu danh ngôn động viên).`;
-        }
-        // Trường hợp 2: Đánh giá tâm lý / Cảm xúc
-        else if (mood || logs) {
-            systemInstruction = "Bạn là Chuyên gia tâm lý học đường thân thiện, thấu cảm với học sinh cấp 2.";
-            promptContent = `Học sinh check-in cảm xúc: ${mood}, mức độ áp lực hiện tại: ${stressLevel}/5. Ghi chú: ${description || "Không có"}. Dữ liệu các ngày qua: ${JSON.stringify(logs || [])}.
-            Hãy trả về JSON thuần túy gồm: psychologicalAssessment (đánh giá tâm lý) và carePlan (kế hoạch chăm sóc tinh thần).`;
-        }
-        // Trường hợp 3: Chat tư vấn tâm lý (Góc SOS)
-        else if (story) {
-            systemInstruction = "Bạn là Chuyên gia tư vấn tâm lý học đường ân cần, luôn lắng nghe và an ủi học sinh.";
-            promptContent = `Học sinh tâm sự: "${story}". Hãy đưa ra lời khuyên nhẹ nhàng, ấm áp và chân thành nhất bằng tiếng Việt.`;
         }
         // Trường hợp 4: Chat gia sư thông thường (AI Tutor)
         else {
@@ -97,21 +110,23 @@ export default async function handler(req, res) {
             if (chatHistory.length === 0) {
                 return res.status(400).json({ error: "Chưa có câu hỏi nào được gửi." });
             }
+            // Góc tâm sự: tin nhắn có dấu hiệu nguy hiểm → KHÔNG gọi AI, trả lời hỗ trợ cố định
+            if (/tâm sự/i.test(String(subject))) {
+                const lastUser = [...chatHistory].reverse().find((m) => m.role === "user");
+                const danger = lastUser ? detectSafety(lastUser.content) : null;
+                if (danger) return res.status(200).json({ reply: SAFETY_REPLY[danger], safety: danger });
+            }
             chatHistory.unshift({ role: "system", content: tutorPersona(subject, grade) + FORMAT_NOTE + SAFETY_NOTE });
 
-            const reply = await askAI(groq, chatHistory);
+            const reply = await askAI(groq(), chatHistory);
             return res.status(200).json({ reply });
         }
 
         // Xử lý các request phân tích trả về JSON
-        const textResult = await askAI(groq, [
-            { role: "system", content: systemInstruction + (story ? FORMAT_NOTE : " Trả về kết quả hoàn toàn bằng định dạng JSON nếu được yêu cầu.") + SAFETY_NOTE },
+        const textResult = await askAI(groq(), [
+            { role: "system", content: systemInstruction + " Trả về kết quả hoàn toàn bằng định dạng JSON nếu được yêu cầu." + SAFETY_NOTE },
             { role: "user", content: promptContent }
         ]);
-
-        if (story) {
-            return res.status(200).json({ reply: textResult });
-        }
 
         try {
             const jsonStart = textResult.indexOf('{');

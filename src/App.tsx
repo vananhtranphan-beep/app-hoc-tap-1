@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "./components/Header";
-import { Navigation } from "./components/Navigation";
+import { Navigation, STUDY_SECTIONS } from "./components/Navigation";
 import { Dashboard } from "./components/Dashboard";
 import { SubjectsView } from "./components/SubjectsView";
 import { AITutorView } from "./components/AITutorView";
@@ -9,205 +9,265 @@ import { ProgressView } from "./components/ProgressView";
 import { MoodTrackerView } from "./components/MoodTrackerView";
 import { CareerGuidanceView } from "./components/CareerGuidanceView";
 import { VideoHubView } from "./components/VideoHubView";
+import { StudyHubView } from "./components/StudyHubView";
+import { PrivacyView } from "./components/PrivacyView";
 import { StudentProfileModal } from "./components/StudentProfileModal";
 import { AuthScreen } from "./components/AuthScreen";
+import { CompassLogo } from "./components/CompassLogo";
 import { NavSection, StudentProfile } from "./types";
 import { ArrowLeft } from "lucide-react";
+import { cloud, CloudStatus } from "./lib/cloud";
+import { GUEST_ID, generateNickname, randomAvatar, needsCleanup, publicProfile, sanitizeProfile } from "./lib/profile";
 
-const INITIAL_DEMO_ACCOUNT: StudentProfile = {
-  fullName: "Trần Nguyễn Minh Anh",
-  dob: "15/08/2012",
-  grade: "8",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  studentId: "minhanh2026",
-  password: "123",
-  schoolName: "THCS Chu Văn An",
-  isLoggedIn: true,
+const ACCOUNTS_KEY = "ai_study_hub_accounts_list";
+const ACTIVE_KEY = "ai_study_hub_active_user_id";
+
+const safeGet = (k: string) => {
+  try {
+    return localStorage.getItem(k);
+  } catch {
+    return null;
+  }
 };
+const safeSet = (k: string, v: string) => {
+  try {
+    localStorage.setItem(k, v);
+  } catch {}
+};
+
+// Tài khoản trên máy: đọc lại và làm sạch (bỏ họ tên, ngày sinh, trường của bản cũ; bỏ tài khoản mẫu)
+function loadAccounts(): StudentProfile[] {
+  try {
+    const parsed = JSON.parse(safeGet(ACCOUNTS_KEY) || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((a: any) => a && typeof a.studentId === "string" && a.studentId.trim())
+      .filter((a: any) => !(a.studentId === "minhanh2026" && a.password === "123")) // tài khoản mẫu cũ
+      .map(sanitizeProfile);
+  } catch {
+    return [];
+  }
+}
 
 export default function App() {
   const [currentSection, setCurrentSection] = useState<NavSection>("home");
   const [streakCount, setStreakCount] = useState(1);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  // Câu hỏi gõ ở ô "Hỏi AI Tutor Nhanh" (Trang chủ) để chuyển sang AI Tutor
   const [pendingQuestion, setPendingQuestion] = useState("");
 
-  const [accounts, setAccounts] = useState<StudentProfile[]>(() => {
-    const saved = localStorage.getItem("ai_study_hub_accounts_list");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch { }
-    }
-    return [INITIAL_DEMO_ACCOUNT];
-  });
-
+  const [accounts, setAccounts] = useState<StudentProfile[]>(loadAccounts);
   const [activeUserId, setActiveUserId] = useState<string | null>(() => {
-    const saved = localStorage.getItem("ai_study_hub_active_user_id");
-    if (saved !== null) return saved === "" ? null : saved;
-    return INITIAL_DEMO_ACCOUNT.studentId;
+    const saved = safeGet(ACTIVE_KEY);
+    return saved ? saved : null;
   });
 
-  useEffect(() => {
-    localStorage.setItem("ai_study_hub_accounts_list", JSON.stringify(accounts));
-  }, [accounts]);
+  useEffect(() => safeSet(ACCOUNTS_KEY, JSON.stringify(accounts)), [accounts]);
+  useEffect(() => safeSet(ACTIVE_KEY, activeUserId || ""), [activeUserId]);
+
+  // ---------- Đồng bộ dữ liệu học tập lên máy chủ (không gồm dữ liệu cảm xúc) ----------
+  const [cloudStatus, setCloudStatus] = useState<CloudStatus>(cloud.status());
+  const [isSyncing, setIsSyncing] = useState(false);
+  useEffect(() => cloud.subscribe(setCloudStatus), []);
 
   useEffect(() => {
-    localStorage.setItem("ai_study_hub_active_user_id", activeUserId || "");
+    let cancelled = false;
+    if (!activeUserId) {
+      cloud.stopSync();
+      return;
+    }
+    if (!cloud.hasSession(activeUserId)) {
+      cloud.startSync(activeUserId); // chế độ khách hoặc tài khoản chỉ lưu trên máy
+      return;
+    }
+    setIsSyncing(true);
+    cloud.resume(activeUserId).finally(() => {
+      if (cancelled) return;
+      cloud.startSync(activeUserId);
+      setIsSyncing(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [activeUserId]);
 
+  // Đếm số ngày vào web liên tục (dùng ở Bảng điểm, không hiện ở đầu trang để không tạo áp lực)
   useEffect(() => {
-    if (!activeUserId) return;
+    if (!activeUserId || isSyncing) return;
     const streakKey = `user_${activeUserId}_login_streak`;
     const lastDateKey = `user_${activeUserId}_last_login_date`;
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
-
-    const savedLastDate = localStorage.getItem(lastDateKey);
-    const savedStreakStr = localStorage.getItem(streakKey);
-    let currentStreak = savedStreakStr ? parseInt(savedStreakStr, 10) : 1;
-    if (isNaN(currentStreak) || currentStreak < 1) currentStreak = 1;
-
-    if (!savedLastDate) {
-      currentStreak = 1;
-      localStorage.setItem(lastDateKey, todayStr);
-      localStorage.setItem(streakKey, "1");
-    } else if (savedLastDate === todayStr) {
-      // Đã đăng nhập hôm nay
-    } else if (savedLastDate === yesterdayStr) {
-      currentStreak += 1;
-      localStorage.setItem(lastDateKey, todayStr);
-      localStorage.setItem(streakKey, String(currentStreak));
+    const savedLast = safeGet(lastDateKey);
+    let streak = parseInt(safeGet(streakKey) || "1", 10);
+    if (isNaN(streak) || streak < 1) streak = 1;
+    if (savedLast === fmt(today)) {
+      // đã tính hôm nay
     } else {
-      currentStreak = 1;
-      localStorage.setItem(lastDateKey, todayStr);
-      localStorage.setItem(streakKey, "1");
+      streak = savedLast === fmt(yesterday) ? streak + 1 : 1;
+      safeSet(lastDateKey, fmt(today));
+      safeSet(streakKey, String(streak));
     }
-    setStreakCount(currentStreak);
-  }, [activeUserId]);
+    setStreakCount(streak);
+  }, [activeUserId, isSyncing]);
 
   const activeProfile = accounts.find((a) => a.studentId === activeUserId) || null;
 
-  const handleLogin = (studentId: string, pass: string): boolean => {
-    const found = accounts.find(
-      (a) => a.studentId.toLowerCase() === studentId.toLowerCase() && (a.password === pass || !a.password)
-    );
-    if (found) {
-      setActiveUserId(found.studentId);
-      setCurrentSection("home");
-      return true;
-    }
-    return false;
+  const upsertAccount = (profile: StudentProfile) => {
+    setAccounts((prev) => [...prev.filter((a) => a.studentId.toLowerCase() !== profile.studentId.toLowerCase()), profile]);
   };
 
-  const handleRegister = (newProfile: StudentProfile) => {
-    setAccounts((prev) => [...prev.filter((a) => a.studentId !== newProfile.studentId), newProfile]);
-    setActiveUserId(newProfile.studentId);
+  const enterApp = (studentId: string) => {
+    setActiveUserId(studentId);
     setCurrentSection("home");
   };
 
-  const handleQuickSelectAccount = (studentId: string) => {
-    const found = accounts.find((a) => a.studentId === studentId);
-    if (found) {
-      setActiveUserId(found.studentId);
-      setCurrentSection("home");
+  // Đăng nhập qua máy chủ. Mật khẩu KHÔNG được lưu trên máy.
+  const handleLogin = async (studentId: string, pass: string): Promise<string> => {
+    const local = accounts.find((a) => a.studentId.toLowerCase() === studentId.toLowerCase());
+    const res = await cloud.login(studentId, pass);
+
+    if (res.ok) {
+      const merged = sanitizeProfile({ ...(local || {}), ...res.profile, password: undefined, isLoggedIn: true });
+      upsertAccount(merged);
+      // Tài khoản cũ chưa có biệt danh: lưu biệt danh mới lên máy chủ
+      if (needsCleanup(res.profile)) cloud.saveProfile(merged.studentId, publicProfile(merged));
+      enterApp(merged.studentId);
+      return "";
     }
+    if (res.reason === "wrong" || res.reason === "rate") return res.message;
+
+    // Tài khoản cũ chỉ có trên máy này (tạo khi chưa có máy chủ): chuyển lên máy chủ rồi xóa mật khẩu khỏi máy
+    if (res.reason === "not_found") {
+      if (local?.password && local.password === pass) {
+        const moved = await cloud.register(publicProfile(local), pass, true);
+        if (moved.ok) upsertAccount({ ...local, password: undefined });
+        enterApp(local.studentId);
+        return "";
+      }
+      return 'Tên đăng nhập chưa có trên hệ thống. Bạn bấm "Tạo tài khoản" nhé!';
+    }
+
+    // Máy chủ chưa sẵn sàng: chỉ tài khoản cũ còn mật khẩu trên máy mới vào được
+    if (local?.password && local.password === pass) {
+      enterApp(local.studentId);
+      return "";
+    }
+    return res.reason === "network"
+      ? "Không kết nối được máy chủ. Bạn kiểm tra mạng, hoặc bấm “Dùng thử không cần tài khoản”."
+      : "Máy chủ tài khoản chưa sẵn sàng. Bạn bấm “Dùng thử không cần tài khoản” nhé.";
   };
 
+  const handleRegister = async (newProfile: StudentProfile, password: string): Promise<string> => {
+    const res = await cloud.register(publicProfile(newProfile), password);
+    if (!res.ok) {
+      if (res.reason === "exists" || res.reason === "invalid") return res.message;
+      if (res.reason === "network") return "Không kết nối được máy chủ. Bạn thử lại sau, hoặc dùng thử không cần tài khoản.";
+      return "Máy chủ tài khoản chưa sẵn sàng. Bạn bấm “Dùng thử không cần tài khoản” nhé.";
+    }
+    upsertAccount(sanitizeProfile({ ...newProfile, ...res.profile }));
+    enterApp(res.profile.studentId);
+    return "";
+  };
+
+  const handleGuest = (grade: StudentProfile["grade"]) => {
+    const existing = accounts.find((a) => a.studentId === GUEST_ID);
+    upsertAccount(
+      existing
+        ? { ...existing, grade }
+        : { studentId: GUEST_ID, nickname: generateNickname(), avatar: randomAvatar(), grade, isLoggedIn: true, isGuest: true }
+    );
+    enterApp(GUEST_ID);
+  };
+
+  // Xóa tài khoản khỏi máy này (kể cả dữ liệu cảm xúc trên máy). Tài khoản trên máy chủ vẫn còn.
   const handleDeleteAccount = (studentId: string) => {
+    cloud.forgetOnDevice(studentId);
     setAccounts((prev) => prev.filter((a) => a.studentId !== studentId));
     if (activeUserId === studentId) setActiveUserId(null);
   };
 
-  const handleLogout = () => {
-    setActiveUserId(null);
+  const handleLogout = async () => {
     setIsProfileOpen(false);
+    if (activeUserId && cloud.hasSession(activeUserId)) {
+      const done = await cloud.logout(activeUserId);
+      if (
+        !done &&
+        !window.confirm("Chưa lưu được dữ liệu mới nhất lên máy chủ (có thể do mất mạng). Vẫn đăng xuất? Dữ liệu vẫn còn trên máy này.")
+      ) {
+        return;
+      }
+    }
+    setActiveUserId(null);
   };
 
-  const handleSaveProfile = (updatedProfile: StudentProfile) => {
-    setAccounts((prev) =>
-      prev.map((a) => (a.studentId === updatedProfile.studentId ? updatedProfile : a))
-    );
+  const handleSaveProfile = (updated: StudentProfile) => {
+    setAccounts((prev) => prev.map((a) => (a.studentId === updated.studentId ? updated : a)));
+    if (!updated.isGuest) cloud.saveProfile(updated.studentId, publicProfile(updated));
   };
 
   if (!activeUserId || !activeProfile) {
     return (
-      <AuthScreen
-        accounts={accounts}
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-        onDeleteAccount={handleDeleteAccount}
-        onQuickSelectAccount={handleQuickSelectAccount}
-      />
+      <AuthScreen accounts={accounts} onLogin={handleLogin} onRegister={handleRegister} onGuest={handleGuest} onDeleteAccount={handleDeleteAccount} />
     );
   }
 
-  const goHome = () => {
-    setCurrentSection("home");
+  if (isSyncing) {
+    return (
+      <div className="min-h-screen bg-cream flex flex-col items-center justify-center gap-3 text-navy">
+        <CompassLogo size={56} animate />
+        <p className="text-sm font-semibold">Đang tải dữ liệu của bạn...</p>
+      </div>
+    );
+  }
+
+  const go = (sec: NavSection) => {
+    setCurrentSection(sec);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const isStudyPage = STUDY_SECTIONS.includes(currentSection);
+
   return (
-    <div className="min-h-screen bg-slate-100 font-sans text-slate-800 flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-cream font-sans text-ink flex flex-col antialiased selection:bg-teal selection:text-white">
       <Header
-        streakCount={streakCount}
+        cloudStatus={cloudStatus}
         profile={activeProfile}
         onOpenProfile={() => setIsProfileOpen(true)}
-        onNavigateToMood={() => {
-          setCurrentSection("mood");
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
+        onGoHome={() => go("home")}
         onLogout={handleLogout}
       />
 
       <div className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto min-w-0">
-        <Navigation
-          currentSection={currentSection}
-          onSelectSection={(sec) => {
-            setCurrentSection(sec);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-        />
+        <Navigation currentSection={currentSection} onSelectSection={go} />
 
-        <main className="flex-1 p-4 lg:p-8 min-w-0 overflow-x-hidden space-y-4">
-          {/* Nút quay lại trang chủ chung cho mọi trang con */}
+        <main className="flex-1 px-4 pt-4 lg:p-8 pb-bottom-nav min-w-0 overflow-x-hidden space-y-4">
           {currentSection !== "home" && (
             <button
-              onClick={goHome}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition cursor-pointer shadow-xs"
+              onClick={() => go(isStudyPage ? "study" : "home")}
+              className="inline-flex items-center gap-2 min-h-10 px-3.5 rounded-xl bg-white border border-line hover:border-teal text-navy font-semibold text-sm transition cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4 text-indigo-600" />
-              <span>⬅ Quay lại trang chủ</span>
+              <ArrowLeft className="w-4 h-4 text-teal" />
+              {isStudyPage ? "Học tập thông minh" : "Trang chủ"}
             </button>
           )}
 
           {currentSection === "home" && (
             <Dashboard
-              onNavigate={(sec) => {
-                setCurrentSection(sec);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
+              onNavigate={go}
               onAskAI={(question) => {
                 setPendingQuestion(question);
-                setCurrentSection("ai_tutor");
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                go("ai_tutor");
               }}
-              streakCount={streakCount}
+              profile={activeProfile}
+              isAdmin={!activeProfile.isGuest && activeProfile.studentId.toLowerCase() === "tranphanvananh"}
             />
           )}
 
-          {currentSection === "subjects" && (
-            <SubjectsView key={activeUserId} userId={activeUserId} />
-          )}
-
-          {currentSection === "mood" && (
-            <MoodTrackerView key={activeUserId} userId= {activeUserId} />
-          )}
-
+          {currentSection === "study" && <StudyHubView onNavigate={go} />}
+          {currentSection === "subjects" && <SubjectsView key={activeUserId} userId={activeUserId} />}
+          {currentSection === "mood" && <MoodTrackerView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />}
           {currentSection === "ai_tutor" && (
             <AITutorView
               key={activeUserId}
@@ -217,23 +277,15 @@ export default function App() {
               onInitialQuestionUsed={() => setPendingQuestion("")}
             />
           )}
-
-          {currentSection === "planner" && (
-            <StudyPlanView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />
-          )}
-
+          {currentSection === "planner" && <StudyPlanView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />}
           {currentSection === "progress" && (
-            <ProgressView
-              key={activeUserId}
-              userId={activeUserId}
-              streakCount={streakCount}
-              grade={activeProfile.grade}
-            />
+            <ProgressView key={activeUserId} userId={activeUserId} streakCount={streakCount} grade={activeProfile.grade} />
           )}
-
-          {currentSection === "career" && <CareerGuidanceView />}
-
+          {currentSection === "career" && <CareerGuidanceView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />}
           {currentSection === "videos" && <VideoHubView key={activeUserId} userId={activeUserId} />}
+          {currentSection === "privacy" && (
+            <PrivacyView key={activeUserId} profile={activeProfile} onAccountRemoved={() => handleDeleteAccount(activeProfile.studentId)} />
+          )}
         </main>
       </div>
 
@@ -244,9 +296,9 @@ export default function App() {
         profile={activeProfile}
         onSaveProfile={handleSaveProfile}
         onLogout={handleLogout}
-        onSwitchAccount={() => {
-          setActiveUserId(null);
+        onOpenPrivacy={() => {
           setIsProfileOpen(false);
+          go("privacy");
         }}
       />
     </div>

@@ -19,7 +19,7 @@ interface AITutorViewProps {
 const WELCOME: Message = {
   role: "model",
   content:
-    "Xin chào em! Thầy/Cô là **AI Tutor** - Gia sư ảo thông minh của AI Study Hub. 🤖\n\nEm có thể hỏi bất kỳ bài tập hay lý thuyết môn **Toán Học** hoặc các môn học khác. Với bài Toán, em bấm các nút **∑ Công thức** phía dưới để gõ phân số, căn, mũ... thật dễ dàng nhé!",
+    "Xin chào em! Thầy/Cô là **AI Tutor** - Gia sư ảo thông minh của AI Youth Compass. 🤖\n\nEm có thể hỏi bất kỳ bài tập hay lý thuyết môn **Toán Học** hoặc các môn học khác. Với bài Toán, em bấm các nút **∑ Công thức** phía dưới để gõ phân số, căn, mũ... thật dễ dàng nhé!",
 };
 
 // Chỉ gửi những tin nhắn gần nhất để AI trả lời nhanh và không vượt giới hạn
@@ -120,23 +120,23 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] min-h-[560px] max-w-5xl mx-auto p-2 sm:p-4 space-y-3">
       {/* Header Bar */}
-      <div className="p-4 rounded-3xl bg-gradient-to-r from-violet-900 via-indigo-950 to-slate-900 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl bg-navy text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-violet-600 shadow-inner">
+          <div className="p-3 rounded-2xl bg-teal shadow-inner">
             <Bot className="w-6 h-6 text-white animate-pulse" />
           </div>
           <div>
             <h2 className="text-lg sm:text-xl font-extrabold">🤖 AI Tutor THCS 24/7</h2>
-            <p className="text-xs text-violet-200">Gia sư ảo thông minh đồng hành cùng học sinh</p>
+            <p className="text-xs text-mist">Gia sư ảo thông minh đồng hành cùng học sinh</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-violet-300">Môn:</span>
+          <span className="text-xs font-bold text-teal-soft">Môn:</span>
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-violet-900/80 border border-violet-400/40 text-xs font-bold text-white focus:outline-none"
+            className="px-3 py-1.5 rounded-xl bg-navy/80 border border-teal/40 text-xs font-bold text-white focus:outline-none"
           >
             <option value="Toán Học">Toán Học</option>
             <option value="Ngữ Văn">Ngữ Văn</option>
@@ -158,7 +158,7 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
       </div>
 
       {/* Chat Messages Box */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 rounded-2xl bg-white border border-line shadow-sm space-y-4">
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -166,17 +166,17 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
           >
             <div
               className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
-                msg.role === "user" ? "bg-violet-600 text-white" : "bg-slate-900 text-violet-400"
+                msg.role === "user" ? "bg-teal text-white" : "bg-navy text-teal"
               }`}
             >
               {msg.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
             </div>
 
             <div
-              className={`max-w-[85%] min-w-0 p-4 rounded-3xl text-sm leading-relaxed ${
+              className={`max-w-[85%] min-w-0 p-4 rounded-2xl text-sm leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-violet-600 text-white rounded-tr-none shadow-md"
-                  : "bg-slate-50 border border-slate-200/80 text-slate-800 rounded-tl-none shadow-xs space-y-2"
+                  ? "bg-teal text-white rounded-tr-none shadow-md"
+                  : "bg-cream border border-line/80 text-ink rounded-tl-none shadow-xs space-y-2"
               }`}
             >
               {msg.role === "model" && (
@@ -192,10 +192,10 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
 
         {isLoading && (
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-slate-900 text-violet-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-2xl bg-navy text-teal flex items-center justify-center">
               <Bot className="w-5 h-5 animate-spin" />
             </div>
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 font-bold animate-pulse">
+            <div className="p-4 rounded-2xl bg-cream border border-line text-xs text-muted font-bold animate-pulse">
               AI Tutor đang soạn câu trả lời...
             </div>
           </div>
@@ -215,7 +215,7 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
           onClick={() => setShowKeyboard((v) => !v)}
           title={showKeyboard ? "Ẩn bàn phím công thức" : "Hiện bàn phím công thức"}
           className={`h-12 w-12 rounded-2xl border shadow-sm transition cursor-pointer flex items-center justify-center shrink-0 ${
-            showKeyboard ? "bg-violet-600 border-violet-600 text-white" : "bg-white border-slate-200 text-violet-700 hover:bg-violet-50"
+            showKeyboard ? "bg-teal border-teal text-white" : "bg-white border-line text-teal-deep hover:bg-mist/60"
           }`}
         >
           <Sigma className="w-5 h-5" />
@@ -227,12 +227,12 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={`Hỏi AI Tutor về bài tập môn ${subject}... (Shift + Enter để xuống dòng)`}
-          className="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm font-medium text-slate-800 resize-none leading-relaxed"
+          className="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-white border border-line text-sm focus:outline-none focus:ring-2 focus:ring-teal shadow-sm font-medium text-ink resize-none leading-relaxed"
         />
         <button
           type="submit"
           disabled={isLoading || !inputMessage.trim()}
-          className="h-12 px-5 rounded-2xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-extrabold text-sm shadow-md transition cursor-pointer flex items-center gap-2 shrink-0"
+          className="h-12 px-5 rounded-2xl bg-teal hover:bg-teal-deep disabled:opacity-50 text-white font-extrabold text-sm shadow-md transition cursor-pointer flex items-center gap-2 shrink-0"
         >
           <span className="hidden sm:inline">Gửi</span>
           <Send className="w-4 h-4" />

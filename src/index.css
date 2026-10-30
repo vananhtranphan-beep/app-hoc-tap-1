@@ -4,9 +4,29 @@
    Hiệu ứng động dùng trong web (trước đây code có gọi nhưng chưa định nghĩa)
    ============================================================ */
 @theme {
+  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --animate-spin-slow: spin 14s linear infinite;
   --animate-shake: shake 0.45s ease-in-out;
   --animate-fadeIn: fadeIn 0.2s ease-out;
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  /* Bảng màu AI Youth Compass */
+  --color-navy: #173b50;
+  --color-navy-deep: #0f2a3a;
+  --color-navy-soft: #2a5670;
+  --color-teal: #328f89;
+  --color-teal-deep: #287470;
+  --color-teal-soft: #d6ebe9;
+  --color-cream: #f7f8f5;
+  --color-mist: #e8eef5;
+  --color-line: #d5dee6;
+  --color-ink: #1b2b36;
+  --color-muted: #5b6b77;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
@@ -33,7 +53,7 @@
 .md-content ol { list-style: decimal; padding-left: 1.4em; }
 .md-content li + li { margin-top: 0.25em; }
 .md-content li > p { margin: 0; }
-.md-content li::marker { color: #7c3aed; }
+.md-content li::marker { color: #328f89; }
 .md-content strong { font-weight: 800; }
 .md-content em { font-style: italic; }
 .md-content h1, .md-content h2, .md-content h3, .md-content h4 { font-weight: 800; line-height: 1.35; margin-top: 0.9em; }
@@ -41,11 +61,11 @@
 .md-content h2 { font-size: 1.12em; }
 .md-content h3, .md-content h4 { font-size: 1.05em; }
 .md-content code { background: rgb(15 23 42 / 0.07); padding: 0.1em 0.35em; border-radius: 0.35em; font-size: 0.9em; }
-.md-content pre { background: #0f172a; color: #e2e8f0; padding: 0.75em 1em; border-radius: 0.75em; overflow-x: auto; }
+.md-content pre { background: #173b50; color: #e2e8f0; padding: 0.75em 1em; border-radius: 0.75em; overflow-x: auto; }
 .md-content pre code { background: transparent; padding: 0; }
-.md-content blockquote { border-left: 3px solid #a78bfa; padding-left: 0.8em; color: #475569; }
+.md-content blockquote { border-left: 3px solid #328f89; padding-left: 0.8em; color: #475569; }
 .md-content hr { border: 0; border-top: 1px dashed #cbd5e1; }
-.md-content a { color: #6d28d9; text-decoration: underline; }
+.md-content a { color: #287470; text-decoration: underline; }
 .md-content table { display: block; width: max-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: 0.92em; }
 .md-content th, .md-content td { border: 1px solid #e2e8f0; padding: 0.4em 0.65em; text-align: left; vertical-align: top; }
 .md-content th { background: #f1f5f9; font-weight: 700; }
@@ -60,7 +80,7 @@
 }
 
 /* Tin nhắn của học sinh (nền tím, chữ trắng) */
-.md-dark li::marker { color: #ddd6fe; }
+.md-dark li::marker { color: #d6ebe9; }
 .md-dark code { background: rgb(255 255 255 / 0.18); }
 .md-dark blockquote { border-left-color: rgb(255 255 255 / 0.6); color: inherit; }
 .md-dark a { color: #fff; }
@@ -134,11 +154,82 @@
 @keyframes reportPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .report-pop { animation: reportPop 0.35s ease-out; }
 
+@keyframes starTwinkle { 0%, 100% { opacity: 0.25; transform: scale(0.75); } 50% { opacity: 1; transform: scale(1.2); } }
+.star-twinkle { transform-box: fill-box; transform-origin: center; animation: starTwinkle 2.6s ease-in-out infinite; }
+
+@keyframes sunRays { to { transform: rotate(360deg); } }
+.sun-rays { transform-box: fill-box; transform-origin: center; animation: sunRays 30s linear infinite; }
+
+@keyframes rainbowGlow { 0%, 100% { opacity: 0.22; } 50% { opacity: 0.45; } }
+.rainbow-glow { animation: rainbowGlow 6s ease-in-out infinite; }
+
+@keyframes birdFly { 0% { transform: translate(-40px, 0); } 50% { transform: translate(160px, -12px); } 100% { transform: translate(360px, 4px); } }
+.bird-fly { animation: birdFly 16s linear infinite; }
+@keyframes wingFlap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(-0.4); } }
+.bird-wing { transform-box: fill-box; transform-origin: center; animation: wingFlap 0.5s ease-in-out infinite; }
+
+@keyframes petalFall {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-45px, 135px) rotate(-220deg); opacity: 0; }
+}
+.petal-fall { transform-box: fill-box; transform-origin: center; animation: petalFall 7s ease-in infinite; }
+
+@keyframes flowerBob { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+.flower-bob { transform-box: fill-box; transform-origin: bottom center; animation: flowerBob 2.8s ease-in-out infinite; }
+
+@keyframes auraPulse { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.06); } }
+.aura-pulse { transform-box: fill-box; transform-origin: center; animation: auraPulse 4s ease-in-out infinite; }
+
+@keyframes canTilt { 0% { transform: rotate(0deg); } 25%, 85% { transform: rotate(-30deg); } 100% { transform: rotate(0deg); } }
+.can-tilt { transform-box: fill-box; transform-origin: 30% 100%; animation: canTilt 2.5s ease-in-out forwards; }
+
+@keyframes streamFlow { to { stroke-dashoffset: -24; } }
+.water-stream { stroke-dasharray: 6 6; animation: streamFlow 0.5s linear infinite; }
+
+@keyframes sparklePop { 0% { transform: scale(0); opacity: 0; } 40% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
+.sparkle-pop { transform-box: fill-box; transform-origin: center; animation: sparklePop 1.2s ease-out infinite; }
+
+/* ============================================================
+   AI Youth Compass: la bàn, thẻ, nút
+   ============================================================ */
+/* Kim la bàn xoay rồi dừng lại khi vào trang */
+@keyframes needleSettle {
+  0% { transform: rotate(-140deg); }
+  60% { transform: rotate(18deg); }
+  80% { transform: rotate(-8deg); }
+  100% { transform: rotate(0deg); }
+}
+.compass-needle { transform-box: view-box; transform-origin: center; animation: needleSettle 1.6s cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+@keyframes needleIdle { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(4deg); } }
+.compass-idle { transform-box: view-box; transform-origin: center; animation: needleIdle 5s ease-in-out 1.6s infinite; }
+@keyframes orbitSpin { to { transform: rotate(360deg); } }
+.compass-orbit { transform-box: view-box; transform-origin: center; animation: orbitSpin 60s linear infinite; }
+
+/* Thẻ nổi nhẹ khi chạm/di chuột */
+.lift { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.lift:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px rgba(23, 59, 80, 0.35); }
+
+/* Các khối trang chủ hiện dần */
+.rise-1 { animation: rise 0.5s 0.05s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.rise-2 { animation: rise 0.5s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.rise-3 { animation: rise 0.5s 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.rise-4 { animation: rise 0.5s 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* Chừa chỗ cho thanh điều hướng dưới đáy trên điện thoại (kể cả máy có tai thỏ) */
+.pb-bottom-nav { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { .pb-bottom-nav { padding-bottom: 2rem; } }
+
 /* Người dùng bật "giảm chuyển động" trong máy thì tắt hiệu ứng */
 @media (prefers-reduced-motion: reduce) {
+  .compass-needle, .compass-idle, .compass-orbit, .rise-1, .rise-2, .rise-3, .rise-4, .animate-rise {
+    animation: none !important;
+  }
+  .lift:hover { transform: none; }
   .tree-sway, .grass-sway, .firefly, .leaf-fall, .rain-drop, .soil-ripple, .butterfly,
   .butterfly-wing, .fruit-twinkle, .sun-glow, .cloud-drift, .cloud-drift-slow, .bar-shimmer,
-  .report-pop, .animate-spin-slow {
+  .report-pop, .animate-spin-slow, .star-twinkle, .sun-rays, .rainbow-glow, .bird-fly, .bird-wing,
+  .petal-fall, .flower-bob, .aura-pulse, .can-tilt, .water-stream, .sparkle-pop {
     animation: none !important;
   }
 }

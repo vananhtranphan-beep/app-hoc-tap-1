@@ -1,382 +1,322 @@
-import React, { useState } from "react";
-import {
-  User,
-  Lock,
-  GraduationCap,
-  School,
-  Sparkles,
-  LogIn,
-  UserPlus,
-  ShieldCheck,
-  CheckCircle2,
-  Trash2,
-  KeyRound
-} from "lucide-react";
+import React, { useState, useRef } from "react";
+import { User, Lock, LogIn, UserPlus, ShieldCheck, Trash2, RefreshCw, ArrowRight } from "lucide-react";
 import { StudentProfile } from "../types";
+import { CompassLogo } from "./CompassLogo";
+import { AVATARS, generateNickname, randomAvatar } from "../lib/profile";
+
+// ============================================================
+// ĐĂNG NHẬP / TẠO TÀI KHOẢN / DÙNG THỬ KHÔNG CẦN TÀI KHOẢN
+// Tạo tài khoản chỉ cần: tên đăng nhập, mật khẩu, khối lớp.
+// Không hỏi họ tên thật, ngày sinh, trường lớp. Web tự tạo biệt danh.
+// ============================================================
+
+type Grade = StudentProfile["grade"];
 
 interface AuthScreenProps {
   accounts: StudentProfile[];
-  onLogin: (studentId: string, pass: string) => boolean;
-  onRegister: (newProfile: StudentProfile) => void;
+  /** Trả về "" nếu đăng nhập thành công, hoặc câu báo lỗi */
+  onLogin: (studentId: string, pass: string) => Promise<string>;
+  /** Trả về "" nếu tạo tài khoản thành công, hoặc câu báo lỗi */
+  onRegister: (newProfile: StudentProfile, password: string) => Promise<string>;
+  /** Vào web ở chế độ khách (không cần tài khoản) */
+  onGuest: (grade: Grade) => void;
   onDeleteAccount: (studentId: string) => void;
-  onQuickSelectAccount: (studentId: string) => void;
 }
 
-const PRESET_AVATARS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=200&q=80"
-];
+const GRADES: Grade[] = ["6", "7", "8", "9"];
 
-export const AuthScreen: React.FC<AuthScreenProps> = ({
-  accounts,
-  onLogin,
-  onRegister,
-  onDeleteAccount,
-  onQuickSelectAccount,
-}) => {
-  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+const inputCls =
+  "w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-line text-ink placeholder-muted/60 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition";
 
-  // Login Form State
+const GradePicker: React.FC<{ value: Grade; onChange: (g: Grade) => void }> = ({ value, onChange }) => (
+  <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Khối lớp">
+    {GRADES.map((g) => (
+      <button
+        key={g}
+        type="button"
+        role="radio"
+        aria-checked={value === g}
+        onClick={() => onChange(g)}
+        className={`min-h-11 rounded-xl border text-sm font-bold transition cursor-pointer ${
+          value === g ? "bg-navy border-navy text-cream" : "bg-white border-line text-ink hover:border-teal"
+        }`}
+      >
+        Lớp {g}
+      </button>
+    ))}
+  </div>
+);
+
+export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onRegister, onGuest, onDeleteAccount }) => {
+  const [activeTab, setActiveTab] = useState<"login" | "register">(accounts.some((a) => !a.isGuest) ? "login" : "register");
+  const [isBusy, setIsBusy] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
   const [loginId, setLoginId] = useState("");
   const [loginPass, setLoginPass] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // Register Form State
-  const [regFullName, setRegFullName] = useState("");
-  const [regGrade, setRegGrade] = useState<"6" | "7" | "8" | "9">("8");
-  const [regSchool, setRegSchool] = useState("");
-  const [regStudentId, setRegStudentId] = useState("");
+  const [regId, setRegId] = useState("");
   const [regPassword, setRegPassword] = useState("");
-  const [regAvatar, setRegAvatar] = useState(PRESET_AVATARS[0]);
+  const [regGrade, setRegGrade] = useState<Grade>("8");
+  const [regNickname, setRegNickname] = useState(() => generateNickname());
+  const [regAvatar, setRegAvatar] = useState(() => randomAvatar());
   const [regError, setRegError] = useState("");
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const [guestOpen, setGuestOpen] = useState(false);
+  const [guestGrade, setGuestGrade] = useState<Grade>("8");
+
+  const savedAccounts = accounts.filter((a) => !a.isGuest);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBusy) return;
     setLoginError("");
-    if (!loginId.trim()) {
-      setLoginError("Vui lòng nhập ID đăng nhập!");
-      return;
-    }
-    const success = onLogin(loginId.trim(), loginPass);
-    if (!success) {
-      setLoginError("ID đăng nhập hoặc Mật khẩu không chính xác!");
-    }
+    if (!loginId.trim()) return setLoginError("Bạn nhập tên đăng nhập nhé.");
+    if (!loginPass) return setLoginError("Bạn nhập mật khẩu nhé.");
+    setIsBusy(true);
+    const error = await onLogin(loginId.trim(), loginPass);
+    setIsBusy(false);
+    if (error) setLoginError(error);
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const pickAccount = (acc: StudentProfile) => {
+    setActiveTab("login");
+    setLoginId(acc.studentId);
+    setLoginPass("");
+    setLoginError("");
+    setTimeout(() => passwordRef.current?.focus(), 50);
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBusy) return;
     setRegError("");
-
-    if (!regFullName.trim()) {
-      setRegError("Vui lòng nhập Họ và Tên!");
-      return;
+    const id = regId.trim();
+    if (!id) return setRegError("Bạn đặt một tên đăng nhập nhé.");
+    if (!/^[a-zA-Z0-9_.-]{3,40}$/.test(id) || id.startsWith("__")) {
+      return setRegError("Tên đăng nhập chỉ gồm chữ không dấu, số, dấu _ . - (3–40 ký tự), không có khoảng trắng.");
     }
-    if (!regSchool.trim()) {
-      setRegError("Vui lòng nhập tên Trường THCS!");
-      return;
-    }
-    if (!regStudentId.trim()) {
-      setRegError("Vui lòng nhập ID đăng nhập!");
-      return;
-    }
-    if (!regPassword.trim() || regPassword.trim().length < 5) {
-      setRegError("Mật khẩu phải chứa ít nhất 5 ký tự (chữ, số hoặc cả hai)!");
-      return;
-    }
-
-    // Check if ID already exists
-    if (accounts.some((a) => a.studentId.toLowerCase() === regStudentId.trim().toLowerCase())) {
-      setRegError("ID đăng nhập này đã tồn tại trên hệ thống! Vui lòng chọn ID khác.");
-      return;
+    if (/\d{8,}/.test(id)) return setRegError("Tên đăng nhập có vẻ giống số điện thoại. Bạn đặt tên khác nhé.");
+    if (regPassword.trim().length < 5) return setRegError("Mật khẩu cần ít nhất 5 ký tự.");
+    if (accounts.some((a) => a.studentId.toLowerCase() === id.toLowerCase())) {
+      return setRegError("Tên đăng nhập này đã có trên máy. Bạn chọn tên khác nhé.");
     }
 
     const newProf: StudentProfile = {
-      fullName: regFullName.trim(),
-      dob: "01/01/2012",
+      studentId: id,
+      nickname: regNickname,
       grade: regGrade,
       avatar: regAvatar,
-      studentId: regStudentId.trim(),
-      password: regPassword,
-      schoolName: regSchool.trim(),
       isLoggedIn: true,
       createdAt: new Date().toLocaleDateString("vi-VN"),
     };
-
-    onRegister(newProf);
+    setIsBusy(true);
+    const error = await onRegister(newProf, regPassword);
+    setIsBusy(false);
+    if (error) setRegError(error);
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-slate-100 flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-xl space-y-6">
-        {/* Brand Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-extrabold border border-indigo-400/30">
-            <Sparkles className="w-4 h-4 text-rose-400 animate-pulse" />
-            <span>AI Study Hub THCS - Hệ Thống Tài Khoản Học Sinh</span>
+    <div className="min-h-screen bg-cream text-ink flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-md space-y-6">
+        {/* Thương hiệu */}
+        <div className="text-center space-y-3 rise-1">
+          <CompassLogo size={64} animate className="mx-auto drop-shadow-sm" />
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-navy">AI Youth Compass</h1>
+            <p className="text-sm text-muted mt-1">La bàn nhỏ cho hành trình hiểu mình và chọn hướng đi</p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-300 via-rose-300 to-amber-200 bg-clip-text text-transparent">
-            Đăng Nhập / Tạo Tài Khoản
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
-            Mỗi tài khoản lưu trữ riêng biệt dữ liệu môn học, bảng điểm, kế hoạch học tập & nhật ký cảm xúc 30 ngày của bạn.
-          </p>
         </div>
 
-        {/* Tab Buttons */}
-        <div className="flex bg-slate-800/90 p-1.5 rounded-2xl border border-slate-700 shadow-lg">
-          <button
-            onClick={() => {
-              setActiveTab("login");
-              setLoginError("");
-            }}
-            className={`flex-1 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition cursor-pointer flex items-center justify-center gap-2 ${
-              activeTab === "login"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/50"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-            }`}
-          >
-            <LogIn className="w-4 h-4" />
-            <span>Đăng Nhập</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("register");
-              setRegError("");
-            }}
-            className={`flex-1 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition cursor-pointer flex items-center justify-center gap-2 ${
-              activeTab === "register"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/50"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-            }`}
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Tạo Tài Khoản Mới</span>
-          </button>
-        </div>
+        <div className="rounded-2xl bg-white border border-line shadow-[0_12px_40px_-20px_rgba(23,59,80,0.35)] overflow-hidden rise-2">
+          {/* Thẻ chọn */}
+          <div className="grid grid-cols-2 border-b border-line" role="tablist">
+            {(
+              [
+                ["login", "Đăng nhập", LogIn],
+                ["register", "Tạo tài khoản", UserPlus],
+              ] as const
+            ).map(([key, label, Icon]) => (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={activeTab === key}
+                onClick={() => {
+                  setActiveTab(key);
+                  setLoginError("");
+                  setRegError("");
+                }}
+                className={`min-h-12 flex items-center justify-center gap-2 text-sm font-bold transition cursor-pointer border-b-2 ${
+                  activeTab === key ? "border-teal text-navy bg-mist/40" : "border-transparent text-muted hover:text-navy"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            ))}
+          </div>
 
-        {/* LOGIN FORM */}
-        {activeTab === "login" && (
-          <form
-            onSubmit={handleLoginSubmit}
-            className="p-6 sm:p-8 rounded-3xl bg-slate-800/80 border border-slate-700/80 shadow-2xl backdrop-blur-xl space-y-5"
-          >
-            <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-3">
-              <KeyRound className="w-5 h-5 text-indigo-400" />
-              <span>Nhập ID & Mật Khẩu Đăng Nhập</span>
-            </h2>
-
-            {loginError && (
-              <div className="p-3.5 rounded-2xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs font-bold animate-shake">
-                ⚠️ {loginError}
-              </div>
-            )}
-
-            <div className="space-y-4 text-xs">
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold block">ID Đăng nhập (Username)</label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    value={loginId}
-                    onChange={(e) => setLoginId(e.target.value)}
-                    placeholder="Ví dụ: minhanh2026 hoặc hoangnam"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+          {activeTab === "login" ? (
+            <form onSubmit={handleLoginSubmit} className="p-5 sm:p-6 space-y-4">
+              {loginError && (
+                <div role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-medium animate-shake">
+                  {loginError}
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold block">Mật khẩu</label>
+              )}
+              <label className="block space-y-1.5">
+                <span className="text-sm font-semibold text-ink">Tên đăng nhập</span>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="password"
-                    value={loginPass}
-                    onChange={(e) => setLoginPass(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                  <User className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input autoComplete="username" value={loginId} onChange={(e) => setLoginId(e.target.value)} className={inputCls} placeholder="Tên đăng nhập của bạn" />
                 </div>
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-sm font-semibold text-ink">Mật khẩu</span>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input ref={passwordRef} type="password" autoComplete="current-password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} className={inputCls} placeholder="••••••" />
+                </div>
+              </label>
+              <button
+                type="submit"
+                disabled={isBusy}
+                className="w-full min-h-12 rounded-xl bg-teal hover:bg-teal-deep disabled:opacity-60 disabled:cursor-wait text-white font-bold text-sm transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-4 h-4" />
+                {isBusy ? "Đang đăng nhập..." : "Đăng nhập"}
+              </button>
+              <p className="text-xs text-muted text-center">Quên mật khẩu? Bạn nhờ thầy/cô quản trị đặt lại giúp.</p>
+            </form>
+          ) : (
+            <form onSubmit={handleRegisterSubmit} className="p-5 sm:p-6 space-y-4">
+              {regError && (
+                <div role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-medium animate-shake">
+                  {regError}
+                </div>
+              )}
+
+              {/* Biệt danh tự tạo */}
+              <div className="p-3.5 rounded-xl bg-mist/60 border border-line flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-white border border-line flex items-center justify-center text-2xl shrink-0" aria-hidden>
+                  {regAvatar}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] font-semibold text-muted uppercase tracking-wide">Biệt danh của bạn</div>
+                  <div className="font-bold text-navy leading-snug">{regNickname}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegNickname((n) => generateNickname(n));
+                    setRegAvatar(randomAvatar());
+                  }}
+                  className="min-h-10 px-3 rounded-lg bg-white border border-line hover:border-teal text-navy text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Đổi
+                </button>
               </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 via-rose-500 to-amber-500 hover:from-indigo-600 hover:to-amber-600 text-white font-extrabold text-sm shadow-xl shadow-indigo-950/80 transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <LogIn className="w-5 h-5" />
-              <span>Đăng Nhập Vào Học Hub</span>
-            </button>
-          </form>
-        )}
-
-        {/* REGISTER FORM */}
-        {activeTab === "register" && (
-          <form
-            onSubmit={handleRegisterSubmit}
-            className="p-6 sm:p-8 rounded-3xl bg-slate-800/80 border border-slate-700/80 shadow-2xl backdrop-blur-xl space-y-5"
-          >
-            <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-3">
-              <UserPlus className="w-5 h-5 text-indigo-400" />
-              <span>Điền Thông Tin Tạo Tài Khoản Học Sinh</span>
-            </h2>
-
-            {regError && (
-              <div className="p-3.5 rounded-2xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs font-bold animate-shake">
-                ⚠️ {regError}
-              </div>
-            )}
-
-            {/* Avatar Picker */}
-            <div className="space-y-2">
-              <label className="text-slate-300 font-bold text-xs block">Chọn Ảnh Đại Diện Avatar</label>
-              <div className="flex items-center gap-3 overflow-x-auto pb-2">
-                {PRESET_AVATARS.map((img, idx) => (
+              <div className="flex flex-wrap gap-1.5" aria-label="Chọn biểu tượng">
+                {AVATARS.map((a) => (
                   <button
-                    key={idx}
+                    key={a}
                     type="button"
-                    onClick={() => setRegAvatar(img)}
-                    className={`w-12 h-12 rounded-2xl overflow-hidden border-2 transition shrink-0 cursor-pointer ${
-                      regAvatar === img ? "border-rose-400 scale-105 shadow-md shadow-rose-950" : "border-slate-700 opacity-60 hover:opacity-100"
+                    onClick={() => setRegAvatar(a)}
+                    aria-label={`Biểu tượng ${a}`}
+                    className={`w-10 h-10 rounded-full text-lg flex items-center justify-center border transition cursor-pointer ${
+                      regAvatar === a ? "border-teal bg-teal-soft" : "border-line bg-white hover:border-teal"
                     }`}
                   >
-                    <img src={img} alt="Avatar" className="w-full h-full object-cover" />
+                    {a}
                   </button>
                 ))}
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-slate-300 font-bold block">Họ và Tên Học Sinh</label>
+              <label className="block space-y-1.5">
+                <span className="text-sm font-semibold text-ink">Tên đăng nhập</span>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    value={regFullName}
-                    onChange={(e) => setRegFullName(e.target.value)}
-                    placeholder="Ví dụ: Trần Nguyễn Minh Anh"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                  <User className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input autoComplete="username" value={regId} onChange={(e) => setRegId(e.target.value)} className={inputCls} placeholder="VD: dieuxanh27" />
                 </div>
-              </div>
-
+                <span className="block text-xs text-muted">Đừng dùng tên thật, ngày sinh hay số điện thoại.</span>
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-sm font-semibold text-ink">Mật khẩu</span>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input type="password" autoComplete="new-password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className={inputCls} placeholder="Ít nhất 5 ký tự" />
+                </div>
+              </label>
               <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold block">Khối Lớp THCS</label>
-                <div className="relative">
-                  <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <select
-                    value={regGrade}
-                    onChange={(e) => setRegGrade(e.target.value as any)}
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 text-slate-100 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="6">Lớp 6 THCS</option>
-                    <option value="7">Lớp 7 THCS</option>
-                    <option value="8">Lớp 8 THCS</option>
-                    <option value="9">Lớp 9 THCS</option>
-                  </select>
-                </div>
+                <span className="text-sm font-semibold text-ink">Khối lớp</span>
+                <GradePicker value={regGrade} onChange={setRegGrade} />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold block">Trường THCS</label>
-                <div className="relative">
-                  <School className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    value={regSchool}
-                    onChange={(e) => setRegSchool(e.target.value)}
-                    placeholder="Ví dụ: THCS Chu Văn An"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
+              <button
+                type="submit"
+                disabled={isBusy}
+                className="w-full min-h-12 rounded-xl bg-teal hover:bg-teal-deep disabled:opacity-60 disabled:cursor-wait text-white font-bold text-sm transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                {isBusy ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+              </button>
+            </form>
+          )}
+        </div>
 
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold block">ID Đăng nhập (Username)</label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    value={regStudentId}
-                    onChange={(e) => setRegStudentId(e.target.value)}
-                    placeholder="Ví dụ: hoangnam2026"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
+        {/* Dùng thử không cần tài khoản */}
+        <div className="rounded-2xl border border-dashed border-line bg-white/60 p-4 rise-3">
+          {!guestOpen ? (
+            <button onClick={() => setGuestOpen(true)} className="w-full min-h-11 flex items-center justify-between gap-3 text-left cursor-pointer group">
+              <div>
+                <div className="text-sm font-bold text-navy">Dùng thử không cần tài khoản</div>
+                <div className="text-xs text-muted">Dữ liệu chỉ lưu trên máy này</div>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold block">Mật khẩu (Ít nhất 5 ký tự)</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="password"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Tối thiểu 5 số hoặc chữ"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 text-slate-100 placeholder-slate-500 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white font-extrabold text-sm shadow-xl shadow-emerald-950/80 transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="w-5 h-5" />
-              <span>Tạo Tài Khoản & Đăng Nhập Ngay</span>
+              <ArrowRight className="w-5 h-5 text-teal group-hover:translate-x-0.5 transition" />
             </button>
-          </form>
-        )}
+          ) : (
+            <div className="space-y-3">
+              <div className="text-sm font-bold text-navy">Bạn đang học lớp mấy?</div>
+              <GradePicker value={guestGrade} onChange={setGuestGrade} />
+              <div className="flex gap-2">
+                <button onClick={() => setGuestOpen(false)} className="min-h-11 px-4 rounded-xl border border-line text-sm font-semibold text-muted hover:text-navy cursor-pointer">
+                  Hủy
+                </button>
+                <button onClick={() => onGuest(guestGrade)} className="flex-1 min-h-11 rounded-xl bg-navy hover:bg-navy-deep text-cream text-sm font-bold cursor-pointer">
+                  Vào dùng thử
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {/* SAVED ACCOUNTS ON THIS DEVICE */}
-        {accounts.length > 0 && (
-          <div className="p-6 rounded-3xl bg-slate-800/60 border border-slate-700/60 space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>Tài Khoản Đã Tạo Trên Thiết Bị Này ({accounts.length})</span>
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {accounts.map((acc) => (
-                <div
-                  key={acc.studentId}
-                  className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-700 hover:border-indigo-500/80 transition flex items-center justify-between gap-3 group"
-                >
-                  <button
-                    onClick={() => onQuickSelectAccount(acc.studentId)}
-                    className="flex items-center gap-3 text-left flex-1 min-w-0 cursor-pointer"
-                  >
-                    <img
-                      src={acc.avatar}
-                      alt={acc.fullName}
-                      className="w-10 h-10 rounded-xl object-cover border border-indigo-500/50 shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <div className="text-xs font-extrabold text-slate-200 group-hover:text-indigo-300 transition truncate">
-                        {acc.fullName}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-semibold truncate">
-                        Lớp {acc.grade} • ID: {acc.studentId}
-                      </div>
-                    </div>
+        {/* Tài khoản đã dùng trên máy này */}
+        {savedAccounts.length > 0 && (
+          <div className="space-y-2 rise-4">
+            <div className="text-xs font-semibold text-muted uppercase tracking-wide px-1">Đã dùng trên máy này</div>
+            <div className="space-y-2">
+              {savedAccounts.map((acc) => (
+                <div key={acc.studentId} className="flex items-center gap-2 p-2 pl-3 rounded-xl bg-white border border-line">
+                  <button onClick={() => pickAccount(acc)} className="flex-1 min-w-0 min-h-11 flex items-center gap-3 text-left cursor-pointer">
+                    <span className="w-9 h-9 rounded-full bg-mist flex items-center justify-center text-lg shrink-0" aria-hidden>
+                      {acc.avatar}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold text-navy truncate">{acc.nickname}</span>
+                      <span className="block text-xs text-muted truncate">
+                        Lớp {acc.grade} · {acc.studentId}
+                      </span>
+                    </span>
                   </button>
-
                   <button
                     onClick={() => {
-                      if (confirm(`Bạn có chắc muốn xóa tài khoản ID "${acc.studentId}" khỏi thiết bị này?`)) {
+                      if (window.confirm(`Xóa "${acc.studentId}" khỏi máy này? Dữ liệu cảm xúc lưu trên máy này cũng bị xóa. Tài khoản trên máy chủ vẫn còn.`)) {
                         onDeleteAccount(acc.studentId);
                       }
                     }}
-                    className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-950/50 rounded-xl transition cursor-pointer"
-                    title="Xóa tài khoản khỏi thiết bị"
+                    className="w-11 h-11 flex items-center justify-center rounded-lg text-muted hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                    aria-label={`Xóa ${acc.studentId} khỏi máy này`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -385,6 +325,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             </div>
           </div>
         )}
+
+        <p className="flex items-start justify-center gap-1.5 text-xs text-muted text-center px-2">
+          <ShieldCheck className="w-4 h-4 text-teal shrink-0" />
+          <span>Không hỏi tên thật, ngày sinh hay trường lớp. Nhật ký cảm xúc chỉ lưu trên máy của bạn.</span>
+        </p>
       </div>
     </div>
   );

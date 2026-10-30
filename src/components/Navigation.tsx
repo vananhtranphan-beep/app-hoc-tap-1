@@ -1,123 +1,109 @@
 import React from "react";
-import {
-  Home,
-  BookOpen,
-  Bot,
-  Calendar,
-  TrendingUp,
-  Smile,
-  Target,
-  Video,
-} from "lucide-react";
+import { Home, BookOpen, Bot, Calendar, TrendingUp, Sprout, Compass, Video, GraduationCap } from "lucide-react";
 import { NavSection } from "../types";
+import { CompassLogo } from "./CompassLogo";
 
 interface NavigationProps {
   currentSection: NavSection;
   onSelectSection: (section: NavSection) => void;
 }
 
-export const NAV_ITEMS: {
-  id: NavSection;
-  label: string;
-  icon: React.ElementType;
-  color: string;
-  badge?: string;
-}[] = [
-    { id: "home", label: "Trang chủ", icon: Home, color: "text-blue-600" },
-    { id: "subjects", label: "Môn học THCS", icon: BookOpen, color: "text-emerald-600", badge: "Sách 6-9" },
-    { id: "mood", label: "Theo dõi tâm lý", icon: Smile, color: "text-rose-500", badge: "Ưu Tiên #1 ⭐" },
-    { id: "ai_tutor", label: "AI Tutor THCS", icon: Bot, color: "text-indigo-600", badge: "AI 24/7" },
-    { id: "planner", label: "Lập kế hoạch", icon: Calendar, color: "text-violet-600", badge: "Lịch 7 Ngày" },
-    { id: "progress", label: "Theo dõi tiến độ", icon: TrendingUp, color: "text-cyan-600", badge: "Mục Tiêu" },
-    { id: "career", label: "Hướng nghiệp THCS", icon: Target, color: "text-amber-600", badge: "Ôn Thi 10" },
-    { id: "videos", label: "Video bài giảng", icon: Video, color: "text-red-600" },
+type NavItem = { id: NavSection; label: string; icon: React.ElementType };
+
+const MAIN_ITEMS: NavItem[] = [
+  { id: "home", label: "Trang chủ", icon: Home },
+  { id: "career", label: "Hướng nghiệp", icon: Compass },
+  { id: "mood", label: "Cây cảm xúc", icon: Sprout },
+];
+
+export const STUDY_ITEMS: (NavItem & { desc: string })[] = [
+  { id: "subjects", label: "Sách giáo khoa", icon: BookOpen, desc: "Đọc SGK lớp 6–9 các môn" },
+  { id: "videos", label: "Video bài giảng", icon: Video, desc: "Lưu video YouTube để xem lại" },
+  { id: "ai_tutor", label: "AI Tutor", icon: Bot, desc: "Hỏi bài, AI giải thích từng bước" },
+  { id: "planner", label: "Kế hoạch tuần", icon: Calendar, desc: "Lên lịch học 7 ngày" },
+  { id: "progress", label: "Bảng điểm", icon: TrendingUp, desc: "Tính điểm trung bình học kỳ" },
+];
+
+export const STUDY_SECTIONS: NavSection[] = ["study", ...STUDY_ITEMS.map((i) => i.id)];
+
+const SideButton: React.FC<{ item: NavItem; active: boolean; onClick: () => void }> = ({ item, active, onClick }) => {
+  const Icon = item.icon;
+  return (
+    <button
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={`w-full flex items-center gap-3 min-h-11 px-3 rounded-xl text-sm font-semibold transition cursor-pointer ${
+        active ? "bg-teal text-white" : "text-mist/85 hover:bg-white/8 hover:text-white"
+      }`}
+    >
+      <Icon className="w-[18px] h-[18px] shrink-0" />
+      <span>{item.label}</span>
+    </button>
+  );
+};
+
+export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelectSection }) => {
+  const inStudy = STUDY_SECTIONS.includes(currentSection);
+
+  const mobileItems: (NavItem & { active: boolean })[] = [
+    ...MAIN_ITEMS.map((i) => ({ ...i, active: currentSection === i.id })),
+    { id: "study", label: "Học tập", icon: GraduationCap, active: inStudy },
   ];
 
-export const Navigation: React.FC<NavigationProps> = ({
-  currentSection,
-  onSelectSection,
-}) => {
   return (
     <>
-      {/* Desktop Sidebar Navigation */}
-      <aside className="hidden lg:flex flex-col w-64 bg-slate-900 text-slate-200 border-r border-slate-800 p-4 shrink-0 min-h-[calc(100vh-61px)]">
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-3">
-          Menu Điều Hướng App
-        </div>
-        <nav className="space-y-1 flex-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentSection === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onSelectSection(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all cursor-pointer ${isActive
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/40"
-                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
-                  }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon
-                    className={`w-5 h-5 ${isActive ? "text-white" : item.color
-                      }`}
-                  />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                      }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+      {/* Máy tính: thanh bên */}
+      <aside className="hidden lg:flex flex-col w-60 bg-navy text-mist p-4 shrink-0 min-h-[calc(100vh-61px)] sticky top-[61px] self-start">
+        <nav className="space-y-1" aria-label="Điều hướng chính">
+          {MAIN_ITEMS.map((item) => (
+            <SideButton key={item.id} item={item} active={currentSection === item.id} onClick={() => onSelectSection(item.id)} />
+          ))}
         </nav>
 
-        {/* Footer info box */}
-        <div className="mt-6 p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs text-slate-400">
-          <div className="font-semibold text-slate-200 mb-1 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-            AI Hub Connected
-          </div>
-          <div>Phiên bản AI Study Hub v2.5 sẵn sàng hỗ trợ bạn 24/7.</div>
+        <button
+          onClick={() => onSelectSection("study")}
+          className={`mt-6 mb-1 px-3 text-left text-[11px] font-bold uppercase tracking-wider cursor-pointer ${currentSection === "study" ? "text-white" : "text-mist/55 hover:text-white"}`}
+        >
+          Học tập thông minh
+        </button>
+        <nav className="space-y-1" aria-label="Học tập thông minh">
+          {STUDY_ITEMS.map((item) => (
+            <SideButton key={item.id} item={item} active={currentSection === item.id} onClick={() => onSelectSection(item.id)} />
+          ))}
+        </nav>
+
+        <div className="mt-auto pt-6 flex items-center gap-2.5 px-2 text-xs text-mist/70">
+          <CompassLogo size={28} />
+          <span>La bàn nhỏ cho hành trình lớn</span>
         </div>
       </aside>
 
-      {/* Menu điện thoại: 1 hàng vuốt ngang, không chiếm nhiều màn hình */}
-      <div className="lg:hidden bg-slate-900 border-b border-slate-800 px-2.5 py-2 sticky top-[67px] z-20">
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar snap-x">
-          {NAV_ITEMS.map((item) => {
+      {/* Điện thoại, máy tính bảng: thanh điều hướng dưới đáy */}
+      <nav
+        aria-label="Điều hướng chính"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-line pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="grid grid-cols-4 max-w-xl mx-auto">
+          {mobileItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentSection === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => onSelectSection(item.id)}
-                className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 snap-start whitespace-nowrap ${isActive
-                    ? "bg-indigo-600 text-white shadow"
-                    : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
+                aria-current={item.active ? "page" : undefined}
+                className={`min-h-16 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition cursor-pointer ${
+                  item.active ? "text-teal" : "text-muted hover:text-navy"
+                }`}
               >
-                <div className="flex items-center gap-2">
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : item.color}`} />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span className={`text-[9px] px-1 py-0.5 rounded shrink-0 ${isActive ? "bg-white/20 text-white" : "bg-indigo-500/20 text-indigo-300"}`}>
-                    {item.badge.includes("⭐") ? "⭐" : item.badge.split(" ")[0]}
-                  </span>
-                )}
+                <span className={`w-12 h-7 rounded-full flex items-center justify-center transition ${item.active ? "bg-teal-soft" : ""}`}>
+                  <Icon className="w-5 h-5" />
+                </span>
+                {item.label}
               </button>
             );
           })}
         </div>
-      </div>
+      </nav>
     </>
   );
 };

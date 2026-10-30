@@ -1,347 +1,249 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Sparkles, Compass, Award, ChevronRight, GraduationCap, Bot, User } from "lucide-react";
-import { MathMarkdown } from "./MathMarkdown";
-import { CareerResult } from "../types";
+import React, { useEffect, useMemo, useState } from "react";
+import { Check, Bot, Compass } from "lucide-react";
+import { Career, careerById } from "../data/careerData";
+import {
+  CareerState,
+  ChatMsg,
+  aiContext,
+  answeredCount,
+  careerDetailForAI,
+  computeScores,
+  loadCareerState,
+  saveCareerState,
+  suggestCareers,
+} from "../lib/career";
+import { QuizStep, Attribution } from "./career/QuizStep";
+import { SummaryStep } from "./career/SummaryStep";
+import { CatalogStep } from "./career/CatalogStep";
+import { CareerDetail } from "./career/CareerDetail";
+import { ExperienceStep } from "./career/ExperienceStep";
+import { PlanStep } from "./career/PlanStep";
+import { CareerChat } from "./career/CareerChat";
+import { AboutQuestions } from "./career/AboutQuestions";
+import { Card, PrimaryBtn } from "./career/ui";
 
-interface Message {
-  role: "user" | "model";
-  content: string;
+// ============================================================
+// HƯỚNG NGHIỆP: 6 BƯỚC + TRÒ CHUYỆN VỚI AI
+// 1 Khám phá bản thân → 2 Tổng hợp → 3 Khám phá nghề → 4 Chi tiết nghề
+// → 5 Trải nghiệm nghề → 6 Kế hoạch khám phá
+// Tiến độ lưu theo tài khoản (đồng bộ lên máy chủ khi đăng nhập).
+// ============================================================
+
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | "chat";
+
+interface Props {
+  userId?: string;
+  grade?: string;
 }
 
-export const CareerGuidanceView: React.FC = () => {
-  const [interests, setInterests] = useState("Thích công nghệ, sáng tạo, giải quyết vấn đề và tư duy logic");
-  const [strengths, setStrengths] = useState("Tư duy phân tích, thích tính toán và khả năng giao tiếp Tiếng Anh tốt");
-  const [favoriteSubjects, setFavoriteSubjects] = useState<string[]>(["Toán", "Ngoại ngữ 1 (Tiếng Anh)", "Tin học"]);
-  const [targetHighSchool, setTargetHighSchool] = useState("Trường THPT Chuyên / Top 1");
+const STEPS: { n: Exclude<Step, "chat">; label: string }[] = [
+  { n: 1, label: "Khám phá bản thân" },
+  { n: 2, label: "Tổng hợp" },
+  { n: 3, label: "Khám phá nghề" },
+  { n: 4, label: "Chi tiết nghề" },
+  { n: 5, label: "Trải nghiệm" },
+  { n: 6, label: "Kế hoạch" },
+];
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
+export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade = "8" }) => {
+  const [state, setState] = useState<CareerState>(() => loadCareerState(userId));
+  const [step, setStep] = useState<Step>(() => (loadCareerState(userId).completedAt ? 2 : 1));
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [expFocus, setExpFocus] = useState<string | null>(null);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [prefill, setPrefill] = useState<{ text: string; extra?: string } | null>(null);
 
-  const [careers, setCareers] = useState<CareerResult[]>([
-    {
-      title: "Kỹ Sư Lập Trình & Trí Tuệ Nhân Tạo (AI Engineer)",
-      description: "Xây dựng ứng dụng phần mềm, thuật toán trí tuệ nhân tạo và hệ thống xử lý dữ liệu thông minh.",
-      matchPercentage: 95,
-      subjectsNeeded: ["Toán Học (Khối A00, A01)", "Tiếng Anh (Khối D01)", "Tin Học"],
-      recommendedHighSchoolPaths: ["THPT Chuyên Tin / Chuyên Toán", "THPT Công Lập Chất Lượng Cao"],
-      roadmap: [
-        "Lớp 6 - Lớp 9 THCS: Ôn chắc kiến thức Toán Đại số & Hình học, tích cực rèn luyện môn Tiếng Anh và học Scratch/Python cơ bản.",
-        "Thi Vào Lớp 10: Đặt mục tiêu đỗ vào lớp Chuyên Toán, Chuyên Tin hoặc THPT Top đầu địa phương.",
-        "Lớp 10 - Lớp 12 THPT: Ôn tập tổ hợp môn A01 (Toán, Lý, Anh) hoặc A00 (Toán, Lý, Hóa), thi chứng chỉ IELTS 6.5+.",
-        "Bậc Đại Học: Ngành Khoa học Máy tính / Công nghệ Thông tin tại các trường Đại học Bách Khoa, KHTN."
-      ]
-    },
-    {
-      title: "Chuyên Gia Phân Tích Dữ Liệu & Kinh Tế Số",
-      description: "Phân tích xu hướng kinh tế, tối ưu hóa dữ liệu và vận hành hệ thống tài chính công nghệ.",
-      matchPercentage: 88,
-      subjectsNeeded: ["Toán Học", "Tiếng Anh", "Lịch Sử & Địa Lý"],
-      recommendedHighSchoolPaths: ["THPT Khối A01 / D01", "Trường THPT Quốc Tế / Song Ngữ"],
-      roadmap: [
-        "Lớp 6 - Lớp 9 THCS: Học tốt chương trình Toán Cấp 2 (đặc biệt là Thống kê xác suất) và nâng cao từ vựng Tiếng Anh.",
-        "Thi Vào Lớp 10: Tập trung đạt điểm cao bài thi Tuyển sinh Lớp 10 môn Toán & Tiếng Anh.",
-        "Lớp 10 - Lớp 12 THPT: Tham gia các cuộc thi KHKT học sinh và ôn tập tổ hợp D01 (Toán, Văn, Anh).",
-        "Bậc Đại Học: Ngành Phân Tích Dữ Liệu Kinh Doanh, Tài Chính Doanh Nghiệp."
-      ]
-    }
-  ]);
+  useEffect(() => saveCareerState(userId, state), [state, userId]);
 
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  const update = (fn: (s: CareerState) => CareerState) => setState(fn);
+  const scores = useMemo(() => computeScores(state.answers), [state.answers]);
+  const hasQuiz = Boolean(state.completedAt) && answeredCount(state.answers) >= 10;
+  const suggestions = useMemo(() => (hasQuiz ? suggestCareers(state, scores, 8) : []), [hasQuiz, state, scores]);
+  const recommendedIds = suggestions.map((s) => s.career.id);
+  const context = useMemo(() => aiContext(state, scores, grade), [state, scores, grade]);
 
-  const handleConsultCareer = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-
-    const promptText = `Học sinh có nguyện vọng hướng nghiệp như sau:
-- Mục tiêu trường THPT ước mơ: ${targetHighSchool}
-- Sở thích & đam mê: ${interests}
-- Điểm mạnh & kỹ năng: ${strengths}
-- Các môn học yêu thích ở cấp 2: ${favoriteSubjects.join(", ")}
-
-Hãy đóng vai trò là chuyên gia tư vấn hướng nghiệp THCS, phân tích bức tranh tổng thể về lộ trình học tập, khối thi phù hợp và gợi ý định hướng chọn trường, chọn nghề chi tiết nhất cho học sinh này.`;
-
-    const newMsgs: Message[] = [
-      {
-        role: "user",
-        content: "Hãy phân tích lộ trình hướng nghiệp dựa trên thông tin khảo sát của tôi."
-      }
-    ];
-
-    setMessages(newMsgs);
-
-    try {
-      const response = await fetch("/api/tutor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: "Hướng nghiệp THCS",
-          messages: [{ role: "user", content: promptText }]
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Lỗi kết nối AI hướng nghiệp");
-
-      setMessages([
-        ...newMsgs,
-        { role: "model", content: data.reply }
-      ]);
-    } catch (err: any) {
-      setMessages([
-        ...newMsgs,
-        { role: "model", content: "⚠️ Không thể kết nối AI: " + err.message + ". Em vui lòng thử lại sau nhé!" }
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+  const go = (s: Step) => {
+    setStep(s);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const openCareer = (id: string) => {
+    setDetailId(id);
+    go(4);
+  };
+  const toggleSave = (id: string) =>
+    update((s) => ({ ...s, saved: s.saved.includes(id) ? s.saved.filter((x) => x !== id) : [...s.saved, id] }));
+  const toggleCompare = (id: string) =>
+    update((s) => ({
+      ...s,
+      compare: s.compare.includes(id) ? s.compare.filter((x) => x !== id) : s.compare.length >= 3 ? s.compare : [...s.compare, id],
+    }));
+  const setChat = (m: ChatMsg[]) => update((s) => ({ ...s, chat: m.slice(-40) }));
+  const askAboutCareer = (c: Career) => {
+    setPrefill({ text: `Mình muốn hỏi thêm về nghề ${c.name}: nghề này có hợp với mình không, và mình nên bắt đầu tìm hiểu từ đâu?`, extra: careerDetailForAI(c) });
+    go("chat");
   };
 
-  const toggleFavSubject = (subj: string) => {
-    setFavoriteSubjects((prev) =>
-      prev.includes(subj) ? prev.filter((s) => s !== subj) : [...prev, subj]
-    );
+  const doneMark: Record<number, boolean> = {
+    1: hasQuiz,
+    2: hasQuiz,
+    3: state.saved.length > 0,
+    4: state.saved.length > 0 || state.compare.length > 0,
+    5: Object.values(state.experiences).some((e) => e.status === "done"),
+    6: state.plan.length > 0,
   };
 
-  const ALL_SUBJECTS = [
-    "Toán",
-    "Ngữ văn",
-    "Ngoại ngữ 1 (Tiếng Anh)",
-    "Khoa học tự nhiên",
-    "Lịch sử và Địa lí",
-    "Giáo dục công dân",
-    "Tin học",
-    "Công nghệ",
-    "Giáo dục thể chất",
-    "Nghệ thuật",
-    "Hoạt động trải nghiệm",
-    "Giáo dục địa phương"
-  ];
+  const detail = detailId ? careerById(detailId) : undefined;
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-900 via-orange-950 to-slate-900 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/30 text-amber-200 text-xs font-bold border border-amber-400/30">
-            <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
-            <span>Định Hướng Học Tập & Chọn Khối Lớp 10 THCS</span>
+    <div className="space-y-5 pb-6">
+      {/* Đầu trang */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="w-12 h-12 rounded-2xl bg-teal text-white flex items-center justify-center">
+            <Compass className="w-6 h-6" />
+          </span>
+          <div>
+            <h2 className="text-2xl font-extrabold text-navy tracking-tight">Hướng nghiệp</h2>
+            <p className="text-sm text-muted">Hiểu sở thích của mình, khám phá nghề, thử trải nghiệm nhỏ.</p>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            🎯 Hướng Nghiệp THCS & Định Hướng Chọn Trường
-          </h2>
-          <p className="text-xs sm:text-sm text-amber-100 leading-relaxed">
-            Phân tích AI dựa trên sở thích, điểm mạnh, môn học yêu thích và loại trường THPT ước mơ để đề xuất ngành nghề phù hợp, khối thi và lộ trình từng bước!
-          </p>
         </div>
-
         <button
-          onClick={handleConsultCareer}
-          disabled={isLoading}
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-900/50 transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-amber-300/30 disabled:opacity-50"
+          onClick={() => go("chat")}
+          aria-current={step === "chat" ? "page" : undefined}
+          className={`min-h-11 px-4 rounded-xl text-sm font-bold inline-flex items-center gap-2 border transition cursor-pointer ${
+            step === "chat" ? "bg-navy text-cream border-navy" : "bg-white text-navy border-line hover:border-teal"
+          }`}
         >
-          <Sparkles className="w-5 h-5 text-yellow-200 animate-pulse" />
-          <span>{isLoading ? "AI Đang Phân Tích Lộ Trình..." : "🤖 AI Phân Tích Định Hướng"}</span>
+          <Bot className="w-4 h-4" /> Hỏi AI hướng nghiệp
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Survey Form (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
-            <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
-              <Compass className="w-5 h-5 text-amber-600" />
-              <span>Khảo Sát Đam Mê & Môn Học Yêu Thích</span>
-            </h3>
-
-            {/* Target High School Type */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Mục tiêu Trường THPT ước mơ:</label>
-              <select
-                value={targetHighSchool}
-                onChange={(e) => setTargetHighSchool(e.target.value)}
-                className="w-full p-3 rounded-2xl border border-slate-200 text-xs bg-slate-50 font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="Trường THPT Chuyên / Top 1">Trường THPT Chuyên / Top 1 Địa Phương</option>
-                <option value="Trường THPT Công Lập Chất Lượng">Trường THPT Công Lập Chất Lượng Khá/Giỏi</option>
-                <option value="Trường Song Ngữ / Tư Thục">Trường THPT Song Ngữ / Quốc Tế / Tư Thục</option>
-                <option value="Trường Nghề / Cao Đẳng Nghề THPT">Trường Nghề / Hệ Cao Đẳng Nghề THPT</option>
-              </select>
-            </div>
-
-            {/* Interests */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Sở thích & Đam mê cá nhân:</label>
-              <textarea
-                value={interests}
-                onChange={(e) => setInterests(e.target.value)}
-                rows={2}
-                className="w-full p-3 rounded-2xl border border-slate-200 text-xs bg-slate-50 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
-                placeholder="VD: Thích lập trình, vẽ tranh, giao tiếp, tìm hiểu tự nhiên..."
-              />
-            </div>
-
-            {/* Strengths */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Điểm mạnh & Kỹ năng vượt trội:</label>
-              <textarea
-                value={strengths}
-                onChange={(e) => setStrengths(e.target.value)}
-                rows={2}
-                className="w-full p-3 rounded-2xl border border-slate-200 text-xs bg-slate-50 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
-                placeholder="VD: Tư duy logic, giải toán nhanh, làm việc nhóm, học ngoại ngữ..."
-              />
-            </div>
-
-            {/* Favorite Subjects */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700">Chọn môn học yêu thích nhất (Cấp 2):</label>
-              <div className="flex flex-wrap gap-1.5">
-                {ALL_SUBJECTS.map((s) => {
-                  const isSelected = favoriteSubjects.includes(s);
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => toggleFavSubject(s)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                        isSelected
-                          ? "bg-amber-600 text-white shadow-xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button
-              onClick={handleConsultCareer}
-              disabled={isLoading}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-extrabold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-amber-200 disabled:opacity-50"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Phân Tích AI Định Hướng & Lựa Chọn Ngành</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Results Showcase (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          {/* AI Chat Evaluation Output Box */}
-          {(messages.length > 0 || isLoading) && (
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-amber-50 via-orange-50 to-slate-50 border border-amber-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-amber-200/80 pb-3">
-                <div className="flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-amber-700" />
-                  <h3 className="font-extrabold text-amber-950 text-base">
-                    Báo Cáo Phân Tích Định Hướng Từ AI Chuyên Gia
-                  </h3>
-                </div>
-                <span className="px-3 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold text-xs">
-                  Mục tiêu: {targetHighSchool}
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${msg.role === "user" ? "bg-amber-600 text-white" : "bg-slate-900 text-amber-400"}`}>
-                      {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                    </div>
-                    <div className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${msg.role === "user" ? "bg-amber-600 text-white rounded-tr-none" : "bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs space-y-2"}`}>
-                      {msg.role === "model" && (
-                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold">
-                          <Sparkles className="w-3 h-3 text-amber-600" />
-                          <span>AI chỉ có tính chất tham khảo</span>
-                        </div>
-                      )}
-                      <MathMarkdown tone={msg.role === "user" ? "dark" : "light"}>{msg.content}</MathMarkdown>
-                    </div>
-                  </div>
-                ))}
-
-                {isLoading && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center">
-                      <Bot className="w-4 h-4 animate-spin" />
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white border border-slate-200 text-xs text-slate-500 font-bold animate-pulse">
-                      AI Chuyên gia đang phân tích lộ trình hướng nghiệp cho em...
-                    </div>
-                  </div>
-                )}
-                <div ref={chatBottomRef} />
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <h4 className="font-extrabold text-slate-900 text-base flex items-center justify-between">
-              <span>🎯 Ngành Nghề & Trường THPT Đề Xuất P.Hợp</span>
-              <span className="text-xs text-slate-500 font-normal">Cho học sinh Cấp 2</span>
-            </h4>
-
-            {careers.map((c, idx) => (
-              <div key={idx} className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                  <h5 className="font-extrabold text-slate-900 text-base">{c.title}</h5>
-                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs self-start sm:self-auto shrink-0">
-                    {c.matchPercentage}% Phù hợp
+      {/* Thanh 6 bước */}
+      <nav aria-label="Các bước hướng nghiệp" className="-mx-4 px-4 lg:mx-0 lg:px-0 overflow-x-auto no-scrollbar">
+        <ol className="flex gap-2 min-w-max lg:min-w-0 lg:grid lg:grid-cols-6">
+          {STEPS.map((s) => {
+            const active = step === s.n;
+            return (
+              <li key={s.n}>
+                <button
+                  onClick={() => (s.n === 4 && !detail ? go(3) : go(s.n))}
+                  aria-current={active ? "step" : undefined}
+                  className={`w-full min-h-12 px-3 rounded-xl border text-left flex items-center gap-2.5 transition cursor-pointer ${
+                    active ? "bg-navy border-navy text-cream" : "bg-white border-line text-navy hover:border-teal"
+                  }`}
+                >
+                  <span
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                      doneMark[s.n] ? "bg-teal text-white" : active ? "bg-white/15 text-cream" : "bg-mist text-navy"
+                    }`}
+                  >
+                    {doneMark[s.n] ? <Check className="w-4 h-4" /> : s.n}
                   </span>
-                </div>
+                  <span className="text-sm lg:text-[13px] font-semibold whitespace-nowrap lg:whitespace-normal lg:leading-tight">{s.label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">{c.description}</p>
+      {step === 1 && (
+        <QuizStep
+          state={state}
+          update={update}
+          onOpenAbout={() => setAboutOpen(true)}
+          onFinish={() => {
+            update((s) => ({ ...s, completedAt: new Date().toISOString() }));
+            go(2);
+          }}
+        />
+      )}
 
-                {/* Subjects needed */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Tổ hợp môn xét tuyển & môn trọng tâm:</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {c.subjectsNeeded.map((sub, sIdx) => (
-                      <span key={sIdx} className="px-3 py-1 rounded-xl bg-slate-100 text-slate-800 text-xs font-bold">
-                        {sub}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+      {step === 2 &&
+        (hasQuiz ? (
+          <SummaryStep
+            state={state}
+            scores={scores}
+            suggestions={suggestions}
+            grade={grade}
+            context={context}
+            onEditQuiz={() => {
+              update((s) => ({ ...s, quizIndex: 0 }));
+              go(1);
+            }}
+            onOpenCareer={openCareer}
+            onToggleSave={toggleSave}
+            onGoCatalog={() => go(3)}
+            onChatChange={setChat}
+          />
+        ) : (
+          <Card className="space-y-3">
+            <h3 className="text-lg font-extrabold text-navy">Chưa có kết quả tổng hợp</h3>
+            <p className="text-sm text-muted">Bạn làm khảo sát ngắn ở bước 1 (khoảng 5 phút) để web tổng hợp sở thích của bạn.</p>
+            <PrimaryBtn onClick={() => go(1)}>Bắt đầu khảo sát</PrimaryBtn>
+          </Card>
+        ))}
 
-                {/* Recommended High Schools */}
-                {c.recommendedHighSchoolPaths && (
-                  <div className="space-y-1">
-                    <div className="text-[11px] font-extrabold text-amber-700 uppercase tracking-wider">Môi trường THPT đề xuất:</div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {c.recommendedHighSchoolPaths.map((path, pIdx) => (
-                        <span key={pIdx} className="px-3 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">
-                          {path}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+      {step === 3 && (
+        <CatalogStep
+          state={state}
+          recommendedIds={recommendedIds}
+          onOpenCareer={openCareer}
+          onToggleSave={toggleSave}
+          onToggleCompare={toggleCompare}
+          onClearCompare={() => update((s) => ({ ...s, compare: [] }))}
+        />
+      )}
 
-                {/* Step Roadmap */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
-                  <div className="text-xs font-extrabold text-indigo-800 flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-amber-500" /> Lộ trình học tập từng bước cho học sinh THCS:
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-slate-700 font-medium">
-                    {c.roadmap.map((step, rIdx) => (
-                      <li key={rIdx} className="flex items-start gap-2">
-                        <ChevronRight className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                        <span>{step}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {step === 4 && detail && (
+        <CareerDetail
+          career={detail}
+          state={state}
+          suggestion={suggestions.find((s) => s.career.id === detail.id)}
+          hasQuiz={hasQuiz}
+          onBack={() => go(3)}
+          onOpenCareer={openCareer}
+          onToggleSave={toggleSave}
+          onToggleCompare={toggleCompare}
+          onTryActivity={(id) => {
+            setExpFocus(id);
+            go(5);
+          }}
+          onAskAI={askAboutCareer}
+        />
+      )}
+
+      {step === 5 && (
+        <ExperienceStep
+          state={state}
+          update={update}
+          candidateIds={[...state.saved, ...recommendedIds.slice(0, 3)]}
+          focusId={expFocus}
+          onFocus={setExpFocus}
+          onOpenCareer={openCareer}
+        />
+      )}
+
+      {step === 6 && <PlanStep state={state} update={update} />}
+
+      {step === "chat" && (
+        <Card className="space-y-3">
+          <h3 className="text-lg font-extrabold text-navy">Trò chuyện với AI hướng nghiệp</h3>
+          <CareerChat
+            grade={grade}
+            messages={state.chat}
+            onChange={setChat}
+            context={context}
+            ready={hasQuiz}
+            prefill={prefill}
+            key="career-chat"
+            onPrefillUsed={() => setPrefill(null)}
+          />
+        </Card>
+      )}
+
+      {step !== 1 && <Attribution onOpenAbout={() => setAboutOpen(true)} />}
+      {aboutOpen && <AboutQuestions onClose={() => setAboutOpen(false)} />}
     </div>
   );
 };

@@ -6,7 +6,9 @@ export type NavSection =
   | "planner"
   | "progress"
   | "career"
-  | "videos";
+  | "videos"
+  | "study"
+  | "privacy";
 
 export interface CustomPdfBook {
   id: string;
@@ -59,16 +61,16 @@ export interface StudyTask {
   completed: boolean[];
 }
 
+// Hồ sơ ẩn danh: không có họ tên thật, ngày sinh, trường lớp
 export interface StudentProfile {
-  fullName: string;
-  dob: string;
+  studentId: string; // Tên đăng nhập
+  nickname: string; // Biệt danh do web tự tạo (em có thể đổi)
   grade: "6" | "7" | "8" | "9";
-  avatar: string;
-  studentId: string; // Login ID / Username
-  password?: string; // Password
-  schoolName?: string; // THCS School Name
+  avatar: string; // Biểu tượng (emoji), không dùng ảnh người thật
   isLoggedIn: boolean;
+  isGuest?: boolean; // Chế độ khách: chỉ lưu trên máy này
   createdAt?: string;
+  password?: string; // CHỈ còn ở tài khoản cũ tạo khi chưa có máy chủ, sẽ bị xóa khi chuyển lên máy chủ
 }
 
 export interface MoodLog {
