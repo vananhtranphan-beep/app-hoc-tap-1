@@ -1,0 +1,541 @@
+import React, { useState, useEffect, useRef } from "react";
+import {
+  TrendingUp,
+  Award,
+  Flame,
+  BarChart3,
+  BookOpen,
+  Sparkles,
+  Bot,
+  User,
+  Info
+} from "lucide-react";
+import { MathMarkdown } from "./MathMarkdown";
+import { SubjectGradeRecord, SemesterGrades } from "../types";
+
+export interface SubjectConfig {
+  id: string;
+  name: string;
+  txCount: number;
+}
+
+const INITIAL_SUBJECTS: SubjectConfig[] = [
+  { id: "math", name: "Toán", txCount: 4 },
+  { id: "literature", name: "Ngữ văn", txCount: 4 },
+  { id: "english", name: "Ngoại ngữ 1 (Tiếng Anh)", txCount: 3 },
+  { id: "khtn", name: "Khoa học tự nhiên", txCount: 3 },
+  { id: "history_geo", name: "Lịch sử và Địa lí", txCount: 3 },
+  { id: "gdcd", name: "Giáo dục công dân", txCount: 2 },
+  { id: "informatics", name: "Tin học", txCount: 2 },
+  { id: "technology", name: "Công nghệ", txCount: 2 },
+];
+
+export function calculateSemesterAvg(sem: SemesterGrades, txCount: number = 4): number | null {
+  const txScores = [sem.tx1, sem.tx2, sem.tx3, sem.tx4].slice(0, txCount);
+  const gk = sem.gk ?? null;
+  const ck = sem.ck ?? null;
+
+  let totalScore = 0;
+  let totalWeight = 0;
+
+  txScores.forEach((tx) => {
+    if (tx !== null && tx !== undefined && !isNaN(tx)) {
+      totalScore += tx * 1;
+      totalWeight += 1;
+    }
+  });
+
+  if (gk !== null && !isNaN(gk)) {
+    totalScore += gk * 2;
+    totalWeight += 2;
+  }
+
+  if (ck !== null && !isNaN(ck)) {
+    totalScore += ck * 3;
+    totalWeight += 3;
+  }
+
+  if (totalWeight === 0) return null;
+  return Number((totalScore / totalWeight).toFixed(2));
+}
+
+export function calculateFullYearAvg(hk1Avg: number | null, hk2Avg: number | null): number | null {
+  if (hk1Avg === null && hk2Avg === null) return null;
+  if (hk1Avg !== null && hk2Avg === null) return hk1Avg;
+  if (hk1Avg === null && hk2Avg !== null) return hk2Avg;
+  return Number(((hk1Avg! + hk2Avg! * 2) / 3).toFixed(2));
+}
+
+interface Message {
+  role: "user" | "model";
+  content: string;
+}
+
+interface ProgressViewProps {
+  userId?: string;
+  /** Số ngày vào app liên tục (lấy từ hệ thống điểm danh tự động của App) */
+  streakCount?: number;
+  grade?: string;
+}
+
+export const ProgressView: React.FC<ProgressViewProps> = ({ userId, streakCount = 1, grade = "8" }) => {
+  const storageKey = `user_${userId || "default"}_subject_records`;
+
+  // Active view tab for grades table: HK1 | HK2 | FULL_YEAR
+  const [activeSemTab, setActiveSemTab] = useState<"hk1" | "hk2" | "full">("hk1");
+
+  // Subject Grades State
+  const [records, setRecords] = useState<SubjectGradeRecord[]>(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // default
+      }
+    }
+    // Tài khoản mới: bảng điểm trống (không có điểm mẫu)
+    const empty = { tx1: null, tx2: null, tx3: null, tx4: null, gk: null, ck: null };
+    return INITIAL_SUBJECTS.map((s) => ({ subjectId: s.id, subjectName: s.name, hk1: { ...empty }, hk2: { ...empty } }));
+  });
+
+  // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(records));
+  }, [records, storageKey]);
+
+  // AI Chat Evaluation State (Sử dụng API /api/tutor giống hệt AI Tutor View)
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isEvaluating]);
+
+  const handleScoreChange = (
+    subjIdx: number,
+    semKey: "hk1" | "hk2",
+    colKey: keyof SemesterGrades,
+    valStr: string
+  ) => {
+    const num = valStr === "" ? null : parseFloat(valStr);
+    const updated = [...records];
+    updated[subjIdx] = {
+      ...updated[subjIdx],
+      [semKey]: {
+        ...updated[subjIdx][semKey],
+        [colKey]: num !== null && !isNaN(num) ? Math.min(10, Math.max(0, num)) : null
+      }
+    };
+    setRecords(updated);
+  };
+
+  // Calculate averages across all subjects
+  const subjectAverages = records.map((r, idx) => {
+    const sConf = INITIAL_SUBJECTS.find((s) => s.id === r.subjectId) || INITIAL_SUBJECTS[idx] || { txCount: 4 };
+    const hk1Avg = calculateSemesterAvg(r.hk1, sConf.txCount);
+    const hk2Avg = calculateSemesterAvg(r.hk2, sConf.txCount);
+    const fullYearAvg = calculateFullYearAvg(hk1Avg, hk2Avg);
+    return {
+      name: r.subjectName,
+      hk1Avg,
+      hk2Avg,
+      fullYearAvg
+    };
+  });
+
+  const validFullYearAvgs = subjectAverages
+    .map((s) => s.fullYearAvg)
+    .filter((v): v is number => v !== null);
+
+  const overallGPA = validFullYearAvgs.length > 0
+    ? Number((validFullYearAvgs.reduce((a, b) => a + b, 0) / validFullYearAvgs.length).toFixed(2))
+    : 0;
+
+  // Trigger AI Evaluation using /api/tutor endpoint
+  const hasGrades = validFullYearAvgs.length > 0;
+  const gpaText = hasGrades ? overallGPA : "—";
+
+  const handleEvaluateProgressWithAI = async () => {
+    if (isEvaluating || !hasGrades) return;
+    setIsEvaluating(true);
+
+    const summaryText = subjectAverages
+      .map((s) => `- ${s.name}: ĐTB HK1 = ${s.hk1Avg ?? "Chưa có"}, ĐTB HK2 = ${s.hk2Avg ?? "Chưa có"}, ĐTB Cả Năm = ${s.fullYearAvg ?? "Chưa có"}`)
+      .join("\n");
+
+    const promptText = `Em là học sinh lớp ${grade}. Dưới đây là bảng điểm chi tiết các môn học của em, với điểm trung bình cả năm tổng kết là ${overallGPA}:\n${summaryText}\n\nHãy đóng vai trò là gia sư AI, phân tích giúp em lực học hiện tại, chỉ ra môn nào em cần cố gắng bứt phá hơn và đưa ra lời khuyên chiến lược học tập cụ thể cho em nhé!`;
+
+    const newMsgs: Message[] = [
+      {
+        role: "user",
+        content: "Hãy phân tích bảng điểm và đưa ra đánh giá tiến độ học tập cho tôi."
+      }
+    ];
+
+    setMessages(newMsgs);
+
+    try {
+      const response = await fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: "Đánh giá học tập",
+          messages: [{ role: "user", content: promptText }]
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Lỗi kết nối AI");
+
+      setMessages([
+        ...newMsgs,
+        { role: "model", content: data.reply }
+      ]);
+    } catch (err: any) {
+      setMessages([
+        ...newMsgs,
+        { role: "model", content: "⚠️ Không thể kết nối AI: " + err.message + ". Em vui lòng thử lại sau nhé!" }
+      ]);
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Top Banner Header */}
+      <div className="p-6 rounded-2xl bg-navy text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal/30 text-mist text-xs font-bold border border-teal/40">
+            <TrendingUp className="w-3.5 h-3.5 text-teal-soft" />
+            <span>Sổ Điểm Điện Tử & Bảng Tính Điểm Chuẩn THCS ⭐</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            📈 Theo Dõi Bảng Điểm & Tiến Độ Học Tập
+          </h2>
+          <p className="text-xs sm:text-sm text-mist leading-relaxed">
+            Nhập 4 cột điểm Thường xuyên (x1), 1 cột Giữa kỳ (x2), 1 cột Cuối kỳ (x3) cho 2 Học Kỳ. Hệ thống tự tính chính xác ĐTB Học Kỳ và ĐTB Cả Năm!
+          </p>
+        </div>
+
+        <button
+          onClick={handleEvaluateProgressWithAI}
+          disabled={isEvaluating || !hasGrades}
+          title={hasGrades ? undefined : "Nhập điểm trước để AI đánh giá"}
+          className="px-6 py-3.5 rounded-2xl bg-teal hover:bg-teal-deep text-white font-extrabold text-xs sm:text-sm shadow-lg transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-teal/50 disabled:opacity-50"
+        >
+          <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+          <span>{isEvaluating ? "AI Đang Phân Tích..." : hasGrades ? "🤖 AI Đánh Giá Bảng Điểm" : "Nhập điểm để AI đánh giá"}</span>
+        </button>
+      </div>
+
+      {/* KPI Stats Bar (Đã bỏ mục tiêu đặt ra, giữ lại 2 cột cân đối) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Streak Checkin */}
+        <div className="p-5 rounded-2xl bg-white border border-line shadow-sm space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-muted">
+            <span>Ngày Vào App Liên Tục</span>
+            <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-3xl font-extrabold text-amber-600">{streakCount} Ngày</span>
+            <span className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-100 text-emerald-700">
+              ✓ Đã điểm danh hôm nay
+            </span>
+          </div>
+          <div className="text-[11px] text-amber-800 font-semibold">
+            Hệ thống tự điểm danh mỗi ngày em vào app. Vào app mỗi ngày để giữ ngọn lửa học tập!
+          </div>
+        </div>
+
+        {/* Overall GPA */}
+        <div className="p-5 rounded-2xl bg-white border border-line shadow-sm space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-muted">
+            <span>ĐTB Trung Bình Cả Năm</span>
+            <Award className="w-4 h-4 text-teal-deep" />
+          </div>
+          <div className="text-3xl font-extrabold text-teal-deep">{gpaText}</div>
+          <div className="text-[11px] text-muted font-medium">
+            Tự động tính từ các môn học tính điểm THCS
+          </div>
+        </div>
+      </div>
+
+      {/* AI Evaluation Report Box (Giao diện hiển thị kết quả giống khung chat AI Tutor) */}
+      {(messages.length > 0 || isEvaluating) && (
+        <div className="p-6 rounded-2xl bg-mist border border-teal-soft shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-teal-soft/80 pb-3">
+            <div className="flex items-center gap-2">
+              <Bot className="w-5 h-5 text-teal-deep" />
+              <h3 className="font-extrabold text-navy text-base">
+                Báo Cáo Phân Tích & Đánh Giá Từ AI Tutor
+              </h3>
+            </div>
+            <span className="px-3 py-0.5 rounded-full bg-teal-soft text-navy font-bold text-xs">
+              ĐTB Tổng Cả Năm: {gpaText}
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${msg.role === "user" ? "bg-teal text-white" : "bg-navy text-teal"}`}>
+                  {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                </div>
+                <div className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${msg.role === "user" ? "bg-teal text-white rounded-tr-none" : "bg-white border border-line text-ink rounded-tl-none shadow-xs space-y-2"}`}>
+                  {msg.role === "model" && (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold">
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>AI chỉ có tính chất tham khảo</span>
+                    </div>
+                  )}
+                  <MathMarkdown tone={msg.role === "user" ? "dark" : "light"}>{msg.content}</MathMarkdown>
+                </div>
+              </div>
+            ))}
+
+            {isEvaluating && (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-navy text-teal flex items-center justify-center">
+                  <Bot className="w-4 h-4 animate-spin" />
+                </div>
+                <div className="p-4 rounded-2xl bg-white border border-line text-xs text-muted font-bold animate-pulse">
+                  AI Tutor đang phân tích bảng điểm của em...
+                </div>
+              </div>
+            )}
+            <div ref={chatBottomRef} />
+          </div>
+        </div>
+      )}
+
+      {/* Formula Explanation Banner */}
+      <div className="p-4 rounded-2xl bg-mist/60 border border-teal-soft text-xs text-navy flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Info className="w-5 h-5 text-teal-deep shrink-0" />
+          <div>
+            <span className="font-bold">Công thức tính điểm chuẩn Bộ Giáo Dục:</span>
+            <p className="text-[11px] text-teal-deep mt-0.5">
+              ĐTB Học Kỳ = (Cột Thường Xuyên × 1 + Giữa Kỳ × 2 + Cuối Kỳ × 3) ÷ Tổng Trọng Số. | ĐTB Cả Năm = (ĐTB HK1 + ĐTB HK2 × 2) ÷ 3.
+            </p>
+          </div>
+        </div>
+
+        {/* Tab Selector: HK1 vs HK2 vs Full Year Summary */}
+        <div className="flex bg-white p-1 rounded-xl border border-teal-soft shrink-0">
+          <button
+            onClick={() => setActiveSemTab("hk1")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeSemTab === "hk1" ? "bg-teal text-white shadow-sm" : "text-muted hover:bg-mist"
+            }`}
+          >
+            Học Kỳ 1
+          </button>
+          <button
+            onClick={() => setActiveSemTab("hk2")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeSemTab === "hk2" ? "bg-teal text-white shadow-sm" : "text-muted hover:bg-mist"
+            }`}
+          >
+            Học Kỳ 2
+          </button>
+          <button
+            onClick={() => setActiveSemTab("full")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeSemTab === "full" ? "bg-teal text-white shadow-sm" : "text-muted hover:bg-mist"
+            }`}
+          >
+            Tổng Kết Cả Năm
+          </button>
+        </div>
+      </div>
+
+      {/* DETAILED GRADES TABLE ACCORDING TO FORMULA */}
+      <div className="p-6 rounded-2xl bg-white border border-line shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-line pb-3">
+          <h3 className="font-extrabold text-navy text-base flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-teal-deep" />
+            <span>
+              {activeSemTab === "hk1"
+                ? "Bảng Điểm Chi Tiết - Học Kỳ 1"
+                : activeSemTab === "hk2"
+                ? "Bảng Điểm Chi Tiết - Học Kỳ 2"
+                : "Bảng Điểm Tổng Kết Cả Năm (HK1 & HK2)"}
+            </span>
+          </h3>
+
+          <span className="text-xs font-extrabold text-teal-deep bg-mist/60 px-3 py-1 rounded-full border border-line">
+            ĐTB Cả Năm Tổng: {gpaText}
+          </span>
+        </div>
+
+        {/* Table View depending on active tab */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-mist text-ink font-bold uppercase tracking-wider">
+                <th className="p-3 rounded-l-xl">Môn Học</th>
+
+                {activeSemTab !== "full" ? (
+                  <>
+                    <th className="p-2 text-center">TX 1 (x1)</th>
+                    <th className="p-2 text-center">TX 2 (x1)</th>
+                    <th className="p-2 text-center">TX 3 (x1)</th>
+                    <th className="p-2 text-center">TX 4 (x1)</th>
+                    <th className="p-2 text-center bg-mist/60 text-navy">Giữa Kỳ (x2)</th>
+                    <th className="p-2 text-center bg-mist/60 text-navy">Cuối Kỳ (x3)</th>
+                    <th className="p-3 text-center rounded-r-xl bg-navy-soft text-white">
+                      ĐTB {activeSemTab === "hk1" ? "Học Kỳ 1" : "Học Kỳ 2"}
+                    </th>
+                  </>
+                ) : (
+                  <>
+                    <th className="p-3 text-center bg-mist/60 text-navy">ĐTB Học Kỳ 1</th>
+                    <th className="p-3 text-center bg-mist/60 text-navy">ĐTB Học Kỳ 2 (x2)</th>
+                    <th className="p-3 text-center rounded-r-xl bg-navy text-amber-300 font-black text-sm">
+                      ĐTB Cả Năm
+                    </th>
+                  </>
+                )}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-line font-medium">
+              {records.map((r, idx) => {
+                const hk1Avg = subjectAverages[idx].hk1Avg;
+                const hk2Avg = subjectAverages[idx].hk2Avg;
+                const fullAvg = subjectAverages[idx].fullYearAvg;
+
+                const currentSemKey = activeSemTab === "hk2" ? "hk2" : "hk1";
+                const semData = r[currentSemKey];
+                const sConf = INITIAL_SUBJECTS.find((s) => s.id === r.subjectId) || INITIAL_SUBJECTS[idx] || { txCount: 4 };
+
+                return (
+                  <tr key={r.subjectId} className="hover:bg-cream transition">
+                    <td className="p-3 font-extrabold text-navy flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-teal-deep shrink-0" />
+                      <div>
+                        <div>{r.subjectName}</div>
+                        <div className="text-[10px] text-muted font-normal">
+                          {sConf.txCount} cột Thường Xuyên
+                        </div>
+                      </div>
+                    </td>
+
+                    {activeTabDetail(
+                      activeSemTab,
+                      semData,
+                      idx,
+                      currentSemKey,
+                      handleScoreChange,
+                      hk1Avg,
+                      hk2Avg,
+                      fullAvg,
+                      sConf.txCount
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Helper for rendering table rows cleanly
+function activeTabDetail(
+  activeSemTab: "hk1" | "hk2" | "full",
+  semData: SemesterGrades,
+  idx: number,
+  semKey: "hk1" | "hk2",
+  handleScoreChange: (subjIdx: number, semKey: "hk1" | "hk2", colKey: keyof SemesterGrades, valStr: string) => void,
+  hk1Avg: number | null,
+  hk2Avg: number | null,
+  fullAvg: number | null,
+  txCount: number = 4
+) {
+  if (activeSemTab === "full") {
+    return (
+      <>
+        <td className="p-3 text-center font-bold text-ink bg-mist/60">
+          {hk1Avg !== null ? hk1Avg : "—"}
+        </td>
+        <td className="p-3 text-center font-bold text-ink bg-mist/60">
+          {hk2Avg !== null ? hk2Avg : "—"}
+        </td>
+        <td className="p-3 text-center font-black text-sm">
+          <span
+            className={`px-3 py-1 rounded-xl inline-block ${
+              fullAvg && fullAvg >= 8.0
+                ? "bg-emerald-100 text-emerald-800"
+                : fullAvg && fullAvg >= 6.5
+                ? "bg-mist text-navy"
+                : fullAvg
+                ? "bg-amber-100 text-amber-800"
+                : "bg-mist text-muted"
+            }`}
+          >
+            {fullAvg !== null ? fullAvg : "—"}
+          </span>
+        </td>
+      </>
+    );
+  }
+
+  const cols: { key: keyof SemesterGrades; txIndex?: number }[] = [
+    { key: "tx1", txIndex: 1 },
+    { key: "tx2", txIndex: 2 },
+    { key: "tx3", txIndex: 3 },
+    { key: "tx4", txIndex: 4 },
+    { key: "gk" },
+    { key: "ck" }
+  ];
+  const currentAvg = semKey === "hk1" ? hk1Avg : hk2Avg;
+
+  return (
+    <>
+      {cols.map(({ key: colKey, txIndex }) => {
+        const val = semData[colKey];
+        const isGk = colKey === "gk";
+        const isCk = colKey === "ck";
+        const isDisabledTx = txIndex !== undefined && txIndex > txCount;
+
+        if (isDisabledTx) {
+          return (
+            <td key={colKey} className="p-2 text-center bg-cream/50 text-mist font-bold select-none">
+              —
+            </td>
+          );
+        }
+
+        return (
+          <td
+            key={colKey}
+            className={`p-2 text-center ${
+              isGk ? "bg-mist/60" : isCk ? "bg-mist/60" : ""
+            }`}
+          >
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="10"
+              value={val !== null ? val : ""}
+              onChange={(e) => handleScoreChange(idx, semKey, colKey, e.target.value)}
+              placeholder="0"
+              className="w-12 px-1.5 py-1 rounded-lg border border-line bg-white text-center font-bold text-navy focus:outline-none focus:ring-2 focus:ring-teal"
+            />
+          </td>
+        );
+      })}
+
+      <td className="p-3 text-center font-black text-xs bg-navy-soft text-white">
+        {currentAvg !== null ? currentAvg : "—"}
+      </td>
+    </>
+  );
+}
