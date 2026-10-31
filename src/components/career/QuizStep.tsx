@@ -5,7 +5,7 @@ import { CareerState, answeredCount } from "../../lib/career";
 import { Card, Chip, GhostBtn, PrimaryBtn } from "./ui";
 
 // ============================================================
-// BƯỚC 1: KHÁM PHÁ BẢN THÂN
+// KHẢO SÁT: KHÁM PHÁ BẢN THÂN
 // 30 câu sở thích (mỗi màn hình 1 câu) + trang câu hỏi thêm (không bắt buộc)
 // ============================================================
 
@@ -65,8 +65,8 @@ export const QuizStep: React.FC<Props> = ({ state, update, onFinish, onOpenAbout
           <span>{onExtra ? "Câu hỏi thêm (không bắt buộc)" : `Câu ${idx + 1} / ${TOTAL}`}</span>
           <span>Đã trả lời {done}/{TOTAL}</span>
         </div>
-        <div className="h-2 rounded-full bg-mist overflow-hidden" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-          <div className="h-full bg-teal rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+        <div className="h-2 rounded-full bg-clay-soft overflow-hidden" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-full bg-clay-deep rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export const QuizStep: React.FC<Props> = ({ state, update, onFinish, onOpenAbout
                   aria-checked={selected}
                   onClick={() => answer(o.value)}
                   className={`min-h-12 px-3 rounded-xl border text-sm font-semibold transition cursor-pointer ${
-                    selected ? "bg-navy border-navy text-cream" : "bg-white border-line text-ink hover:border-teal hover:bg-teal-soft/40"
+                    selected ? "bg-navy border-navy text-cream" : "bg-white border-clay-soft text-ink hover:border-clay hover:bg-clay-soft/40"
                   }`}
                 >
                   {o.label}
@@ -122,12 +122,12 @@ export const QuizStep: React.FC<Props> = ({ state, update, onFinish, onOpenAbout
               </div>
             </div>
           ))}
-          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-line">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-clay-soft">
             <GhostBtn onClick={() => go(TOTAL - 1)}>
               <ArrowLeft className="w-4 h-4" /> Xem lại câu 30
             </GhostBtn>
             <PrimaryBtn onClick={onFinish} disabled={done < 10}>
-              Xem tổng hợp <ArrowRight className="w-4 h-4" />
+              Xem kết quả <ArrowRight className="w-4 h-4" />
             </PrimaryBtn>
           </div>
           {done < 10 && <p className="text-xs text-amber-800">Bạn cần trả lời ít nhất 10 câu sở thích để web tổng hợp được. Bấm "Xem lại" để trả lời thêm.</p>}

@@ -5,7 +5,7 @@ import { CareerState } from "../../lib/career";
 import { Card, PrimaryBtn } from "./ui";
 
 // ============================================================
-// BƯỚC 6: KẾ HOẠCH KHÁM PHÁ (tạo, sửa, đánh dấu xong, xóa)
+// KẾ HOẠCH KHÁM PHÁ (tạo, sửa, đánh dấu xong, xóa)
 // ============================================================
 
 interface Props {
@@ -38,7 +38,7 @@ export const PlanStep: React.FC<Props> = ({ state, update }) => {
 
   return (
     <div className="space-y-4">
-      <div className="p-4 rounded-2xl bg-teal-soft/60 border border-teal-soft text-sm text-navy">
+      <div className="p-4 rounded-2xl bg-clay-soft/60 border border-clay-soft text-sm text-navy">
         Bạn <b>chưa cần chọn nghề ngay</b>. Kế hoạch này chỉ là những việc nhỏ để tìm hiểu thêm. Sở thích và định hướng có thể thay đổi theo trải nghiệm, điều đó hoàn toàn bình thường.
       </div>
 
@@ -67,7 +67,7 @@ export const PlanStep: React.FC<Props> = ({ state, update }) => {
               onChange={(e) => setText(e.target.value)}
               maxLength={200}
               placeholder="VD: Tìm hiểu một ngày làm việc của kiến trúc sư"
-              className="w-full min-h-11 px-3.5 rounded-xl border border-line bg-cream text-sm focus:outline-none focus:ring-2 focus:ring-teal"
+              className="w-full min-h-11 px-3.5 rounded-xl border border-clay-soft bg-white text-sm focus:outline-none focus:ring-2 focus:ring-clay"
             />
           </label>
           <PrimaryBtn type="submit" disabled={!text.trim()} aria-label="Thêm mục tiêu">
@@ -80,12 +80,12 @@ export const PlanStep: React.FC<Props> = ({ state, update }) => {
         ) : (
           <ul className="space-y-2">
             {state.plan.map((p) => (
-              <li key={p.id} className="flex items-center gap-2 p-2 pl-3 rounded-xl border border-line bg-cream">
+              <li key={p.id} className="flex items-center gap-2 p-2 pl-3 rounded-xl border border-clay-soft bg-white">
                 <input
                   type="checkbox"
                   checked={p.done}
                   onChange={() => update((s) => ({ ...s, plan: s.plan.map((x) => (x.id === p.id ? { ...x, done: !x.done } : x)) }))}
-                  className="w-5 h-5 accent-[#328f89] shrink-0 cursor-pointer"
+                  className="w-5 h-5 accent-[#a85d3d] shrink-0 cursor-pointer"
                   aria-label={`Đánh dấu xong: ${p.text}`}
                 />
                 {editing === p.id ? (
@@ -98,11 +98,11 @@ export const PlanStep: React.FC<Props> = ({ state, update }) => {
                       setEditing(null);
                     }}
                   >
-                    <input autoFocus value={editText} onChange={(e) => setEditText(e.target.value)} className="flex-1 min-w-0 min-h-10 px-2.5 rounded-lg border border-line bg-white text-sm" aria-label="Sửa mục tiêu" />
-                    <button type="submit" className="w-10 h-10 rounded-lg bg-teal text-white flex items-center justify-center cursor-pointer" aria-label="Lưu">
+                    <input autoFocus value={editText} onChange={(e) => setEditText(e.target.value)} className="flex-1 min-w-0 min-h-10 px-2.5 rounded-lg border border-clay-soft bg-white text-sm" aria-label="Sửa mục tiêu" />
+                    <button type="submit" className="w-10 h-10 rounded-lg bg-clay-deep text-white flex items-center justify-center cursor-pointer" aria-label="Lưu">
                       <Check className="w-4 h-4" />
                     </button>
-                    <button type="button" onClick={() => setEditing(null)} className="w-10 h-10 rounded-lg border border-line flex items-center justify-center cursor-pointer" aria-label="Hủy">
+                    <button type="button" onClick={() => setEditing(null)} className="w-10 h-10 rounded-lg border border-clay-soft flex items-center justify-center cursor-pointer" aria-label="Hủy">
                       <X className="w-4 h-4" />
                     </button>
                   </form>
@@ -136,11 +136,11 @@ export const PlanStep: React.FC<Props> = ({ state, update }) => {
         )}
 
         {ideas.length > 0 && (
-          <div className="pt-2 border-t border-line">
+          <div className="pt-2 border-t border-clay-soft">
             <div className="text-xs font-semibold text-muted mb-2">Gợi ý mục tiêu (bấm để thêm)</div>
             <div className="flex flex-wrap gap-2">
               {ideas.map((i) => (
-                <button key={i} onClick={() => add(i)} className="min-h-10 px-3.5 rounded-full bg-mist hover:bg-teal-soft text-navy text-sm text-left cursor-pointer inline-flex items-center gap-1.5">
+                <button key={i} onClick={() => add(i)} className="min-h-10 px-3.5 rounded-full bg-clay-soft hover:bg-clay-soft text-navy text-sm text-left cursor-pointer inline-flex items-center gap-1.5">
                   <Plus className="w-3.5 h-3.5 shrink-0" /> {i}
                 </button>
               ))}

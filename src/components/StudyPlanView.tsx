@@ -185,9 +185,9 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
   return (
     <div className="space-y-6 pb-12">
       {/* Top Banner */}
-      <div className="p-6 rounded-2xl bg-navy text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-6 rounded-2xl bg-ocean text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal/30 text-mist text-xs font-bold border border-teal/40">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ocean/30 text-mist text-xs font-bold border border-ocean/40">
             <Calendar className="w-3.5 h-3.5" />
             <span>Thời Khóa Biểu Tự Nhập Tay 7 Ngày Trong Tuần</span>
           </div>
@@ -202,7 +202,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
         <button
           onClick={handleAnalyzePlannerWithAI}
           disabled={isAnalyzing || !hasTasks}
-          className="px-6 py-3.5 rounded-2xl bg-teal hover:bg-teal-deep text-white font-extrabold text-xs sm:text-sm shadow-lg transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-teal/50 disabled:opacity-50 disabled:cursor-default"
+          className="px-6 py-3.5 rounded-2xl bg-ocean hover:bg-ocean-dark text-white font-extrabold text-xs sm:text-sm shadow-lg transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-ocean/50 disabled:opacity-50 disabled:cursor-default"
         >
           <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
           <span>{isAnalyzing ? "AI Đang Phân Tích Lịch..." : hasTasks ? "🤖 Kết Nối AI Phân Tích Kế Hoạch" : "Thêm việc để AI phân tích"}</span>
@@ -211,7 +211,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
 
       {/* Stats Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-line shadow-sm flex items-center gap-3">
+        <div className="p-4 rounded-2xl bg-white border border-sky-line shadow-sm flex items-center gap-3">
           <div className="p-3 rounded-xl bg-emerald-100 text-emerald-700">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -223,7 +223,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-line shadow-sm flex items-center gap-3">
+        <div className="p-4 rounded-2xl bg-white border border-sky-line shadow-sm flex items-center gap-3">
           <div className="p-3 rounded-xl bg-amber-100 text-amber-700">
             <Zap className="w-6 h-6" />
           </div>
@@ -238,19 +238,19 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
 
       {/* AI Analysis Feedback Report */}
       {aiReport && (
-        <div className="p-6 rounded-2xl bg-mist/60 border border-teal-soft shadow-sm space-y-4">
+        <div className="p-6 rounded-2xl bg-sky-soft/60 border border-sky-soft shadow-sm space-y-4">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>AI chỉ có tính chất tham khảo</span>
           </div>
-          <div className="flex items-center justify-between border-b border-teal-soft/80 pb-3">
+          <div className="flex items-center justify-between border-b border-sky-soft/80 pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-teal-deep" />
+              <Sparkles className="w-5 h-5 text-ocean" />
               <h3 className="font-extrabold text-navy text-base">
                 Báo Cáo Phân Tích & Lời Khuyên Kế Hoạch Học Tập AI
               </h3>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full bg-teal-soft text-navy font-bold text-xs">
+            <span className="px-2.5 py-0.5 rounded-full bg-sky-soft text-navy font-bold text-xs">
               Đánh giá AI
             </span>
           </div>
@@ -258,7 +258,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
           <div className="space-y-3 text-xs text-ink leading-relaxed">
             <div>
               <span className="font-bold text-navy block mb-1">📊 Đánh giá sự cân bằng thời khóa biểu:</span>
-              <p className="bg-white/80 p-3.5 rounded-2xl border border-line font-medium">{aiReport.summary}</p>
+              <p className="bg-white/80 p-3.5 rounded-2xl border border-sky-line font-medium">{aiReport.summary}</p>
             </div>
 
             {aiReport.recommendations && aiReport.recommendations.length > 0 && (
@@ -266,8 +266,8 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
                 <span className="font-bold text-navy block mb-1">💡 Lời khuyên tối ưu hóa hiệu quả:</span>
                 <div className="space-y-1.5">
                   {aiReport.recommendations.map((rec, rIdx) => (
-                    <div key={rIdx} className="bg-white/80 p-2.5 rounded-xl border border-line flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                    <div key={rIdx} className="bg-white/80 p-2.5 rounded-xl border border-sky-line flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-ocean mt-1.5 shrink-0"></span>
                       <span className="font-medium text-ink">{rec}</span>
                     </div>
                   ))}
@@ -276,14 +276,14 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
             )}
 
             {aiReport.encouragementQuote && (
-              <div className="p-3.5 bg-teal text-white rounded-2xl font-bold flex items-center gap-2 shadow-sm">
+              <div className="p-3.5 bg-ocean text-white rounded-2xl font-bold flex items-center gap-2 shadow-sm">
                 <Award className="w-5 h-5 text-amber-300 shrink-0" />
                 <span>"{aiReport.encouragementQuote}"</span>
               </div>
             )}
           </div>
 
-          <div className="text-[11px] text-muted font-medium italic mt-2 text-center pt-2 border-t border-line/60">
+          <div className="text-[11px] text-muted font-medium italic mt-2 text-center pt-2 border-t border-sky-line/60">
             AI chỉ mang tính chất tham khảo.
           </div>
         </div>
@@ -294,19 +294,19 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
         {days.map((dayItem, dayIdx) => (
           <div
             key={dayIdx}
-            className="p-5 rounded-2xl bg-white border border-line shadow-sm space-y-4 hover:border-teal/50 transition"
+            className="p-5 rounded-2xl bg-white border border-sky-line shadow-sm space-y-4 hover:border-ocean/50 transition"
           >
             {/* Day Header */}
-            <div className="flex items-center justify-between border-b border-line pb-3">
+            <div className="flex items-center justify-between border-b border-sky-line pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-3.5 py-1 rounded-xl bg-teal text-white font-extrabold text-xs shadow-xs">
+                <span className="px-3.5 py-1 rounded-xl bg-ocean text-white font-extrabold text-xs shadow-xs">
                   {dayItem.dayName}
                 </span>
                 <span className="text-xs font-bold text-muted">
                   ({dayItem.tasks.length} nhiệm vụ)
                 </span>
               </div>
-              <span className="text-xs font-extrabold text-teal-deep bg-mist/60 px-2.5 py-1 rounded-lg">
+              <span className="text-xs font-extrabold text-ocean bg-sky-soft/60 px-2.5 py-1 rounded-lg">
                 Tổng: {dayItem.tasks.reduce((sum, t) => sum + (Number(t.hours) || 0), 0)} Giờ
               </span>
             </div>
@@ -319,7 +319,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
                   className={`p-3 rounded-2xl border transition flex flex-col sm:flex-row items-stretch sm:items-center gap-2 ${
                     task.completed
                       ? "bg-emerald-50/60 border-emerald-200"
-                      : "bg-cream border-line hover:bg-mist/80"
+                      : "bg-sky-bg border-sky-line hover:bg-sky-soft/80"
                   }`}
                 >
                   {/* Complete Checkbox */}
@@ -341,7 +341,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
                     value={task.taskName}
                     onChange={(e) => handleUpdateTask(dayIdx, taskIdx, "taskName", e.target.value)}
                     placeholder="Tên việc cần làm / bài tập..."
-                    className={`flex-1 px-3 py-1.5 rounded-xl border border-line text-xs bg-white focus:outline-none focus:ring-2 focus:ring-teal font-medium ${
+                    className={`flex-1 px-3 py-1.5 rounded-xl border border-sky-line text-xs bg-white focus:outline-none focus:ring-2 focus:ring-ocean font-medium ${
                       task.completed ? "line-through text-muted" : "text-ink"
                     }`}
                   />
@@ -355,7 +355,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
                       max="10"
                       value={task.hours}
                       onChange={(e) => handleUpdateTask(dayIdx, taskIdx, "hours", Number(e.target.value))}
-                      className="w-16 px-2 py-1.5 rounded-xl border border-line text-xs bg-white text-center font-bold text-teal-deep focus:outline-none"
+                      className="w-16 px-2 py-1.5 rounded-xl border border-sky-line text-xs bg-white text-center font-bold text-ocean focus:outline-none"
                     />
                     <span className="text-[11px] font-bold text-muted">Giờ</span>
 
@@ -377,7 +377,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
             <button
               type="button"
               onClick={() => handleAddTask(dayIdx)}
-              className="w-full py-2.5 rounded-2xl bg-mist hover:bg-mist/60 text-ink hover:text-teal-deep text-xs font-bold border border-dashed border-line hover:border-teal/50 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2.5 rounded-2xl bg-sky-soft hover:bg-sky-soft/60 text-ink hover:text-ocean text-xs font-bold border border-dashed border-sky-line hover:border-ocean/50 transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Thêm Việc Cần Làm Cho {dayItem.dayName}</span>

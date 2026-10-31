@@ -4,7 +4,7 @@ export type NavSection =
   | "mood"
   | "ai_tutor"
   | "planner"
-  | "progress"
+  | "quest"
   | "career"
   | "videos"
   | "study"

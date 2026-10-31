@@ -51,8 +51,8 @@ export const PinLock: React.FC<{ userId: string; onUnlocked: () => void }> = ({ 
 
   return (
     <div className="max-w-md mx-auto space-y-4 pb-6 pt-2">
-      <section className="rounded-2xl bg-white border border-line p-6 space-y-4 text-center animate-rise">
-        <span className="mx-auto w-14 h-14 rounded-2xl bg-teal text-white flex items-center justify-center">
+      <section className="rounded-2xl bg-sun-card border border-sun-line p-6 space-y-4 text-center animate-rise">
+        <span className="mx-auto w-14 h-14 rounded-2xl bg-leaf-deep text-white flex items-center justify-center">
           <Lock className="w-7 h-7" />
         </span>
         <div>
@@ -83,7 +83,7 @@ export const PinLock: React.FC<{ userId: string; onUnlocked: () => void }> = ({ 
               maxLength={4}
               aria-label="Mã PIN 4 số"
               aria-invalid={Boolean(error)}
-              className="w-44 mx-auto block text-center tracking-[0.6em] text-2xl font-bold px-4 py-3 rounded-xl border border-line bg-cream focus:outline-none focus:ring-2 focus:ring-teal"
+              className="w-44 mx-auto block text-center tracking-[0.6em] text-2xl font-bold px-4 py-3 rounded-xl border border-sun-line bg-white focus:outline-none focus:ring-2 focus:ring-leaf-deep"
             />
           </label>
           {error && (
@@ -91,7 +91,7 @@ export const PinLock: React.FC<{ userId: string; onUnlocked: () => void }> = ({ 
               {error}
             </p>
           )}
-          <button type="submit" disabled={busy || pin.length !== 4} className="min-h-11 px-6 rounded-xl bg-teal hover:bg-teal-deep disabled:opacity-50 text-white font-bold text-sm cursor-pointer">
+          <button type="submit" disabled={busy || pin.length !== 4} className="min-h-11 px-6 rounded-xl bg-leaf-deep hover:bg-leaf-dark disabled:opacity-50 text-white font-bold text-sm cursor-pointer">
             Mở khóa
           </button>
         </form>
@@ -112,7 +112,7 @@ export const PinLock: React.FC<{ userId: string; onUnlocked: () => void }> = ({ 
               >
                 Xóa và bắt đầu lại
               </button>
-              <button onClick={() => setForgot(false)} className="min-h-10 px-4 rounded-xl bg-white border border-line text-navy text-sm font-semibold cursor-pointer">
+              <button onClick={() => setForgot(false)} className="min-h-10 px-4 rounded-xl bg-white border border-sun-line text-navy text-sm font-semibold cursor-pointer">
                 Thôi, mình nhớ ra rồi
               </button>
             </div>
@@ -123,7 +123,7 @@ export const PinLock: React.FC<{ userId: string; onUnlocked: () => void }> = ({ 
       <button
         onClick={() => setHelp(!help)}
         aria-expanded={help}
-        className="w-full min-h-11 px-4 rounded-xl bg-white border border-line hover:border-rose-300 text-rose-700 text-sm font-bold inline-flex items-center justify-center gap-2 cursor-pointer"
+        className="w-full min-h-11 px-4 rounded-xl bg-white border border-sun-line hover:border-rose-300 text-rose-700 text-sm font-bold inline-flex items-center justify-center gap-2 cursor-pointer"
       >
         <LifeBuoy className="w-4 h-4" /> Cần giúp ngay?
       </button>

@@ -5,7 +5,7 @@ import { Dashboard } from "./components/Dashboard";
 import { SubjectsView } from "./components/SubjectsView";
 import { AITutorView } from "./components/AITutorView";
 import { StudyPlanView } from "./components/StudyPlanView";
-import { ProgressView } from "./components/ProgressView";
+import { KnowledgeQuest } from "./components/quest/KnowledgeQuest";
 import { MoodTrackerView } from "./components/MoodTrackerView";
 import { CareerGuidanceView } from "./components/CareerGuidanceView";
 import { VideoHubView } from "./components/VideoHubView";
@@ -20,6 +20,18 @@ import { cloud, CloudStatus } from "./lib/cloud";
 import { GUEST_ID, generateNickname, randomAvatar, needsCleanup, publicProfile, sanitizeProfile } from "./lib/profile";
 
 const ACCOUNTS_KEY = "ai_study_hub_accounts_list";
+
+// Màu nền nhận diện riêng của từng phân hệ (các phân hệ khác sẽ thêm ở đợt sau)
+const MODULE_BG: Partial<Record<NavSection, string>> = {
+  career: "bg-clay-bg",
+  mood: "bg-sun-bg",
+  study: "bg-sky-bg",
+  subjects: "bg-sky-bg",
+  quest: "bg-sky-bg",
+  ai_tutor: "bg-sky-bg",
+  planner: "bg-sky-bg",
+  videos: "bg-sky-bg",
+};
 const ACTIVE_KEY = "ai_study_hub_active_user_id";
 
 const safeGet = (k: string) => {
@@ -51,7 +63,6 @@ function loadAccounts(): StudentProfile[] {
 
 export default function App() {
   const [currentSection, setCurrentSection] = useState<NavSection>("home");
-  const [streakCount, setStreakCount] = useState(1);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState("");
 
@@ -90,26 +101,14 @@ export default function App() {
     };
   }, [activeUserId]);
 
-  // Đếm số ngày vào web liên tục (dùng ở Bảng điểm, không hiện ở đầu trang để không tạo áp lực)
+  // Bảng điểm đã bỏ: dọn dữ liệu điểm và số ngày vào web của bản cũ (bản thử, chưa có người dùng thật)
   useEffect(() => {
     if (!activeUserId || isSyncing) return;
-    const streakKey = `user_${activeUserId}_login_streak`;
-    const lastDateKey = `user_${activeUserId}_last_login_date`;
-    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const savedLast = safeGet(lastDateKey);
-    let streak = parseInt(safeGet(streakKey) || "1", 10);
-    if (isNaN(streak) || streak < 1) streak = 1;
-    if (savedLast === fmt(today)) {
-      // đã tính hôm nay
-    } else {
-      streak = savedLast === fmt(yesterday) ? streak + 1 : 1;
-      safeSet(lastDateKey, fmt(today));
-      safeSet(streakKey, String(streak));
-    }
-    setStreakCount(streak);
+    ["subject_records", "login_streak", "last_login_date"].forEach((k) => {
+      try {
+        if (localStorage.getItem(`user_${activeUserId}_${k}`) !== null) localStorage.removeItem(`user_${activeUserId}_${k}`);
+      } catch {}
+    });
   }, [activeUserId, isSyncing]);
 
   const activeProfile = accounts.find((a) => a.studentId === activeUserId) || null;
@@ -230,7 +229,9 @@ export default function App() {
   const isStudyPage = STUDY_SECTIONS.includes(currentSection);
 
   return (
-    <div className="min-h-screen bg-cream font-sans text-ink flex flex-col antialiased selection:bg-teal selection:text-white">
+    <div
+      className={`min-h-screen font-sans text-ink flex flex-col antialiased selection:bg-teal selection:text-white transition-colors duration-300 ${MODULE_BG[currentSection] || "bg-cream"}`}
+    >
       <Header
         cloudStatus={cloudStatus}
         profile={activeProfile}
@@ -267,7 +268,7 @@ export default function App() {
 
           {currentSection === "study" && <StudyHubView onNavigate={go} />}
           {currentSection === "subjects" && <SubjectsView key={activeUserId} userId={activeUserId} />}
-          {currentSection === "mood" && <MoodTrackerView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />}
+          {currentSection === "mood" && <MoodTrackerView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} isGuest={activeProfile.isGuest} />}
           {currentSection === "ai_tutor" && (
             <AITutorView
               key={activeUserId}
@@ -278,8 +279,16 @@ export default function App() {
             />
           )}
           {currentSection === "planner" && <StudyPlanView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />}
-          {currentSection === "progress" && (
-            <ProgressView key={activeUserId} userId={activeUserId} streakCount={streakCount} grade={activeProfile.grade} />
+          {currentSection === "quest" && (
+            <KnowledgeQuest
+              key={activeUserId}
+              userId={activeUserId}
+              grade={activeProfile.grade}
+              onAskTutor={(q) => {
+                setPendingQuestion(q);
+                go("ai_tutor");
+              }}
+            />
           )}
           {currentSection === "career" && <CareerGuidanceView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />}
           {currentSection === "videos" && <VideoHubView key={activeUserId} userId={activeUserId} />}

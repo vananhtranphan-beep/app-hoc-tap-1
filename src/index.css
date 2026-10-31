@@ -23,6 +23,32 @@
   --color-ink: #1b2b36;
   --color-muted: #5b6b77;
 
+  /* Hướng nghiệp: cam đất */
+  --color-clay-bg: #fff3ea;
+  --color-clay-card: #fffaf6;
+  --color-clay-soft: #fce1d1;
+  --color-clay: #d98a61;
+  --color-clay-deep: #a85d3d;
+  --color-clay-dark: #8c4a2f;
+
+  /* Cây cảm xúc: vàng kem và xanh lá */
+  --color-sun-bg: #fff1c7;
+  --color-sun-card: #fffae9;
+  --color-sun-line: #f0dfa8;
+  --color-leaf-soft: #e3edcf;
+  --color-leaf: #91ad75;
+  --color-leaf-deep: #557b4c;
+  --color-leaf-dark: #45663d;
+
+  /* Học tập thông minh: xanh dương và tím */
+  --color-sky-bg: #f0f4ff;
+  --color-sky-soft: #e1eaff;
+  --color-sky-line: #cfdaf5;
+  --color-lilac: #ded9fa;
+  --color-ocean: #4268a8;
+  --color-ocean-dark: #34548a;
+  --color-grape: #6555a5;
+
   @keyframes rise {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -99,6 +125,26 @@
 
 @keyframes grassSway { 0%, 100% { transform: skewX(-6deg); } 50% { transform: skewX(6deg); } }
 .grass-sway { transform-box: fill-box; transform-origin: bottom; animation: grassSway 3s ease-in-out infinite; }
+
+/* Bản đồ chinh phục: hiệu ứng nhẹ */
+@keyframes questPulse { 0%, 100% { transform: scale(0.85); opacity: 0.7; } 50% { transform: scale(1.15); opacity: 1; } }
+.quest-pulse { transform-box: fill-box; transform-origin: center; animation: questPulse 1.8s ease-in-out infinite; }
+@keyframes questMill { to { transform: rotate(360deg); } }
+.quest-mill { animation: questMill 9s linear infinite; }
+@keyframes questFlag { 0%, 100% { transform: skewY(0deg); } 50% { transform: skewY(8deg); } }
+.quest-flag { transform-box: fill-box; transform-origin: left center; animation: questFlag 1.6s ease-in-out infinite; }
+@keyframes questFall { to { stroke-dashoffset: -24; } }
+.quest-fall line { stroke-dasharray: 6 6; animation: questFall 0.8s linear infinite; }
+@keyframes questRoad { to { stroke-dashoffset: -40; } }
+.quest-road-glow { stroke-dasharray: 14 6; animation: questRoad 2.2s linear infinite; filter: drop-shadow(0 0 4px #ffe08a); }
+@keyframes chestOpen { 0% { transform: rotate(0); } 60% { transform: rotate(-32deg); } 100% { transform: rotate(-26deg); } }
+.chest-lid { transform-box: fill-box; transform-origin: left bottom; animation: chestOpen 0.9s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes chestShine { 0% { opacity: 0; transform: scale(0.4); } 100% { opacity: 1; transform: scale(1); } }
+.chest-shine { transform-box: fill-box; transform-origin: center; animation: chestShine 0.8s 0.6s ease-out both; }
+
+/* Cây "nảy" nhẹ ngay khi vừa check-in hoặc chăm sóc */
+@keyframes growPop { 0% { transform: scale(0.96); } 55% { transform: scale(1.035); } 100% { transform: scale(1); } }
+.grow-pop { animation: growPop 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
 @keyframes fireflyUp {
   0% { transform: translate(0, 0); opacity: 0; }
@@ -229,7 +275,8 @@
   .tree-sway, .grass-sway, .firefly, .leaf-fall, .rain-drop, .soil-ripple, .butterfly,
   .butterfly-wing, .fruit-twinkle, .sun-glow, .cloud-drift, .cloud-drift-slow, .bar-shimmer,
   .report-pop, .animate-spin-slow, .star-twinkle, .sun-rays, .rainbow-glow, .bird-fly, .bird-wing,
-  .petal-fall, .flower-bob, .aura-pulse, .can-tilt, .water-stream, .sparkle-pop {
+  .petal-fall, .flower-bob, .aura-pulse, .can-tilt, .water-stream, .sparkle-pop, .grow-pop,
+  .quest-pulse, .quest-mill, .quest-flag, .quest-fall line, .quest-road-glow, .chest-lid, .chest-shine {
     animation: none !important;
   }
 }

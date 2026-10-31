@@ -65,7 +65,7 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
               role="radio"
               aria-checked={range === r}
               onClick={() => setRange(r)}
-              className={`min-h-10 px-3.5 rounded-full text-sm font-medium border cursor-pointer ${range === r ? "bg-navy border-navy text-cream" : "bg-white border-line text-ink hover:border-teal"}`}
+              className={`min-h-10 px-3.5 rounded-full text-sm font-medium border cursor-pointer ${range === r ? "bg-navy border-navy text-cream" : "bg-white border-sun-line text-ink hover:border-leaf"}`}
             >
               {r} ngày
             </button>
@@ -74,21 +74,21 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
         <button
           onClick={onReviewed}
           disabled={reviewedToday}
-          className="min-h-10 px-4 rounded-xl bg-teal hover:bg-teal-deep disabled:bg-teal-soft disabled:text-teal-deep text-white text-sm font-bold inline-flex items-center gap-1.5 cursor-pointer disabled:cursor-default"
+          className="min-h-10 px-4 rounded-xl bg-leaf-deep hover:bg-leaf-dark disabled:bg-leaf-soft disabled:text-leaf-deep text-white text-sm font-bold inline-flex items-center gap-1.5 cursor-pointer disabled:cursor-default"
         >
           <Sparkles className="w-4 h-4" /> {reviewedToday ? "Hôm nay bạn đã nhìn lại" : "Mình đã nhìn lại hành trình"}
         </button>
       </div>
 
       {/* Lịch cảm xúc */}
-      <section className="rounded-2xl bg-white border border-line p-4 sm:p-5 space-y-3">
+      <section className="rounded-2xl bg-sun-card border border-sun-line p-4 sm:p-5 space-y-3">
         <h4 className="font-bold text-navy">Lịch cảm xúc</h4>
         <div className={`grid gap-1.5 ${range === 7 ? "grid-cols-7" : "grid-cols-7 sm:grid-cols-10"}`}>
           {days.map((d) => (
             <div
               key={d.key}
               title={d.count ? `${d.key}: ${d.count} lần check-in` : d.key}
-              className={`aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] ${d.emoji ? "bg-mist" : "bg-cream border border-dashed border-line"} ${d.key === today ? "ring-2 ring-teal" : ""}`}
+              className={`aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] ${d.emoji ? "bg-leaf-soft" : "bg-white border border-dashed border-sun-line"} ${d.key === today ? "ring-2 ring-leaf-deep" : ""}`}
             >
               <span className="text-muted leading-none">{d.label}</span>
               {d.emoji && <span className="text-base leading-none mt-0.5" aria-hidden>{d.emoji}</span>}
@@ -98,7 +98,7 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
       </section>
 
       {/* Tần suất */}
-      <section className="rounded-2xl bg-white border border-line p-4 sm:p-5 space-y-3">
+      <section className="rounded-2xl bg-sun-card border border-sun-line p-4 sm:p-5 space-y-3">
         <h4 className="font-bold text-navy">Thời tiết xuất hiện trong {range} ngày</h4>
         {inRange.length < 3 ? (
           <p className="text-sm text-muted">Mới có {inRange.length} lần check-in trong khoảng này, chưa đủ để nhận ra xu hướng. Không sao cả, bạn cứ ghi lại khi muốn.</p>
@@ -109,7 +109,7 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
                 <span className="truncate">
                   {w.emoji} {w.label}
                 </span>
-                <div className="h-3 rounded-full bg-mist overflow-hidden">
+                <div className="h-3 rounded-full bg-leaf-soft overflow-hidden">
                   <div className="h-full rounded-full bg-navy-soft/60" style={{ width: `${(n / maxN) * 100}%` }} />
                 </div>
                 <span className="text-right tabular-nums text-muted">{n}</span>
@@ -121,7 +121,7 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
       </section>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <section className="rounded-2xl bg-white border border-line p-4 sm:p-5 space-y-2">
+        <section className="rounded-2xl bg-sun-card border border-sun-line p-4 sm:p-5 space-y-2">
           <h4 className="font-bold text-navy">Hoạt động đã thử ({careInRange.length})</h4>
           {careInRange.length === 0 ? (
             <p className="text-sm text-muted">Chưa có trong khoảng này.</p>
@@ -136,9 +136,9 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
             </ul>
           )}
         </section>
-        <section className="rounded-2xl bg-white border border-line p-4 sm:p-5 space-y-2">
+        <section className="rounded-2xl bg-sun-card border border-sun-line p-4 sm:p-5 space-y-2">
           <h4 className="font-bold text-navy flex items-center gap-1.5">
-            <Flag className="w-4 h-4 text-teal" /> Các mốc của bạn
+            <Flag className="w-4 h-4 text-leaf-deep" /> Các mốc của bạn
           </h4>
           {ms.length === 0 ? (
             <p className="text-sm text-muted">Các mốc sẽ hiện khi bạn bắt đầu hành trình.</p>
@@ -156,14 +156,14 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
       </div>
 
       {/* Ghi chú */}
-      <section className="rounded-2xl bg-white border border-line p-4 sm:p-5 space-y-2">
+      <section className="rounded-2xl bg-sun-card border border-sun-line p-4 sm:p-5 space-y-2">
         <h4 className="font-bold text-navy">Ghi chú bạn đã lưu</h4>
         {notes.length === 0 ? (
           <p className="text-sm text-muted">Chưa có ghi chú nào.</p>
         ) : (
           <ul className="space-y-2">
             {notes.map((n) => (
-              <li key={n.kind + n.id} className="p-3 rounded-xl bg-cream border border-line flex items-start gap-2">
+              <li key={n.kind + n.id} className="p-3 rounded-xl bg-white border border-sun-line flex items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-muted">
                     {n.title} · {fmtTime(n.at)}
@@ -186,7 +186,7 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
       </section>
 
       {/* Nhật ký chi tiết (thu gọn) */}
-      <section className="rounded-2xl bg-white border border-line">
+      <section className="rounded-2xl bg-sun-card border border-sun-line">
         <button onClick={() => setShowLog(!showLog)} aria-expanded={showLog} className="w-full min-h-12 px-4 sm:px-5 flex items-center justify-between text-left cursor-pointer">
           <span className="font-bold text-navy">Nhật ký check-in ({inRange.length})</span>
           <ChevronDown className={`w-5 h-5 text-muted transition ${showLog ? "rotate-180" : ""}`} />
@@ -195,7 +195,7 @@ export const Garden: React.FC<Props> = ({ state, onDeleteEntry, onDeleteNote, on
           <ul className="px-4 sm:px-5 pb-4 space-y-2">
             {inRange.length === 0 && <li className="text-sm text-muted">Chưa có check-in trong khoảng này.</li>}
             {inRange.map((e) => (
-              <li key={e.id} className="p-3 rounded-xl bg-cream border border-line flex items-start gap-2">
+              <li key={e.id} className="p-3 rounded-xl bg-white border border-sun-line flex items-start gap-2">
                 <div className="flex-1 min-w-0 text-sm">
                   <div className="text-xs text-muted">{fmtTime(e.at)}</div>
                   <div className="text-ink">

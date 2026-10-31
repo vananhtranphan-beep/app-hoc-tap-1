@@ -8,7 +8,7 @@ export const StudyHubView: React.FC<{ onNavigate: (s: NavSection) => void }> = (
   <div className="space-y-5 pb-6">
     <div>
       <h2 className="text-2xl font-extrabold text-navy tracking-tight">Học tập thông minh</h2>
-      <p className="text-sm text-muted mt-1">Sách, video, gia sư AI, kế hoạch học và bảng điểm ở cùng một chỗ.</p>
+      <p className="text-sm text-muted mt-1">Sách giáo khoa, bản đồ chinh phục, gia sư AI, kế hoạch học tập và video ở cùng một chỗ.</p>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {STUDY_ITEMS.map((item, i) => {
@@ -17,16 +17,16 @@ export const StudyHubView: React.FC<{ onNavigate: (s: NavSection) => void }> = (
           <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
-            className={`lift rise-${Math.min(i + 1, 4)} group text-left p-4 rounded-2xl bg-white border border-line hover:border-teal flex items-center gap-4 cursor-pointer`}
+            className={`lift rise-${Math.min(i + 1, 4)} group text-left p-4 rounded-2xl bg-white border border-sky-line hover:border-ocean flex items-center gap-4 cursor-pointer`}
           >
-            <span className="w-12 h-12 rounded-xl bg-mist text-navy flex items-center justify-center shrink-0 group-hover:bg-teal group-hover:text-white transition">
+            <span className="w-12 h-12 rounded-xl bg-sky-soft text-navy flex items-center justify-center shrink-0 group-hover:bg-ocean group-hover:text-white transition">
               <Icon className="w-6 h-6" />
             </span>
             <span className="flex-1 min-w-0">
               <span className="block font-bold text-navy">{item.label}</span>
               <span className="block text-sm text-muted">{item.desc}</span>
             </span>
-            <ArrowRight className="w-4 h-4 text-teal opacity-0 group-hover:opacity-100 transition" />
+            <ArrowRight className="w-4 h-4 text-ocean opacity-0 group-hover:opacity-100 transition" />
           </button>
         );
       })}

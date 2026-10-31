@@ -1,11 +1,12 @@
 import React from "react";
-import { Bookmark, BookmarkCheck, Columns3, Bot, FlaskConical, ArrowLeft, Clock, Lightbulb } from "lucide-react";
+import { Bookmark, BookmarkCheck, Columns3, Bot, FlaskConical, ArrowLeft, Lightbulb } from "lucide-react";
 import { Career, RIASEC, careerById } from "../../data/careerData";
 import { CareerState, Suggestion } from "../../lib/career";
 import { Card, CodeBadge, GhostBtn, PrimaryBtn, SourceTag } from "./ui";
+import { ExperiencePanel } from "./ExperiencePanel";
 
 // ============================================================
-// BƯỚC 4: CHI TIẾT NGHỀ
+// CHI TIẾT NGHỀ (có hoạt động trải nghiệm ngay trong trang)
 // ============================================================
 
 interface Props {
@@ -17,8 +18,9 @@ interface Props {
   onOpenCareer: (id: string) => void;
   onToggleSave: (id: string) => void;
   onToggleCompare: (id: string) => void;
-  onTryActivity: (id: string) => void;
+  update: (fn: (s: CareerState) => CareerState) => void;
   onAskAI: (c: Career) => void;
+  backLabel: string;
 }
 
 const Block: React.FC<{ title: string; items: string[] }> = ({ title, items }) => (
@@ -32,15 +34,15 @@ const Block: React.FC<{ title: string; items: string[] }> = ({ title, items }) =
   </div>
 );
 
-export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, hasQuiz, onBack, onOpenCareer, onToggleSave, onToggleCompare, onTryActivity, onAskAI }) => {
+export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, hasQuiz, onBack, onOpenCareer, onToggleSave, onToggleCompare, update, onAskAI, backLabel }) => {
   const saved = state.saved.includes(c.id);
   const comparing = state.compare.includes(c.id);
-  const exp = state.experiences[c.id];
+  const toActivity = () => document.getElementById("trai-nghiem")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
     <div className="space-y-4">
       <GhostBtn onClick={onBack}>
-        <ArrowLeft className="w-4 h-4" /> Danh sách nghề
+        <ArrowLeft className="w-4 h-4" /> {backLabel}
       </GhostBtn>
 
       <Card className="space-y-4">
@@ -62,7 +64,7 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
           <GhostBtn onClick={() => onToggleCompare(c.id)} aria-pressed={comparing} disabled={!comparing && state.compare.length >= 3}>
             <Columns3 className="w-4 h-4" /> {comparing ? "Bỏ so sánh" : "Thêm vào so sánh"}
           </GhostBtn>
-          <GhostBtn onClick={() => onTryActivity(c.id)}>
+          <GhostBtn onClick={toActivity}>
             <FlaskConical className="w-4 h-4" /> Thử hoạt động
           </GhostBtn>
           <GhostBtn onClick={() => onAskAI(c)}>
@@ -76,7 +78,7 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
       <Card className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-extrabold text-navy flex items-center gap-1.5">
-            <Lightbulb className="w-4 h-4 text-teal" /> Vì sao web gợi ý nghề này
+            <Lightbulb className="w-4 h-4 text-clay-deep" /> Vì sao gợi ý nghề này cho bạn
           </h3>
           <SourceTag kind="web" />
         </div>
@@ -110,7 +112,7 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
                 .map((id) => careerById(id))
                 .filter(Boolean)
                 .map((r) => (
-                  <button key={r!.id} onClick={() => onOpenCareer(r!.id)} className="min-h-10 px-3.5 rounded-full bg-mist hover:bg-teal-soft text-navy text-sm font-medium cursor-pointer">
+                  <button key={r!.id} onClick={() => onOpenCareer(r!.id)} className="min-h-10 px-3.5 rounded-full bg-clay-soft hover:bg-clay-soft text-navy text-sm font-medium cursor-pointer">
                     {r!.name}
                   </button>
                 ))}
@@ -119,19 +121,7 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
         </Card>
       </div>
 
-      <Card className="space-y-2">
-        <h3 className="font-extrabold text-navy">Hoạt động trải nghiệm: {c.experience.title}</h3>
-        <p className="text-sm text-ink">{c.experience.goal}</p>
-        <p className="text-xs text-muted inline-flex items-center gap-1">
-          <Clock className="w-3.5 h-3.5" /> Khoảng {c.experience.minutes} phút
-          {exp?.status === "done" ? " · Bạn đã hoàn thành" : exp?.status === "doing" ? " · Đang làm" : ""}
-        </p>
-        <div>
-          <PrimaryBtn onClick={() => onTryActivity(c.id)}>
-            <FlaskConical className="w-4 h-4" /> {exp ? "Mở hoạt động" : "Thử hoạt động"}
-          </PrimaryBtn>
-        </div>
-      </Card>
+      <ExperiencePanel career={c} state={state} update={update} />
     </div>
   );
 };

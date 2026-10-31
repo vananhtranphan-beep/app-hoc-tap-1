@@ -125,6 +125,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
           <CompassLogo size={64} animate className="mx-auto drop-shadow-sm" />
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-navy">AI Youth Compass</h1>
+            <p className="text-base font-bold text-teal-deep">La bàn tuổi teen</p>
             <p className="text-sm text-muted mt-1">La bàn nhỏ cho hành trình hiểu mình và chọn hướng đi</p>
           </div>
         </div>

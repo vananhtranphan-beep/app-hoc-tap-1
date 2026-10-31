@@ -131,16 +131,16 @@ export const MathKeyboard: React.FC<MathKeyboardProps> = ({ textareaRef, value, 
   };
 
   return (
-    <div className="rounded-2xl bg-white border border-teal-soft shadow-sm p-2.5 space-y-2">
+    <div className="rounded-2xl bg-white border border-sky-soft shadow-sm p-2.5 space-y-2">
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-        <span className="text-[10px] font-extrabold text-teal-deep shrink-0 pr-1">∑ Công thức:</span>
+        <span className="text-[10px] font-extrabold text-ocean shrink-0 pr-1">∑ Công thức:</span>
         {GROUPS.map((g, i) => (
           <button
             key={g.name}
             type="button"
             onClick={() => setGroupIdx(i)}
             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0 transition cursor-pointer ${
-              i === groupIdx ? "bg-teal text-white shadow-sm" : "bg-mist/60 text-teal-deep hover:bg-mist"
+              i === groupIdx ? "bg-ocean text-white shadow-sm" : "bg-sky-soft/60 text-ocean hover:bg-sky-soft"
             }`}
           >
             {g.name}
@@ -157,15 +157,15 @@ export const MathKeyboard: React.FC<MathKeyboardProps> = ({ textareaRef, value, 
             aria-label={k.title}
             onPointerDown={(e) => e.preventDefault()} // giữ con trỏ trong ô nhập
             onClick={() => insertKey(k)}
-            className="math-key min-w-[2.75rem] h-10 px-2 rounded-xl bg-cream border border-line hover:bg-mist/60 hover:border-teal/50 active:scale-95 text-ink transition cursor-pointer flex items-center justify-center"
+            className="math-key min-w-[2.75rem] h-10 px-2 rounded-xl bg-sky-bg border border-sky-line hover:bg-sky-soft/60 hover:border-ocean/50 active:scale-95 text-ink transition cursor-pointer flex items-center justify-center"
             dangerouslySetInnerHTML={{ __html: renderLabel(k.label) }}
           />
         ))}
       </div>
 
       {value.includes("$") ? (
-        <div className="rounded-xl bg-mist/60 border border-line px-3 py-2">
-          <div className="text-[10px] font-extrabold text-teal-deep mb-0.5">👀 Xem trước:</div>
+        <div className="rounded-xl bg-sky-soft/60 border border-sky-line px-3 py-2">
+          <div className="text-[10px] font-extrabold text-ocean mb-0.5">👀 Xem trước:</div>
           <MathMarkdown className="text-sm">{value}</MathMarkdown>
         </div>
       ) : (

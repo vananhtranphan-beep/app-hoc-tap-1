@@ -2,7 +2,7 @@
 // LOGIC HƯỚNG NGHIỆP: lưu tiến độ, tính điểm 6 nhóm, gợi ý nghề từ danh mục
 // Gợi ý chính do WEB TÍNH từ câu trả lời (không cần AI). AI chỉ giải thích thêm.
 // ============================================================
-import { CAREERS, Career, INTEREST_ITEMS, RIASEC, RIASEC_ORDER, RiasecCode } from "../data/careerData";
+import { CAREERS, Career, INTEREST_ITEMS, RIASEC, RIASEC_ORDER, RiasecCode, isAcademic } from "../data/careerData";
 
 export interface ChatMsg {
   role: "user" | "model";
@@ -21,6 +21,10 @@ export interface CareerState {
   experiences: Record<string, { status: "doing" | "done"; reflection: string; fit?: "hop" | "phan-van" | "chua-hop"; doneAt?: string }>;
   plan: { id: string; text: string; done: boolean; createdAt: string }[];
   chat: ChatMsg[];
+  /** Nhận xét tổng quan của AI, gắn với lần làm khảo sát (basis = completedAt) để không gọi AI lại mỗi lần mở trang */
+  aiSummary?: { text: string; basis: string };
+  /** Đã bấm "Khám phá những nghề phù hợp với bạn" cho lần khảo sát này (basis = completedAt) */
+  revealed?: string;
 }
 
 export const emptyCareerState = (): CareerState => ({
@@ -67,6 +71,11 @@ export function loadCareerState(userId: string): CareerState {
       compare: arr(raw.compare).filter((id) => known.has(id)).slice(0, 3),
       experiences: raw.experiences && typeof raw.experiences === "object" ? raw.experiences : {},
       plan: Array.isArray(raw.plan) ? raw.plan.filter((p: any) => p && typeof p.text === "string") : [],
+      aiSummary:
+        raw.aiSummary && typeof raw.aiSummary.text === "string" && typeof raw.aiSummary.basis === "string"
+          ? { text: raw.aiSummary.text.slice(0, 6000), basis: raw.aiSummary.basis }
+          : undefined,
+      revealed: typeof raw.revealed === "string" ? raw.revealed : undefined,
       chat: Array.isArray(raw.chat) ? raw.chat.filter((m: any) => m && (m.role === "user" || m.role === "model") && typeof m.content === "string").slice(-40) : [],
     };
   } catch {
@@ -121,6 +130,31 @@ export interface Suggestion {
 }
 
 export function suggestCareers(state: CareerState, scores: Scores, limit = 8): Suggestion[] {
+  const ranked = scoreCareers(state, scores);
+  // Đa dạng: mỗi lĩnh vực tối đa 2 nghề trong danh sách gợi ý
+  const perField: Record<string, number> = {};
+  const out: Suggestion[] = [];
+  for (const s of ranked) {
+    const f = s.career.field;
+    if ((perField[f] || 0) >= 2) continue;
+    perField[f] = (perField[f] || 0) + 1;
+    out.push(s);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/** Xếp nghề chuyên môn, học thuật lên trước, CHỈ trong số các nghề đã hợp (giữ thứ tự phù hợp bên trong mỗi loại) */
+export const academicFirst = <T extends { career: Career }>(list: T[]): T[] =>
+  [...list.filter((s) => isAcademic(s.career.id)), ...list.filter((s) => !isAcademic(s.career.id))];
+
+/** Gom gợi ý thành các nhóm nghề theo nhóm sở thích chính; nhóm điểm cao đứng trước */
+export function groupSuggestions(sugs: Suggestion[], scores: Scores): { code: RiasecCode; items: Suggestion[] }[] {
+  const groups = RIASEC_ORDER.map((code) => ({ code, items: academicFirst(sugs.filter((s) => s.career.codes[0] === code)) })).filter((g) => g.items.length);
+  return groups.sort((a, b) => scores[b.code].score - scores[a.code].score);
+}
+
+function scoreCareers(state: CareerState, scores: Scores): Suggestion[] {
   const tops = topCodes(scores, 3);
   return CAREERS.map((career) => {
     let score = 0;
@@ -149,9 +183,7 @@ export function suggestCareers(state: CareerState, scores: Scores, limit = 8): S
       reasons.push(`Cần điểm mạnh bạn tự nhận: ${sk.join(", ")}`);
     }
     return { career, score, reasons };
-  })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+  }).sort((a, b) => b.score - a.score);
 }
 
 /** Những điều còn chưa rõ, để em biết cần tìm hiểu thêm */
@@ -172,12 +204,12 @@ export function unclearPoints(state: CareerState, scores: Scores): string[] {
 export function aiContext(state: CareerState, scores: Scores, grade: string): string {
   if (!state.completedAt || answeredCount(state.answers) < 10) {
     return [
-      `Học sinh lớp ${grade}, chưa làm khảo sát sở thích nên chưa có thông tin về sở thích.`,
-      `DANH MỤC NGHỀ ĐƯỢC PHÉP GỢI Ý: ${CAREERS.map((c) => `${c.name} [${c.codes.join("")}]`).join("; ")}.`,
+      `Học sinh lớp ${grade}, chưa làm khảo sát sở thích (không bắt buộc) nên chưa có thông tin về sở thích.`,
+      `Danh mục nghề có sẵn trên web (để tham khảo khi gợi ý): ${CAREERS.map((c) => `${c.name} [${c.codes.join("")}]`).join("; ")}.`,
     ].join("\n");
   }
   const tops = topCodes(scores, 3);
-  const sug = suggestCareers(state, scores, 8);
+  const sug = academicFirst(suggestCareers(state, scores, 9));
   const p = state.profile;
   return [
     `Học sinh lớp ${grade}. Kết quả khảo sát sở thích (thang 0–20 mỗi nhóm, phỏng theo O*NET Interest Profiler):`,
@@ -188,7 +220,7 @@ export function aiContext(state: CareerState, scores: Scores, grade: string): st
     p.activities.length ? `Hoạt động yêu thích: ${p.activities.join(", ")}.` : "",
     p.environments.length ? `Môi trường làm việc mong muốn: ${p.environments.join(", ")}.` : "",
     p.skills.length ? `Kỹ năng muốn phát triển: ${p.skills.join(", ")}.` : "",
-    `DANH MỤC NGHỀ ĐƯỢC PHÉP GỢI Ý (do web tính, xếp theo mức phù hợp): ${sug.map((s) => `${s.career.name} [${s.career.codes.join("")}]`).join("; ")}.`,
+    `Nghề web gợi ý theo kết quả (nghề chuyên môn, học thuật xếp trước): ${sug.map((s) => `${s.career.name} [${s.career.codes.join("")}]`).join("; ")}.`,
   ]
     .filter(Boolean)
     .join("\n");

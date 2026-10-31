@@ -7,7 +7,7 @@ import { STUDY_ITEMS } from "./Navigation";
 
 interface DashboardProps {
   onNavigate: (section: NavSection) => void;
-  /** Mở AI Tutor và tự gửi câu hỏi */
+  /** Mở Gia sư AI và tự gửi câu hỏi */
   onAskAI?: (question: string) => void;
   profile: StudentProfile;
   isAdmin?: boolean;
@@ -172,7 +172,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-lg sm:text-xl font-extrabold text-navy">Học tập thông minh</h2>
-            <p className="text-sm text-muted">Sách, video, gia sư AI, kế hoạch học và bảng điểm.</p>
+            <p className="text-sm text-muted">Sách giáo khoa, bản đồ chinh phục, gia sư AI, kế hoạch học tập và video.</p>
           </div>
           <button onClick={() => onNavigate("study")} className="min-h-10 text-sm font-semibold text-teal-deep hover:text-navy flex items-center gap-1 cursor-pointer">
             Xem tất cả <ArrowRight className="w-4 h-4" />
@@ -203,12 +203,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
           className="flex gap-2"
         >
           <label className="relative flex-1 min-w-0">
-            <span className="sr-only">Hỏi nhanh AI Tutor</span>
+            <span className="sr-only">Hỏi nhanh Gia sư AI</span>
             <Bot className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               value={quickQuestion}
               onChange={(e) => setQuickQuestion(e.target.value)}
-              placeholder="Hỏi nhanh AI Tutor, VD: Giải phương trình 2x − 1 = 3"
+              placeholder="Hỏi nhanh Gia sư AI, VD: Giải phương trình 2x − 1 = 3"
               className="w-full min-h-12 pl-10 pr-3 rounded-xl border border-line bg-cream text-sm focus:outline-none focus:ring-2 focus:ring-teal"
             />
           </label>
@@ -245,8 +245,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
       </footer>
 
       {/* Ký hiệu nhỏ ở góc */}
-      <div className="absolute bottom-0 right-0 text-[10px] font-mono tracking-wider text-muted/40 select-none" aria-hidden>
-        CáiKhế9B1
+      <div className="absolute bottom-0 right-0 text-[10px] font-mono tracking-wider text-[#000000] select-none" aria-hidden>
+        CaiKhe9B1
       </div>
     </div>
   );

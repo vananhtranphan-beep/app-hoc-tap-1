@@ -8,13 +8,13 @@
 
 export type RiasecCode = "R" | "I" | "A" | "S" | "E" | "C";
 
-export const RIASEC: Record<RiasecCode, { name: string; short: string; like: string }> = {
-  R: { name: "Thực tế", short: "Làm việc với máy móc, dụng cụ, cây cối, con vật", like: "Thích bắt tay vào làm, lắp ráp, sửa chữa, làm ngoài trời" },
-  I: { name: "Nghiên cứu", short: "Tìm hiểu, quan sát, phân tích, giải quyết vấn đề", like: "Thích đặt câu hỏi, làm thí nghiệm, tìm ra nguyên nhân" },
-  A: { name: "Nghệ thuật", short: "Sáng tạo, thể hiện ý tưởng bằng hình ảnh, âm thanh, chữ viết", like: "Thích vẽ, viết, chơi nhạc, thiết kế, làm điều mới lạ" },
-  S: { name: "Xã hội", short: "Giúp đỡ, hướng dẫn, chăm sóc người khác", like: "Thích lắng nghe, dạy bạn, làm việc nhóm, giúp người gặp khó khăn" },
-  E: { name: "Quản lý", short: "Thuyết phục, lãnh đạo, kinh doanh", like: "Thích dẫn dắt nhóm, đưa ra quyết định, thuyết trình, buôn bán" },
-  C: { name: "Nghiệp vụ", short: "Làm việc với số liệu, giấy tờ, quy trình rõ ràng", like: "Thích sắp xếp ngăn nắp, tính toán cẩn thận, làm theo quy trình" },
+export const RIASEC: Record<RiasecCode, { name: string; en: string; short: string; like: string }> = {
+  R: { name: "Thực tế", en: "Realistic", short: "Làm việc với máy móc, dụng cụ, cây cối, con vật", like: "Thích bắt tay vào làm, lắp ráp, sửa chữa, làm ngoài trời" },
+  I: { name: "Nghiên cứu", en: "Investigative", short: "Tìm hiểu, quan sát, phân tích, giải quyết vấn đề", like: "Thích đặt câu hỏi, làm thí nghiệm, tìm ra nguyên nhân" },
+  A: { name: "Nghệ thuật", en: "Artistic", short: "Sáng tạo, thể hiện ý tưởng bằng hình ảnh, âm thanh, chữ viết", like: "Thích vẽ, viết, chơi nhạc, thiết kế, làm điều mới lạ" },
+  S: { name: "Xã hội", en: "Social", short: "Giúp đỡ, hướng dẫn, chăm sóc người khác", like: "Thích lắng nghe, dạy bạn, làm việc nhóm, giúp người gặp khó khăn" },
+  E: { name: "Quản lý", en: "Enterprising", short: "Thuyết phục, lãnh đạo, kinh doanh", like: "Thích dẫn dắt nhóm, đưa ra quyết định, thuyết trình, buôn bán" },
+  C: { name: "Nghiệp vụ", en: "Conventional", short: "Làm việc với số liệu, giấy tờ, quy trình rõ ràng", like: "Thích sắp xếp ngăn nắp, tính toán cẩn thận, làm theo quy trình" },
 };
 
 export const RIASEC_ORDER: RiasecCode[] = ["R", "I", "A", "S", "E", "C"];
@@ -451,9 +451,46 @@ export const CAREERS: Career[] = [
     experience: { title: "Làm thư ký cho một buổi họp lớp", goal: "Thử ghi chép và tổng hợp thông tin", steps: ["Xin làm thư ký cho buổi sinh hoạt lớp", "Ghi: nội dung, ý kiến chính, quyết định", "Soạn biên bản gọn trên máy tính", "Nhờ giáo viên chủ nhiệm nhận xét"], minutes: 45, result: "Biên bản họp lớp", reflect: REFLECT },
     related: ["thu-thu", "ke-toan"],
   },
+  // ===== THÊM (nghề chuyên môn, học thuật) =====
+  {
+    id: "nha-nghien-cuu", name: "Nhà nghiên cứu khoa học", codes: ["I", "R", "A"], field: "Khoa học, nghiên cứu",
+    desc: "Đặt câu hỏi về thế giới tự nhiên hoặc xã hội, làm thí nghiệm hay khảo sát để tìm ra kiến thức mới, rồi viết báo cáo chia sẻ kết quả.",
+    activities: ["Đọc tài liệu và đặt câu hỏi nghiên cứu", "Thiết kế và làm thí nghiệm hoặc khảo sát", "Phân tích số liệu, viết báo cáo khoa học"],
+    skills: ["Tò mò, ham tìm hiểu", "Tư duy phân tích", "Kiên nhẫn", "Viết và trình bày"],
+    subjects: ["Khoa học tự nhiên", "Toán", "Tiếng Anh", "Ngữ văn"],
+    experience: { title: "Làm một thí nghiệm nhỏ có ghi chép", goal: "Thử quy trình nghiên cứu: đặt câu hỏi, dự đoán, thí nghiệm, kết luận", steps: ["Chọn một câu hỏi đơn giản, ví dụ: hạt đậu nảy mầm nhanh hơn ở chỗ sáng hay chỗ tối?", "Viết dự đoán của bạn trước khi làm", "Gieo hạt ở 2 chỗ khác nhau, ghi chép mỗi ngày trong 5 ngày", "So sánh kết quả với dự đoán và viết 3 câu kết luận"], minutes: 30, result: "Một trang nhật ký thí nghiệm có dự đoán, số liệu và kết luận", reflect: REFLECT },
+    related: ["ky-su-moi-truong", "phan-tich-du-lieu", "ky-thuat-vien-xet-nghiem"],
+  },
+  {
+    id: "doi-ngoai", name: "Chuyên viên đối ngoại, quan hệ quốc tế", codes: ["E", "S", "A"], field: "Ngoại giao, hợp tác quốc tế",
+    desc: "Làm cầu nối giữa cơ quan, trường học hay doanh nghiệp Việt Nam với đối tác nước ngoài: tổ chức gặp gỡ, đàm phán hợp tác, chuẩn bị văn bản và sự kiện.",
+    activities: ["Liên lạc, viết thư cho đối tác nước ngoài", "Chuẩn bị và tham dự các buổi gặp gỡ, hội nghị", "Tìm hiểu văn hóa, phong tục của nước bạn"],
+    skills: ["Giao tiếp tự tin", "Ngoại ngữ", "Thuyết phục", "Hiểu biết văn hóa"],
+    subjects: ["Tiếng Anh", "Lịch sử và Địa lý", "Ngữ văn", "Giáo dục công dân"],
+    experience: { title: "Giới thiệu quê hương cho bạn nước ngoài", goal: "Thử vai người làm cầu nối văn hóa", steps: ["Chọn 3 điều đặc sắc về quê bạn (món ăn, lễ hội, địa danh)", "Viết một đoạn giới thiệu ngắn bằng tiếng Việt", "Thử dịch đoạn đó sang tiếng Anh (có thể nhờ thầy cô xem lại)", "Đọc to như đang giới thiệu cho khách nước ngoài"], minutes: 30, result: "Một đoạn giới thiệu song ngữ về quê hương", reflect: REFLECT },
+    related: ["huong-dan-vien", "nha-bao", "marketing"],
+  },
+  {
+    id: "nghien-cuu-thi-truong", name: "Chuyên viên nghiên cứu thị trường", codes: ["I", "E", "C"], field: "Kinh doanh, nghiên cứu",
+    desc: "Tìm hiểu người mua cần gì, thích gì bằng khảo sát, phỏng vấn và số liệu bán hàng, để giúp công ty quyết định nên làm sản phẩm nào và bán thế nào.",
+    activities: ["Thiết kế phiếu khảo sát, phỏng vấn khách hàng", "Tổng hợp số liệu, vẽ biểu đồ", "Viết báo cáo đề xuất cho công ty"],
+    skills: ["Tư duy phân tích", "Tính toán", "Giao tiếp", "Viết và trình bày"],
+    subjects: ["Toán", "Tin học", "Ngữ văn", "Tiếng Anh"],
+    experience: { title: "Khảo sát món ăn sáng của lớp", goal: "Thử thu thập và phân tích ý kiến của nhiều người", steps: ["Soạn 3 câu hỏi ngắn, ví dụ: bạn hay ăn sáng món gì, giá bao nhiêu là hợp lý?", "Hỏi khoảng 10 bạn và ghi lại câu trả lời", "Đếm và vẽ một biểu đồ cột đơn giản", "Viết 2 câu: nếu mở quán ăn sáng gần trường, nên bán món gì?"], minutes: 40, result: "Một biểu đồ và một đề xuất ngắn dựa trên số liệu", reflect: REFLECT },
+    related: ["marketing", "phan-tich-du-lieu", "khoi-nghiep"],
+  },
 ];
 
 export const careerById = (id: string) => CAREERS.find((c) => c.id === id);
+
+// Nghề chuyên môn, học thuật (thường cần học đại học): được xếp lên trước TRONG SỐ các nghề đã hợp với bạn.
+// Không có nghĩa nghề nào cao quý hơn nghề nào. Thầy cô có thể sửa danh sách này.
+export const ACADEMIC_IDS = new Set([
+  "bac-si", "duoc-si", "giao-vien", "ke-toan", "marketing", "doi-ngoai", "nha-nghien-cuu", "lap-trinh-vien", "khoi-nghiep",
+  "luat-su", "kien-truc-su", "ky-su-co-khi", "ky-su-xay-dung", "ky-su-nong-nghiep", "ky-su-moi-truong", "phan-tich-du-lieu",
+  "nghien-cuu-thi-truong", "tam-ly-hoc-duong", "nha-bao", "ngan-hang",
+]);
+export const isAcademic = (id: string) => ACADEMIC_IDS.has(id);
 
 // ---------- Nguồn và ghi công bản quyền ----------
 export const ONET_LICENSE_URL = "https://www.onetcenter.org/license_tools.html";

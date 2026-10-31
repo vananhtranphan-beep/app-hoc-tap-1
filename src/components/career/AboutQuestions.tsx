@@ -17,11 +17,11 @@ export const AboutQuestions: React.FC<{ onClose: () => void }> = ({ onClose }) =
         aria-modal="true"
         aria-label="Về bộ câu hỏi này"
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-cream rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 space-y-5 animate-rise"
+        className="w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-clay-card rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 space-y-5 animate-rise"
       >
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-xl font-extrabold text-navy">Về bộ câu hỏi này</h2>
-          <button onClick={onClose} className="w-11 h-11 -mt-2 -mr-2 rounded-full flex items-center justify-center text-muted hover:bg-mist cursor-pointer" aria-label="Đóng">
+          <button onClick={onClose} className="w-11 h-11 -mt-2 -mr-2 rounded-full flex items-center justify-center text-muted hover:bg-clay-soft cursor-pointer" aria-label="Đóng">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -34,7 +34,7 @@ export const AboutQuestions: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </p>
           <ul className="grid sm:grid-cols-2 gap-2 pt-1">
             {RIASEC_ORDER.map((c) => (
-              <li key={c} className="p-3 rounded-xl bg-white border border-line">
+              <li key={c} className="p-3 rounded-xl bg-white border border-clay-soft">
                 <span className="font-bold text-navy">
                   {c} · {RIASEC[c].name}
                 </span>
@@ -59,7 +59,7 @@ export const AboutQuestions: React.FC<{ onClose: () => void }> = ({ onClose }) =
             {SOURCES.map((s) => (
               <li key={s.text}>
                 {s.url ? (
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="underline decoration-line hover:text-teal-deep">
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="underline decoration-line hover:text-clay-deep">
                     {s.text}
                   </a>
                 ) : (
@@ -70,7 +70,7 @@ export const AboutQuestions: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </ol>
         </section>
 
-        <section className="p-4 rounded-xl bg-white border border-line text-xs text-muted space-y-1.5">
+        <section className="p-4 rounded-xl bg-white border border-clay-soft text-xs text-muted space-y-1.5">
           <h3 className="font-bold text-navy text-sm">Ghi công bản quyền</h3>
           <p>{ONET_ATTRIBUTION}</p>
           <p>

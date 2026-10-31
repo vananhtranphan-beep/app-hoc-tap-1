@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, BookOpen, Bot, Calendar, TrendingUp, Sprout, Compass, Video, GraduationCap } from "lucide-react";
+import { Home, BookOpen, Bot, Calendar, Map, Sprout, Compass, Video, GraduationCap } from "lucide-react";
 import { NavSection } from "../types";
 import { CompassLogo } from "./CompassLogo";
 
@@ -18,10 +18,10 @@ const MAIN_ITEMS: NavItem[] = [
 
 export const STUDY_ITEMS: (NavItem & { desc: string })[] = [
   { id: "subjects", label: "Sách giáo khoa", icon: BookOpen, desc: "Đọc SGK lớp 6–9 các môn" },
+  { id: "quest", label: "Bản đồ chinh phục", icon: Map, desc: "Khám phá từng chương Toán, AI tạo câu hỏi" },
+  { id: "ai_tutor", label: "Gia sư AI", icon: Bot, desc: "Hỏi bài, AI giải thích từng bước" },
+  { id: "planner", label: "Kế hoạch học tập", icon: Calendar, desc: "Lên lịch học 7 ngày" },
   { id: "videos", label: "Video bài giảng", icon: Video, desc: "Lưu video YouTube để xem lại" },
-  { id: "ai_tutor", label: "AI Tutor", icon: Bot, desc: "Hỏi bài, AI giải thích từng bước" },
-  { id: "planner", label: "Kế hoạch tuần", icon: Calendar, desc: "Lên lịch học 7 ngày" },
-  { id: "progress", label: "Bảng điểm", icon: TrendingUp, desc: "Tính điểm trung bình học kỳ" },
 ];
 
 export const STUDY_SECTIONS: NavSection[] = ["study", ...STUDY_ITEMS.map((i) => i.id)];

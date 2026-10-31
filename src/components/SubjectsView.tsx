@@ -332,7 +332,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   return (
     <div className="space-y-6 pb-12">
       {/* Đầu trang + chọn môn */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-navy text-white shadow-xl space-y-4">
+      <div className="p-5 sm:p-6 rounded-2xl bg-ocean text-white shadow-xl space-y-4">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-2xl bg-white/10 border border-white/15">
             <BookOpen className="w-6 h-6 text-white" />
@@ -395,13 +395,13 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
             </div>
             <div className="flex gap-2 shrink-0">
               {hasUnpublished && (
-                <button onClick={discardDraft} className="px-3 py-2 rounded-xl bg-white border border-line hover:bg-mist text-ink font-bold text-xs transition cursor-pointer flex items-center gap-1.5">
+                <button onClick={discardDraft} className="px-3 py-2 rounded-xl bg-white border border-sky-line hover:bg-sky-soft text-ink font-bold text-xs transition cursor-pointer flex items-center gap-1.5">
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Bỏ thay đổi</span>
                 </button>
               )}
               {hasUnpublished && (
-                <button onClick={() => setShowPublish(!showPublish)} className="px-4 py-2 rounded-xl bg-teal hover:bg-teal-deep text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <button onClick={() => setShowPublish(!showPublish)} className="px-4 py-2 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm">
                   <Upload className="w-4 h-4" />
                   <span>{showPublish ? "Đóng hướng dẫn" : "📤 Đăng cho học sinh"}</span>
                 </button>
@@ -409,7 +409,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
             </div>
           </div>
           {showPublish && hasUnpublished && (
-            <div className="p-4 rounded-2xl bg-white border border-teal-soft space-y-3">
+            <div className="p-4 rounded-2xl bg-white border border-sky-soft space-y-3">
               <ol className="list-decimal pl-5 space-y-1.5 text-xs text-ink">
                 <li>Bấm <b>"Sao chép code"</b>.</li>
                 <li>Bấm <b>"Mở file trên GitHub"</b> (cần đăng nhập GitHub).</li>
@@ -426,14 +426,14 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                   <span>Mở file trên GitHub</span>
                 </a>
               </div>
-              <textarea id="publish-code-box" readOnly value={publishCode} className="w-full h-32 p-2 rounded-xl bg-cream border border-line font-mono text-[10px] text-muted" />
+              <textarea id="publish-code-box" readOnly value={publishCode} className="w-full h-32 p-2 rounded-xl bg-sky-bg border border-sky-line font-mono text-[10px] text-muted" />
             </div>
           )}
         </div>
       )}
 
       {/* Danh sách sách */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-white border border-line shadow-sm space-y-5">
+      <div className="p-5 sm:p-6 rounded-2xl bg-white border border-sky-line shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-lg font-extrabold text-navy">
@@ -446,7 +446,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
           {isAdmin && mode !== "loading" && (
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="px-4 py-2 rounded-xl bg-teal hover:bg-teal-deep text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm self-start"
+              className="px-4 py-2 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm self-start"
             >
               {showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
               <span>{showAddForm ? "Đóng" : "Thêm sách (admin)"}</span>
@@ -455,10 +455,10 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
         </div>
 
         {isAdmin && showAddForm && (
-          <form onSubmit={handleAddBook} className="p-4 rounded-2xl bg-mist/60 border border-teal-soft space-y-3">
+          <form onSubmit={handleAddBook} className="p-4 rounded-2xl bg-sky-soft/60 border border-sky-soft space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input type="text" required aria-label="Tên sách" placeholder="Tên sách (VD: Bài tập Toán 6 - Tập 1)" value={newName} onChange={(e) => setNewName(e.target.value)} className="px-3 py-2.5 rounded-xl bg-white border border-line text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal" />
-              <input type="text" inputMode="url" autoComplete="off" autoCapitalize="off" spellCheck={false} aria-label="Link sách" placeholder="Link sách (có thể để trống, gắn sau)" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="px-3 py-2.5 rounded-xl bg-white border border-line text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal" />
+              <input type="text" required aria-label="Tên sách" placeholder="Tên sách (VD: Bài tập Toán 6 - Tập 1)" value={newName} onChange={(e) => setNewName(e.target.value)} className="px-3 py-2.5 rounded-xl bg-white border border-sky-line text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-ocean" />
+              <input type="text" inputMode="url" autoComplete="off" autoCapitalize="off" spellCheck={false} aria-label="Link sách" placeholder="Link sách (có thể để trống, gắn sau)" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="px-3 py-2.5 rounded-xl bg-white border border-sky-line text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-ocean" />
             </div>
             {formError && <p role="alert" className="text-sm text-rose-700">{formError}</p>}
             <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition cursor-pointer">
@@ -474,20 +474,20 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
             {list.map((book) => {
               const isEditing = editingId === book.id;
               return (
-                <div key={book.id} className={`rounded-2xl bg-white border overflow-hidden flex flex-col ${isEditing ? "col-span-full border-teal/50" : "lift border-line hover:border-teal/50"}`}>
+                <div key={book.id} className={`rounded-2xl bg-white border overflow-hidden flex flex-col ${isEditing ? "col-span-full border-ocean/50" : "lift border-sky-line hover:border-ocean/50"}`}>
                   {isEditing ? (
                     <form
                       onSubmit={(e) => {
                         e.preventDefault();
                         saveEditing(book);
                       }}
-                      className="p-4 space-y-3 bg-mist/60 flex-1"
+                      className="p-4 space-y-3 bg-sky-soft/60 flex-1"
                     >
-                      <span className="text-sm font-bold text-teal-deep">Sửa sách</span>
+                      <span className="text-sm font-bold text-ocean">Sửa sách</span>
                       <div className="grid sm:grid-cols-3 gap-3">
                         <label className="block text-xs font-semibold text-muted">
                           Tên sách
-                          <input value={editName} onChange={(e) => setEditName(e.target.value)} className="mt-1 w-full px-3 py-2.5 rounded-xl bg-white border border-line text-base sm:text-sm text-ink font-normal" />
+                          <input value={editName} onChange={(e) => setEditName(e.target.value)} className="mt-1 w-full px-3 py-2.5 rounded-xl bg-white border border-sky-line text-base sm:text-sm text-ink font-normal" />
                         </label>
                         <label className="block text-xs font-semibold text-muted">
                           Link đọc sách
@@ -500,7 +500,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                             autoCapitalize="off"
                             spellCheck={false}
                             placeholder="https://taphuan.nxbgd.vn/..."
-                            className="mt-1 w-full px-3 py-2.5 rounded-xl bg-white border border-line text-base sm:text-sm text-ink font-normal"
+                            className="mt-1 w-full px-3 py-2.5 rounded-xl bg-white border border-sky-line text-base sm:text-sm text-ink font-normal"
                           />
                         </label>
                         <label className="block text-xs font-semibold text-muted">
@@ -514,7 +514,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                             autoCapitalize="off"
                             spellCheck={false}
                             placeholder="Để trống = bìa màu"
-                            className="mt-1 w-full px-3 py-2.5 rounded-xl bg-white border border-line text-base sm:text-sm text-ink font-normal"
+                            className="mt-1 w-full px-3 py-2.5 rounded-xl bg-white border border-sky-line text-base sm:text-sm text-ink font-normal"
                           />
                         </label>
                       </div>
@@ -523,7 +523,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                         <button type="submit" className="min-h-11 px-5 rounded-xl bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-1.5 cursor-pointer">
                           <Check className="w-4 h-4" /> Lưu
                         </button>
-                        <button type="button" onClick={() => setEditingId(null)} className="min-h-11 px-4 rounded-xl bg-white border border-line text-muted font-bold text-sm cursor-pointer">
+                        <button type="button" onClick={() => setEditingId(null)} className="min-h-11 px-4 rounded-xl bg-white border border-sky-line text-muted font-bold text-sm cursor-pointer">
                           Hủy
                         </button>
                       </div>
@@ -547,12 +547,12 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                         )}
                         <div className="mt-auto flex flex-wrap items-center gap-1.5">
                           {book.url ? (
-                            <a href={book.url} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[6.5rem] min-h-10 rounded-xl bg-teal hover:bg-teal-deep text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition">
+                            <a href={book.url} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[6.5rem] min-h-10 rounded-xl bg-ocean hover:bg-ocean-dark text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition">
                               <span>Đọc sách</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           ) : (
-                            <span className="flex-1 min-h-10 flex items-center justify-center rounded-xl bg-mist text-muted text-xs font-bold text-center">Sắp có</span>
+                            <span className="flex-1 min-h-10 flex items-center justify-center rounded-xl bg-sky-soft text-muted text-xs font-bold text-center">Sắp có</span>
                           )}
                           {isAdmin && (
                             <>
@@ -575,7 +575,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
         )}
 
         {personalList.length > 0 && (
-          <div className="space-y-3 pt-5 border-t border-line">
+          <div className="space-y-3 pt-5 border-t border-sky-line">
             <h4 className="font-extrabold text-sm text-amber-700">🔒 Tài liệu cá nhân em đã lưu trước đây</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {personalList.map((b) => (

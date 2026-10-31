@@ -96,9 +96,9 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
   return (
     <div className="space-y-6 pb-12">
       {/* Header Banner */}
-      <div className="p-6 rounded-2xl bg-navy text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-ocean text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-teal/20 border border-teal/40 flex items-center justify-center text-teal-soft">
+          <div className="w-12 h-12 rounded-2xl bg-ocean/20 border border-ocean/40 flex items-center justify-center text-lilac">
             <Video className="w-7 h-7" />
           </div>
           <div>
@@ -111,7 +111,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-5 py-2.5 rounded-xl bg-teal hover:bg-teal-deep text-white font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-md self-start md:self-auto"
+          className="px-5 py-2.5 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-md self-start md:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Thêm Link Video YouTube Mới</span>
@@ -119,18 +119,18 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
       </div>
 
       {/* YouTube Search Bar */}
-      <div className="p-6 bg-white rounded-2xl border border-line shadow-sm space-y-4">
+      <div className="p-6 bg-white rounded-2xl border border-sky-line shadow-sm space-y-4">
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Nhập từ khóa tìm bài giảng trên YouTube (VD: Phương trình bậc nhất Lớp 8, Phân tích bài văn Lớp 9...)"
-            className="flex-1 px-4 py-3 rounded-xl border border-line text-sm focus:outline-none focus:ring-2 focus:ring-teal bg-cream font-medium"
+            className="flex-1 px-4 py-3 rounded-xl border border-sky-line text-sm focus:outline-none focus:ring-2 focus:ring-ocean bg-sky-bg font-medium"
           />
           <button
             type="submit"
-            className="px-6 py-3 rounded-xl bg-teal hover:bg-teal-deep text-white font-bold text-sm transition flex items-center gap-2 cursor-pointer shadow-md shrink-0"
+            className="px-6 py-3 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold text-sm transition flex items-center gap-2 cursor-pointer shadow-md shrink-0"
           >
             <Search className="w-4 h-4" />
             <span>Tìm trên YouTube</span>
@@ -142,7 +142,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-extrabold text-navy text-lg flex items-center gap-2">
-            <Youtube className="w-5 h-5 text-teal-deep" />
+            <Youtube className="w-5 h-5 text-ocean" />
             <span>Danh Sách Video Bài Giảng Đã Lưu ({customVideos.length})</span>
           </h3>
         </div>
@@ -152,7 +152,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
             {customVideos.map((vid) => (
               <div
                 key={vid.id}
-                className="bg-white rounded-2xl border border-line overflow-hidden shadow-sm hover:shadow-md transition space-y-3 p-4 flex flex-col justify-between"
+                className="bg-white rounded-2xl border border-sky-line overflow-hidden shadow-sm hover:shadow-md transition space-y-3 p-4 flex flex-col justify-between"
               >
                 <div>
                   {vid.youtubeId ? (
@@ -167,19 +167,19 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                       />
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl bg-mist/60 border border-teal-soft text-xs text-teal-deep flex items-center justify-between mb-3">
+                    <div className="p-4 rounded-xl bg-sky-soft/60 border border-sky-soft text-xs text-ocean flex items-center justify-between mb-3">
                       <span className="font-semibold">Link Video YouTube</span>
-                      <Youtube className="w-5 h-5 text-teal-deep" />
+                      <Youtube className="w-5 h-5 text-ocean" />
                     </div>
                   )}
 
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded bg-mist text-teal-deep font-bold text-[10px]">
+                        <span className="px-2 py-0.5 rounded bg-sky-soft text-ocean font-bold text-[10px]">
                           Lớp {vid.grade}
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-mist text-teal-deep font-bold text-[10px]">
+                        <span className="px-2 py-0.5 rounded bg-sky-soft text-ocean font-bold text-[10px]">
                           Môn {vid.subjectId}
                         </span>
                       </div>
@@ -193,7 +193,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
 
                     <button
                       onClick={() => handleDeleteVideo(vid.id)}
-                      className="p-1.5 rounded-lg bg-mist text-teal-deep hover:bg-teal-soft transition cursor-pointer"
+                      className="p-1.5 rounded-lg bg-sky-soft text-ocean hover:bg-sky-soft transition cursor-pointer"
                       title="Xóa video"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -205,7 +205,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                   href={vid.youtubeUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-2.5 rounded-xl bg-mist hover:bg-mist/60 hover:text-teal-deep text-ink font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer border border-line"
+                  className="w-full py-2.5 rounded-xl bg-sky-soft hover:bg-sky-soft/60 hover:text-ocean text-ink font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer border border-sky-line"
                 >
                   <span>Mở xem trên YouTube</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -214,8 +214,8 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center bg-white rounded-2xl border border-line space-y-3">
-            <Youtube className="w-12 h-12 text-teal mx-auto" />
+          <div className="p-12 text-center bg-white rounded-2xl border border-sky-line space-y-3">
+            <Youtube className="w-12 h-12 text-ocean mx-auto" />
             <h4 className="text-base font-bold text-ink">
               Chưa có video bài giảng nào trong kho của bạn
             </h4>
@@ -224,7 +224,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
             </p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal hover:bg-teal-deep text-white text-xs font-bold transition cursor-pointer shadow-md"
+              className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-ocean hover:bg-ocean-dark text-white text-xs font-bold transition cursor-pointer shadow-md"
             >
               <Plus className="w-4 h-4" />
               <span>Thêm Link Video Đầu Tiên</span>
@@ -236,10 +236,10 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
       {/* MODAL ADD VIDEO */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-navy/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-line space-y-4">
-            <div className="flex items-center justify-between border-b border-line pb-3">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-sky-line space-y-4">
+            <div className="flex items-center justify-between border-b border-sky-line pb-3">
               <h3 className="font-extrabold text-navy text-lg flex items-center gap-2">
-                <Youtube className="w-5 h-5 text-teal-deep" />
+                <Youtube className="w-5 h-5 text-ocean" />
                 <span>Thêm Link Video Bài Giảng</span>
               </h3>
               <button
@@ -258,7 +258,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                 <select
                   value={subjectName}
                   onChange={(e) => setSubjectName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-line text-xs font-bold text-ink bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-sky-line text-xs font-bold text-ink bg-white"
                 >
                   <option value="Toán">Toán</option>
                   <option value="Ngữ văn">Ngữ văn</option>
@@ -278,7 +278,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                 <select
                   value={grade}
                   onChange={(e) => setGrade(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-line text-xs font-bold text-ink bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-sky-line text-xs font-bold text-ink bg-white"
                 >
                   <option value={6}>Lớp 6</option>
                   <option value={7}>Lớp 7</option>
@@ -297,7 +297,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                   placeholder="VD: Phương trình bậc hai môn Toán Lớp 9"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-line text-xs font-medium focus:ring-2 focus:ring-teal"
+                  className="w-full px-3 py-2 rounded-xl border border-sky-line text-xs font-medium focus:ring-2 focus:ring-ocean"
                 />
               </div>
 
@@ -311,7 +311,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                   placeholder="https://www.youtube.com/watch?v=..."
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-line text-xs font-medium focus:ring-2 focus:ring-teal"
+                  className="w-full px-3 py-2 rounded-xl border border-sky-line text-xs font-medium focus:ring-2 focus:ring-ocean"
                 />
               </div>
 
@@ -324,7 +324,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                   placeholder="VD: Kênh Học Tốt Cấp 2"
                   value={instructor}
                   onChange={(e) => setInstructor(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-line text-xs font-medium"
+                  className="w-full px-3 py-2 rounded-xl border border-sky-line text-xs font-medium"
                 />
               </div>
 
@@ -332,13 +332,13 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl bg-mist hover:bg-line text-ink text-xs font-bold cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-sky-soft hover:bg-line text-ink text-xs font-bold cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-teal hover:bg-teal-deep text-white text-xs font-bold transition cursor-pointer shadow-md"
+                  className="px-5 py-2 rounded-xl bg-ocean hover:bg-ocean-dark text-white text-xs font-bold transition cursor-pointer shadow-md"
                 >
                   Lưu Link Video
                 </button>

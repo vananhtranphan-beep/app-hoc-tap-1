@@ -115,18 +115,12 @@ export const STAGES = [
   { name: "Khu vườn cá nhân", min: 25, text: "Một khu vườn nhỏ lớn lên từ những lần bạn để ý đến mình." },
 ];
 
-// ---------- Vật trang trí mở khóa (theo hoạt động, không theo chuỗi ngày) ----------
+// ---------- Vật trang trí tự xuất hiện trên cây khi đạt mốc (theo hoạt động, không theo chuỗi ngày) ----------
 export const DECOR = [
   { id: "hoa", name: "Bông hoa đầu tiên", how: "Hoàn thành hoạt động chăm sóc đầu tiên" },
   { id: "buom", name: "Chú bướm", how: "Thử hoạt động ở 2 nhóm khác nhau" },
-  { id: "chau", name: "Chậu gốm", how: "Nhìn lại hành trình lần đầu" },
+  { id: "den", name: "Đèn lồng nhỏ trên cành", how: "Nhìn lại hành trình lần đầu" },
   { id: "domdom", name: "Đom đóm", how: "Thử hoạt động ở 3 nhóm khác nhau" },
   { id: "chim", name: "Chú chim nhỏ", how: "Hoàn thành 5 hoạt động" },
-  { id: "cauvong", name: "Cầu vồng", how: "Chăm sóc cây tươi lại sau một ngày nặng nề" },
-];
-
-export const THEMES = [
-  { id: "rung", name: "Rừng xanh", sky: ["#dbeee9", "#b9ddd5"], ground: "#5d9c7a" },
-  { id: "bien", name: "Bờ biển", sky: ["#dceaf5", "#b8d4ea"], ground: "#d9c49a" },
-  { id: "doi", name: "Đồi chiều", sky: ["#f6e6d6", "#e9cdb5"], ground: "#9aa86b" },
+  { id: "cauvong", name: "Cầu vồng", how: "Chăm sóc để cây hồi lại hoàn toàn sau những ngày nặng nề" },
 ];

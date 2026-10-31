@@ -27,7 +27,7 @@ const GROUP_TEST: Record<Group, (k: string) => boolean> = {
 
 const ROWS: { what: string; where: string; ai: string; icon: React.ElementType }[] = [
   { what: "Tên đăng nhập, mật khẩu (đã mã hóa một chiều), khối lớp, biệt danh", where: "Máy chủ", ai: "Chỉ khối lớp, để AI nói cho hợp tuổi", icon: Server },
-  { what: "Học tập: kế hoạch tuần, điểm tự nhập, video đã lưu", where: "Máy của bạn; có bản trên máy chủ khi đăng nhập", ai: "Chỉ câu bạn hỏi AI Tutor", icon: Smartphone },
+  { what: "Học tập: kế hoạch học tập, tiến độ bản đồ chinh phục, video đã lưu", where: "Máy của bạn; có bản trên máy chủ khi đăng nhập", ai: "Câu bạn hỏi Gia sư AI; tên chương khi tạo câu hỏi", icon: Smartphone },
   { what: "Hướng nghiệp: câu trả lời, nghề đã lưu, kế hoạch khám phá", where: "Máy của bạn; có bản trên máy chủ khi đăng nhập", ai: "Chỉ khi bạn bấm nhờ AI tư vấn", icon: Smartphone },
   { what: "Cảm xúc: check-in, ghi chú, cây, hoạt động đã làm", where: "Chỉ trên máy của bạn, không bao giờ gửi lên máy chủ", ai: "Không tự gửi", icon: Lock },
   { what: "Tin nhắn Góc tâm sự", where: "Không lưu ở đâu cả, đóng trang là mất", ai: "Chỉ tin đang trò chuyện, khi bạn bấm Gửi", icon: Bot },
@@ -145,7 +145,7 @@ export const PrivacyView: React.FC<Props> = ({ profile, onAccountRemoved }) => {
   const groups: { g: Group; label: string; desc: string }[] = [
     { g: "emotion", label: "cảm xúc", desc: "Check-in, ghi chú, cây, vật trang trí, hoạt động đã làm. Mã PIN vẫn giữ." },
     { g: "career", label: "hướng nghiệp", desc: "Câu trả lời khảo sát, nghề đã lưu, kế hoạch khám phá." },
-    { g: "study", label: "học tập", desc: "Kế hoạch tuần, bảng điểm, video đã lưu, số ngày vào web." },
+    { g: "study", label: "học tập", desc: "Kế hoạch học tập, tiến độ bản đồ chinh phục, video đã lưu." },
   ];
 
   return (
@@ -197,7 +197,8 @@ export const PrivacyView: React.FC<Props> = ({ profile, onAccountRemoved }) => {
           <li>
             Câu trả lời của AI do dịch vụ <b>Groq</b> (công ty ở Mỹ, máy chủ đặt ở nước ngoài) tạo ra. Nội dung chỉ được gửi khi bạn bấm Gửi hoặc bấm nhờ AI tư vấn.
           </li>
-          <li>AI Tutor: câu hỏi bạn gõ và các tin gần nhất trong cuộc trò chuyện đó.</li>
+          <li>Gia sư AI: câu hỏi bạn gõ và các tin gần nhất trong cuộc trò chuyện đó.</li>
+          <li>Bản đồ chinh phục: lớp, tên chương, danh sách bài và mức độ khó, để AI tạo câu hỏi trắc nghiệm.</li>
           <li>Hướng nghiệp: tóm tắt câu trả lời khảo sát và danh mục nghề, khi bạn bấm hỏi AI.</li>
           <li>Góc tâm sự: tin bạn đang gửi; thời tiết và nguyên nhân của lần check-in hôm nay chỉ gửi kèm nếu bạn tích ô đồng ý.</li>
           <li>

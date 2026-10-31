@@ -1,10 +1,17 @@
 // ============================================================
 // CÂY CẢM XÚC: lưu trữ và cách cây phát triển
 // - Dữ liệu chỉ lưu TRÊN MÁY (khóa có chữ "_mood_" nên không bao giờ được đồng bộ, xem lib/cloud.ts)
-// - Cây lớn lên nhờ check-in, hoạt động chăm sóc, nhìn lại hành trình (không theo chuỗi ngày)
-// - Cảm xúc nặng nề làm cây rũ lá; cây tươi lại khi em làm một việc chăm sóc bản thân.
-//   Cây KHÔNG tươi lên chỉ vì em chọn cảm xúc vui (để em không phải giả vui).
-// - Cây không bao giờ chết, không tụt giai đoạn.
+// - Chế độ khách: chỉ giữ tạm trong bộ nhớ (đóng hoặc tải lại trang là mất), không ghi vào máy
+// - Cây có 2 lớp:
+//   1. DÁNG CÂY đổi ngay theo cảm xúc vừa check-in (xem moodForm):
+//      Nắng nhẹ, Cầu vồng → "sáng" (lá vươn, trời sáng, có thể nở hoa)
+//      Có mây (hoặc tự gọi tên) → "dịu" (giữ nguyên)
+//      Mưa, Gió mạnh, Sấm chớp → "nặng nề" (lá rũ, trời tối hơn)
+//   2. ĐỘ HÉO (0–3): mỗi lần check-in nặng nề héo thêm 1 mức (tối đa 2 mức mỗi ngày);
+//      mỗi hoạt động chăm sóc bản thân hồi 1 mức; tâm sự với AI hồi tối đa 1 mức mỗi ngày.
+//      Cây KHÔNG hồi chỉ vì em chọn cảm xúc vui (để em không phải giả vui cho cây đẹp).
+// - Cây lớn lên nhờ check-in (cảm xúc nào cũng như nhau), chăm sóc bản thân, nhìn lại hành trình.
+// - Tối đa 5 lần check-in mỗi ngày. Cây không bao giờ chết, không tụt giai đoạn.
 // ============================================================
 import { SELF_CARE, STAGES, WEATHERS, activityById, weatherById } from "../data/moodData";
 
@@ -39,11 +46,21 @@ export interface MoodState {
   notes: SavedNote[];
   chatCare: number; // số lần tâm sự có phản hồi (không lưu nội dung)
   reviews: string[]; // ngày (YYYY-MM-DD) em nhìn lại hành trình
-  wilted: boolean;
+  wilted: boolean; // = wilt > 0 (giữ để tương thích dữ liệu cũ)
   wiltWeather?: string;
+  /** Độ héo 0..3 */
+  wilt: number;
+  /** Ngày và số mức đã héo thêm trong ngày đó (tối đa 2) */
+  wiltDay?: string;
+  wiltToday: number;
+  /** Ngày tâm sự gần nhất đã giúp cây hồi 1 mức */
+  chatHealDay?: string;
   recovered: number;
-  theme: string;
 }
+
+export type MoodForm = "sang" | "diu" | "nang-ne";
+export const MAX_CHECKINS_PER_DAY = 5;
+export const MAX_WILT = 3;
 
 export const moodKey = (userId: string) => `user_${userId}_mood_v3`;
 
@@ -55,8 +72,9 @@ export const emptyMood = (): MoodState => ({
   chatCare: 0,
   reviews: [],
   wilted: false,
+  wilt: 0,
+  wiltToday: 0,
   recovered: 0,
-  theme: "rung",
 });
 
 const newId = (p: string) => `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -94,6 +112,21 @@ function migrateOld(userId: string): MoodEntry[] {
 
 const arr = <T,>(v: any, ok: (x: any) => boolean): T[] => (Array.isArray(v) ? v.filter(ok) : []);
 
+// ---------- Chế độ khách: chỉ giữ tạm trong bộ nhớ ----------
+const guestMemory = new Map<string, MoodState>();
+export function loadGuestMood(userId: string): MoodState {
+  // Xóa dữ liệu cảm xúc khách từng lưu trên máy ở bản cũ
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith(`user_${userId}_`) && /_mood_(v3|logs)$/.test(k))
+      .forEach((k) => localStorage.removeItem(k));
+  } catch {}
+  return guestMemory.get(userId) || emptyMood();
+}
+export function saveGuestMood(userId: string, s: MoodState): void {
+  guestMemory.set(userId, s);
+}
+
 export function loadMood(userId: string): MoodState {
   const base = emptyMood();
   try {
@@ -109,10 +142,16 @@ export function loadMood(userId: string): MoodState {
       notes: arr<SavedNote>(raw.notes, (n) => n && typeof n.text === "string"),
       chatCare: Number(raw.chatCare) || 0,
       reviews: arr<string>(raw.reviews, (r) => typeof r === "string"),
-      wilted: Boolean(raw.wilted),
       wiltWeather: typeof raw.wiltWeather === "string" ? raw.wiltWeather : undefined,
+      // Dữ liệu cũ chỉ có wilted (đúng/sai): đổi thành độ héo 1
+      ...(() => {
+        const w = Number.isFinite(Number(raw.wilt)) ? Math.max(0, Math.min(MAX_WILT, Math.round(Number(raw.wilt)))) : raw.wilted ? 1 : 0;
+        return { wilt: w, wilted: w > 0 };
+      })(),
+      wiltDay: typeof raw.wiltDay === "string" ? raw.wiltDay : undefined,
+      wiltToday: Number(raw.wiltToday) || 0,
+      chatHealDay: typeof raw.chatHealDay === "string" ? raw.chatHealDay : undefined,
       recovered: Number(raw.recovered) || 0,
-      theme: typeof raw.theme === "string" ? raw.theme : "rung",
     };
   } catch {
     return base;
@@ -150,36 +189,59 @@ export function unlockedDecor(s: MoodState): string[] {
   const out: string[] = [];
   if (s.care.length >= 1) out.push("hoa");
   if (groups.size >= 2) out.push("buom");
-  if (s.reviews.length >= 1) out.push("chau");
+  if (s.reviews.length >= 1) out.push("den");
   if (groups.size >= 3) out.push("domdom");
   if (s.care.length >= 5) out.push("chim");
   if (s.recovered >= 1) out.push("cauvong");
   return out;
 }
 
+// ---------- Dáng cây theo cảm xúc vừa check-in ----------
+export function formOf(weathers: string[]): MoodForm {
+  const ws = weathers.map((w) => weatherById(w)).filter(Boolean);
+  const heavy = ws.filter((w) => w!.heavy).length;
+  const bright = ws.filter((w) => w!.id === "nang" || w!.id === "cauvong").length;
+  if (heavy > ws.length - heavy) return "nang-ne";
+  if (bright > 0 && heavy === 0) return "sang";
+  return "diu";
+}
+/** Dáng hiện tại = theo lần check-in gần nhất */
+export const moodForm = (s: MoodState): MoodForm => (s.entries[0] ? formOf(s.entries[0].weathers) : "diu");
+
+export const checkinsToday = (s: MoodState) => s.entries.filter((e) => dayKey(e.at) === dayKey(new Date())).length;
+
 // ---------- Thao tác ----------
 export function addEntry(s: MoodState, e: Omit<MoodEntry, "id" | "at">): MoodState {
+  if (checkinsToday(s) >= MAX_CHECKINS_PER_DAY) return s; // đủ 5 lần hôm nay
   const entry: MoodEntry = { ...e, id: newId("ci"), at: new Date().toISOString() };
+  const next: MoodState = { ...s, entries: [entry, ...s.entries].slice(0, 400) };
+  if (formOf(e.weathers) !== "nang-ne") return next; // cảm xúc nhẹ nhàng KHÔNG tự làm cây hồi
+  const today = dayKey(new Date());
+  const usedToday = s.wiltDay === today ? s.wiltToday : 0;
   const heavy = e.weathers.map((w) => weatherById(w)).find((w) => w?.heavy);
-  return {
-    ...s,
-    entries: [entry, ...s.entries].slice(0, 400),
-    // Cảm xúc nặng nề: cây rũ lá. Cảm xúc nhẹ nhàng KHÔNG tự làm cây tươi lại.
-    wilted: heavy ? true : s.wilted,
-    wiltWeather: heavy ? heavy.id : s.wiltWeather,
-  };
+  if (usedToday >= 2 || s.wilt >= MAX_WILT) return { ...next, wiltWeather: heavy?.id || s.wiltWeather };
+  const wilt = s.wilt + 1;
+  return { ...next, wilt, wilted: true, wiltWeather: heavy?.id || s.wiltWeather, wiltDay: today, wiltToday: usedToday + 1 };
 }
 
-/** Làm một việc chăm sóc (hoạt động hoặc một lượt tâm sự): cây tươi lại */
-function revive(s: MoodState): MoodState {
-  return s.wilted ? { ...s, wilted: false, recovered: s.recovered + 1 } : s;
+/** Chăm sóc bản thân: cây hồi 1 mức (về 0 thì tính là một lần "tươi lại") */
+function heal(s: MoodState): MoodState {
+  if (s.wilt <= 0) return s;
+  const wilt = s.wilt - 1;
+  return { ...s, wilt, wilted: wilt > 0, recovered: wilt === 0 ? s.recovered + 1 : s.recovered };
 }
 
 export function addCare(s: MoodState, activityId: string, fit?: CareRecord["fit"]): MoodState {
-  return revive({ ...s, care: [{ id: newId("cr"), activityId, at: new Date().toISOString(), fit }, ...s.care].slice(0, 400) });
+  return heal({ ...s, care: [{ id: newId("cr"), activityId, at: new Date().toISOString(), fit }, ...s.care].slice(0, 400) });
 }
 
-export const addChatCare = (s: MoodState): MoodState => revive({ ...s, chatCare: s.chatCare + 1 });
+/** Một lượt tâm sự có phản hồi: cây lớn thêm; hồi tối đa 1 mức mỗi ngày nhờ tâm sự */
+export function addChatCare(s: MoodState): MoodState {
+  const n = { ...s, chatCare: s.chatCare + 1 };
+  const today = dayKey(new Date());
+  if (s.wilt <= 0 || s.chatHealDay === today) return n;
+  return { ...heal(n), chatHealDay: today };
+}
 
 export function addReview(s: MoodState): MoodState {
   const today = dayKey(new Date());

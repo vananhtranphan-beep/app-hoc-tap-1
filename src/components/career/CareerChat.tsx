@@ -9,11 +9,19 @@ import { SourceTag } from "./ui";
 // Gửi cho AI: bản tóm tắt sở thích (không tên) + câu hỏi. Lịch sử chat lưu trong tài khoản.
 // ============================================================
 
-const QUICK = [
+// Câu hỏi gợi ý: khi đã có kết quả khảo sát / khi trò chuyện trực tiếp
+const QUICK_RESULT = [
   "Nghề phù hợp nhất với mình cần học giỏi môn nào?",
   "Lên lớp 10 mình nên chọn những môn học nào?",
   "Từ bây giờ mình có thể chuẩn bị những gì?",
   "Hai nghề đầu tiên trong danh sách khác nhau thế nào?",
+];
+const QUICK_FREE = [
+  "Nghiên cứu thị trường là làm gì?",
+  "Nếu thích Toán nhưng không thích làm việc với máy tính thì có nghề nào?",
+  "Làm sao để trở thành bác sĩ?",
+  "Ngành logistics khác quản trị kinh doanh như thế nào?",
+  "Những năm tới ngành nghề nào đang phát triển?",
 ];
 
 interface Props {
@@ -92,23 +100,23 @@ export const CareerChat: React.FC<Props> = ({ grade, messages, onChange, context
   return (
     <div className="space-y-3">
       {!ready && messages.length === 0 && (
-        <div className="p-3 rounded-xl bg-mist/60 border border-line text-sm text-navy">
-          Bạn chưa làm khảo sát ở bước 1, nên AI chỉ trả lời chung chung. Làm khảo sát trước để AI gợi ý sát với bạn hơn.
+        <div className="p-3 rounded-xl bg-clay-soft/50 border border-clay-soft text-sm text-navy">
+          Bạn hỏi gì cũng được: nghề nghiệp, ngành học, sở thích, thế mạnh, con đường sau lớp 9. Nếu muốn AI gợi ý nghề sát với bạn hơn, bạn có thể làm khảo sát (không bắt buộc).
         </div>
       )}
       <p className="flex items-start gap-1.5 text-xs text-muted">
-        <Info className="w-4 h-4 text-teal shrink-0" />
-        Khi bạn bấm gửi, web gửi cho AI: kết quả tổng hợp sở thích (không có tên), khối lớp và câu bạn hỏi. AI có thể sai; hãy hỏi thêm thầy cô, bố mẹ.
+        <Info className="w-4 h-4 text-clay-deep shrink-0" />
+        Khi bạn bấm gửi, web gửi cho AI: khối lớp, câu bạn hỏi và kết quả khảo sát nếu có (không có tên). AI không truy cập được số liệu mới trên mạng và có thể sai; hãy hỏi thêm thầy cô, bố mẹ.
       </p>
 
       {messages.length > 0 && (
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1" aria-live="polite">
           {messages.map((m, i) => (
             <div key={i} className={`flex items-start gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${m.role === "user" ? "bg-navy text-cream" : "bg-teal-soft text-teal-deep"}`}>
+              <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${m.role === "user" ? "bg-navy text-cream" : "bg-clay-soft text-clay-deep"}`}>
                 {m.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </span>
-              <div className={`max-w-[85%] min-w-0 rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-navy text-cream rounded-tr-sm" : "bg-cream border border-line rounded-tl-sm"}`}>
+              <div className={`max-w-[85%] min-w-0 rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-navy text-cream rounded-tr-sm" : "bg-white border border-clay-soft rounded-tl-sm"}`}>
                 {m.role === "model" && (
                   <div className="mb-1.5">
                     <SourceTag kind="ai" />
@@ -120,7 +128,7 @@ export const CareerChat: React.FC<Props> = ({ grade, messages, onChange, context
           ))}
           {loading && (
             <div className="flex items-center gap-2.5" role="status">
-              <span className="w-8 h-8 rounded-full bg-teal-soft text-teal-deep flex items-center justify-center">
+              <span className="w-8 h-8 rounded-full bg-clay-soft text-clay-deep flex items-center justify-center">
                 <Bot className="w-4 h-4 animate-pulse" />
               </span>
               <span className="text-sm text-muted">AI đang suy nghĩ...</span>
@@ -130,11 +138,6 @@ export const CareerChat: React.FC<Props> = ({ grade, messages, onChange, context
         </div>
       )}
 
-      {ready && messages.length === 0 && !loading && (
-        <PrimaryBtnFull onClick={() => send("Dựa trên kết quả khảo sát, bạn nhận xét giúp mình và gợi ý vài nghề để mình tìm hiểu nhé.")}>
-          <Bot className="w-4 h-4" /> Nhờ AI nhận xét và gợi ý
-        </PrimaryBtnFull>
-      )}
 
       {error && (
         <div role="alert" className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-900">
@@ -143,12 +146,12 @@ export const CareerChat: React.FC<Props> = ({ grade, messages, onChange, context
       )}
 
       <div className="flex flex-wrap gap-2">
-        {QUICK.map((q) => (
+        {(ready ? QUICK_RESULT : QUICK_FREE).map((q) => (
           <button
             key={q}
             onClick={() => send(q)}
             disabled={loading}
-            className="min-h-9 px-3 rounded-full bg-mist hover:bg-teal-soft text-navy text-xs font-medium transition cursor-pointer disabled:opacity-50"
+            className="min-h-9 px-3 rounded-full bg-clay-soft hover:bg-clay-soft text-navy text-xs font-medium transition cursor-pointer disabled:opacity-50"
           >
             {q}
           </button>
@@ -176,13 +179,13 @@ export const CareerChat: React.FC<Props> = ({ grade, messages, onChange, context
             }}
             rows={2}
             placeholder="Hỏi thêm AI, VD: Muốn làm kiến trúc sư thì cần chuẩn bị gì?"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-line bg-cream text-sm focus:outline-none focus:ring-2 focus:ring-teal resize-none"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-clay-soft bg-white text-sm focus:outline-none focus:ring-2 focus:ring-clay resize-none"
           />
         </label>
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="min-h-12 w-12 rounded-xl bg-teal hover:bg-teal-deep disabled:opacity-50 text-white flex items-center justify-center cursor-pointer"
+          className="min-h-12 w-12 rounded-xl bg-clay-deep hover:bg-clay-dark disabled:opacity-50 text-white flex items-center justify-center cursor-pointer"
           aria-label="Gửi"
         >
           <Send className="w-4 h-4" />
@@ -203,9 +206,3 @@ export const CareerChat: React.FC<Props> = ({ grade, messages, onChange, context
   );
 };
 
-const PrimaryBtnFull: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = (p) => (
-  <button
-    {...p}
-    className="w-full min-h-12 rounded-xl bg-teal hover:bg-teal-deep text-white font-bold text-sm transition cursor-pointer inline-flex items-center justify-center gap-2"
-  />
-);

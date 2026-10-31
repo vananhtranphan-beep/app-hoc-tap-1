@@ -27,7 +27,12 @@ export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, 
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         <button onClick={onGoHome} className="flex items-center gap-2.5 min-w-0 cursor-pointer" aria-label="Về trang chủ">
           <CompassLogo size={36} animate />
-          <span className="text-base sm:text-lg font-extrabold text-navy whitespace-nowrap tracking-tight">AI Youth Compass</span>
+          {/* Máy tính: một dòng "AI Youth Compass – La bàn tuổi teen"; điện thoại: dòng nhỏ bên dưới */}
+          <span className="min-w-0 leading-tight text-left">
+            <span className="block sm:inline text-base sm:text-lg font-extrabold text-navy whitespace-nowrap tracking-tight">AI Youth Compass</span>
+            <span className="hidden sm:inline text-lg font-semibold text-navy/70 whitespace-nowrap"> – La bàn tuổi teen</span>
+            <span className="block sm:hidden text-[11px] font-semibold text-teal-deep whitespace-nowrap">La bàn tuổi teen</span>
+          </span>
         </button>
 
         <div className="flex items-center gap-2">

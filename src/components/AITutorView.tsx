@@ -11,7 +11,7 @@ interface Message {
 interface AITutorViewProps {
   userId?: string;
   grade?: string;
-  /** Câu hỏi gửi sang từ ô "Hỏi AI Tutor Nhanh" ở Trang chủ */
+  /** Câu hỏi gửi sang từ Trang chủ hoặc Bản đồ chinh phục (kèm ngữ cảnh môn, chương) */
   initialQuestion?: string;
   onInitialQuestionUsed?: () => void;
 }
@@ -19,8 +19,17 @@ interface AITutorViewProps {
 const WELCOME: Message = {
   role: "model",
   content:
-    "Xin chào em! Thầy/Cô là **AI Tutor** - Gia sư ảo thông minh của AI Youth Compass. 🤖\n\nEm có thể hỏi bất kỳ bài tập hay lý thuyết môn **Toán Học** hoặc các môn học khác. Với bài Toán, em bấm các nút **∑ Công thức** phía dưới để gõ phân số, căn, mũ... thật dễ dàng nhé!",
+    "Xin chào em! Thầy/Cô là **Gia sư AI** của AI Youth Compass. 🤖\n\nEm có thể hỏi bất kỳ bài tập hay lý thuyết môn **Toán Học** hoặc các môn học khác. Với bài Toán, em bấm các nút **∑ Công thức** phía dưới để gõ phân số, căn, mũ... thật dễ dàng nhé!",
 };
+
+// Thao tác nhanh (dùng tiếp ngữ cảnh của cuộc trò chuyện)
+const QUICK_ACTIONS: [string, string][] = [
+  ["Giải thích từng bước", "Thầy/cô giải thích lại giúp em từng bước thật chậm, chỗ nào quan trọng thì nhấn mạnh nhé."],
+  ["Cho em câu luyện tập", "Thầy/cô cho em 1 câu luyện tập tương tự (chưa cho đáp án), em làm xong sẽ gửi lại để thầy/cô chữa nhé."],
+  ["Giải thích vì sao em sai", "Em làm sai câu vừa rồi. Thầy/cô chỉ ra chỗ em dễ nhầm và cách tránh giúp em nhé."],
+  ["Cho ví dụ khác", "Thầy/cô cho em một ví dụ khác, dễ hình dung hơn về phần này nhé."],
+  ["Ôn tập nhanh chủ đề", "Thầy/cô tóm tắt nhanh kiến thức chính của chủ đề này thành vài ý ngắn, kèm 1 ví dụ nhé."],
+];
 
 // Chỉ gửi những tin nhắn gần nhất để AI trả lời nhanh và không vượt giới hạn
 const MAX_HISTORY = 12;
@@ -120,23 +129,23 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] min-h-[560px] max-w-5xl mx-auto p-2 sm:p-4 space-y-3">
       {/* Header Bar */}
-      <div className="p-4 rounded-2xl bg-navy text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl bg-ocean text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-teal shadow-inner">
+          <div className="p-3 rounded-2xl bg-grape shadow-inner">
             <Bot className="w-6 h-6 text-white animate-pulse" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-extrabold">🤖 AI Tutor THCS 24/7</h2>
-            <p className="text-xs text-mist">Gia sư ảo thông minh đồng hành cùng học sinh</p>
+            <h2 className="text-lg sm:text-xl font-extrabold">Gia sư AI</h2>
+            <p className="text-xs text-mist">Giải thích từng bước, giúp em hiểu cách làm chứ không chỉ đưa đáp án</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-teal-soft">Môn:</span>
+          <span className="text-xs font-bold text-lilac">Môn:</span>
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-navy/80 border border-teal/40 text-xs font-bold text-white focus:outline-none"
+            className="px-3 py-1.5 rounded-xl bg-ocean-dark border border-white/30 text-xs font-bold text-white focus:outline-none"
           >
             <option value="Toán Học">Toán Học</option>
             <option value="Ngữ Văn">Ngữ Văn</option>
@@ -158,7 +167,7 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
       </div>
 
       {/* Chat Messages Box */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 rounded-2xl bg-white border border-line shadow-sm space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 rounded-2xl bg-white border border-sky-line shadow-sm space-y-4">
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -166,7 +175,7 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
           >
             <div
               className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
-                msg.role === "user" ? "bg-teal text-white" : "bg-navy text-teal"
+                msg.role === "user" ? "bg-ocean text-white" : "bg-grape text-white"
               }`}
             >
               {msg.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
@@ -175,8 +184,8 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
             <div
               className={`max-w-[85%] min-w-0 p-4 rounded-2xl text-sm leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-teal text-white rounded-tr-none shadow-md"
-                  : "bg-cream border border-line/80 text-ink rounded-tl-none shadow-xs space-y-2"
+                  ? "bg-ocean text-white rounded-tr-none shadow-md"
+                  : "bg-sky-bg border border-sky-line/80 text-ink rounded-tl-none shadow-xs space-y-2"
               }`}
             >
               {msg.role === "model" && (
@@ -192,15 +201,30 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
 
         {isLoading && (
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-navy text-teal flex items-center justify-center">
+            <div className="w-9 h-9 rounded-2xl bg-grape text-white flex items-center justify-center">
               <Bot className="w-5 h-5 animate-spin" />
             </div>
-            <div className="p-4 rounded-2xl bg-cream border border-line text-xs text-muted font-bold animate-pulse">
-              AI Tutor đang soạn câu trả lời...
+            <div className="p-4 rounded-2xl bg-sky-bg border border-sky-line text-xs text-muted font-bold animate-pulse">
+              Gia sư AI đang soạn câu trả lời...
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
+      </div>
+
+      {/* Thao tác nhanh: giải thích từng bước, luyện tập, ví dụ khác, ôn tập */}
+      <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
+        {QUICK_ACTIONS.map(([label, text]) => (
+          <button
+            key={label}
+            type="button"
+            disabled={isLoading}
+            onClick={() => sendMessage(messages.length > 1 ? text : `${text} (môn ${subject})`, messages)}
+            className="min-h-10 px-3.5 rounded-full bg-white border border-sky-line hover:border-ocean text-ocean text-xs sm:text-sm font-semibold whitespace-nowrap cursor-pointer disabled:opacity-50"
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Bàn phím công thức toán */}
@@ -215,7 +239,7 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
           onClick={() => setShowKeyboard((v) => !v)}
           title={showKeyboard ? "Ẩn bàn phím công thức" : "Hiện bàn phím công thức"}
           className={`h-12 w-12 rounded-2xl border shadow-sm transition cursor-pointer flex items-center justify-center shrink-0 ${
-            showKeyboard ? "bg-teal border-teal text-white" : "bg-white border-line text-teal-deep hover:bg-mist/60"
+            showKeyboard ? "bg-ocean border-ocean text-white" : "bg-white border-sky-line text-ocean hover:bg-sky-soft/60"
           }`}
         >
           <Sigma className="w-5 h-5" />
@@ -226,13 +250,13 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={`Hỏi AI Tutor về bài tập môn ${subject}... (Shift + Enter để xuống dòng)`}
-          className="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-white border border-line text-sm focus:outline-none focus:ring-2 focus:ring-teal shadow-sm font-medium text-ink resize-none leading-relaxed"
+          placeholder={`Hỏi Gia sư AI về bài tập môn ${subject}... (Shift + Enter để xuống dòng)`}
+          className="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-white border border-sky-line text-sm focus:outline-none focus:ring-2 focus:ring-ocean shadow-sm font-medium text-ink resize-none leading-relaxed"
         />
         <button
           type="submit"
           disabled={isLoading || !inputMessage.trim()}
-          className="h-12 px-5 rounded-2xl bg-teal hover:bg-teal-deep disabled:opacity-50 text-white font-extrabold text-sm shadow-md transition cursor-pointer flex items-center gap-2 shrink-0"
+          className="h-12 px-5 rounded-2xl bg-ocean hover:bg-ocean-dark disabled:opacity-50 text-white font-extrabold text-sm shadow-md transition cursor-pointer flex items-center gap-2 shrink-0"
         >
           <span className="hidden sm:inline">Gửi</span>
           <Send className="w-4 h-4" />

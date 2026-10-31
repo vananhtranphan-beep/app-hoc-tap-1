@@ -91,7 +91,7 @@ export const Companion: React.FC<Props> = ({ grade, checkinContext, onCareTurn }
   return (
     <div className="space-y-3">
       <p className="flex items-start gap-1.5 text-xs text-muted">
-        <Info className="w-4 h-4 text-teal shrink-0" />
+        <Info className="w-4 h-4 text-leaf-deep shrink-0" />
         Tin nhắn không được lưu lại. Khi bạn gửi, nội dung được chuyển tới dịch vụ AI để trả lời. AI không phải chuyên gia tâm lý và có thể sai.
       </p>
 
@@ -101,12 +101,12 @@ export const Companion: React.FC<Props> = ({ grade, checkinContext, onCareTurn }
         <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1" aria-live="polite">
           {msgs.map((m, i) => (
             <div key={i} className={`flex items-start gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${m.role === "user" ? "bg-navy text-cream" : m.safety ? "bg-rose-100 text-rose-700" : "bg-teal-soft text-teal-deep"}`}>
+              <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${m.role === "user" ? "bg-navy text-cream" : m.safety ? "bg-rose-100 text-rose-700" : "bg-leaf-soft text-leaf-deep"}`}>
                 {m.role === "user" ? <User className="w-4 h-4" /> : <Heart className="w-4 h-4" />}
               </span>
               <div
                 className={`max-w-[85%] min-w-0 rounded-2xl px-4 py-3 text-sm ${
-                  m.role === "user" ? "bg-navy text-cream rounded-tr-sm" : m.safety ? "bg-rose-50 border border-rose-200 rounded-tl-sm" : "bg-[#f1f7f5] border border-teal-soft rounded-tl-sm"
+                  m.role === "user" ? "bg-navy text-cream rounded-tr-sm" : m.safety ? "bg-rose-50 border border-rose-200 rounded-tl-sm" : "bg-leaf-soft/50 border border-leaf-soft rounded-tl-sm"
                 }`}
               >
                 <MathMarkdown tone={m.role === "user" ? "dark" : "light"}>{m.content}</MathMarkdown>
@@ -115,7 +115,7 @@ export const Companion: React.FC<Props> = ({ grade, checkinContext, onCareTurn }
           ))}
           {loading && (
             <div className="flex items-center gap-2.5" role="status">
-              <span className="w-8 h-8 rounded-full bg-teal-soft text-teal-deep flex items-center justify-center">
+              <span className="w-8 h-8 rounded-full bg-leaf-soft text-leaf-deep flex items-center justify-center">
                 <Heart className="w-4 h-4 animate-pulse" />
               </span>
               <span className="text-sm text-muted">Đang lắng nghe...</span>
@@ -128,7 +128,7 @@ export const Companion: React.FC<Props> = ({ grade, checkinContext, onCareTurn }
       {msgs.length === 0 && (
         <div className="flex flex-wrap gap-2">
           {STARTERS.map((s) => (
-            <button key={s} onClick={() => send(s)} className="min-h-10 px-3.5 rounded-full bg-mist hover:bg-teal-soft text-navy text-sm cursor-pointer">
+            <button key={s} onClick={() => send(s)} className="min-h-10 px-3.5 rounded-full bg-leaf-soft hover:bg-leaf-soft text-navy text-sm cursor-pointer">
               {s}
             </button>
           ))}
@@ -143,7 +143,7 @@ export const Companion: React.FC<Props> = ({ grade, checkinContext, onCareTurn }
 
       {checkinContext && msgs.length === 0 && (
         <label className="flex items-start gap-2 text-sm text-navy cursor-pointer">
-          <input type="checkbox" checked={shareContext} onChange={(e) => setShareContext(e.target.checked)} className="w-5 h-5 mt-0.5 accent-[#328f89]" />
+          <input type="checkbox" checked={shareContext} onChange={(e) => setShareContext(e.target.checked)} className="w-5 h-5 mt-0.5 accent-[#557b4c]" />
           <span>
             Gửi kèm điều bạn vừa chọn khi check-in (<i>{checkinContext}</i>) để AI hiểu bối cảnh. Ghi chú riêng và nhật ký cũ không được gửi.
           </span>
@@ -170,10 +170,10 @@ export const Companion: React.FC<Props> = ({ grade, checkinContext, onCareTurn }
             }}
             rows={2}
             placeholder="Bạn muốn kể gì cũng được..."
-            className="w-full px-3.5 py-2.5 rounded-xl border border-line bg-cream text-sm focus:outline-none focus:ring-2 focus:ring-teal resize-none"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-sun-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-leaf-deep resize-none"
           />
         </label>
-        <button type="submit" disabled={loading || !input.trim()} className="min-h-12 w-12 rounded-xl bg-teal hover:bg-teal-deep disabled:opacity-50 text-white flex items-center justify-center cursor-pointer" aria-label="Gửi">
+        <button type="submit" disabled={loading || !input.trim()} className="min-h-12 w-12 rounded-xl bg-leaf-deep hover:bg-leaf-dark disabled:opacity-50 text-white flex items-center justify-center cursor-pointer" aria-label="Gửi">
           <Send className="w-4 h-4" />
         </button>
       </form>

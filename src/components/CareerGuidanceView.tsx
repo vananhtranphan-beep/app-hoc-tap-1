@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Check, Bot, Compass } from "lucide-react";
-import { Career, careerById } from "../data/careerData";
+import { Bot, Compass, ArrowLeft } from "lucide-react";
+import { Career, INTEREST_ITEMS, careerById } from "../data/careerData";
 import {
   CareerState,
   ChatMsg,
+  academicFirst,
   aiContext,
   answeredCount,
   careerDetailForAI,
@@ -12,44 +13,49 @@ import {
   saveCareerState,
   suggestCareers,
 } from "../lib/career";
+import { CareerHome } from "./career/CareerHome";
+import { HollandIntro } from "./career/HollandIntro";
 import { QuizStep, Attribution } from "./career/QuizStep";
-import { SummaryStep } from "./career/SummaryStep";
+import { ResultView } from "./career/ResultView";
 import { CatalogStep } from "./career/CatalogStep";
 import { CareerDetail } from "./career/CareerDetail";
-import { ExperienceStep } from "./career/ExperienceStep";
 import { PlanStep } from "./career/PlanStep";
 import { CareerChat } from "./career/CareerChat";
 import { AboutQuestions } from "./career/AboutQuestions";
-import { Card, PrimaryBtn } from "./career/ui";
 
 // ============================================================
-// HƯỚNG NGHIỆP: 6 BƯỚC + TRÒ CHUYỆN VỚI AI
-// 1 Khám phá bản thân → 2 Tổng hợp → 3 Khám phá nghề → 4 Chi tiết nghề
-// → 5 Trải nghiệm nghề → 6 Kế hoạch khám phá
+// HƯỚNG NGHIỆP
+// Trang đầu có 2 lựa chọn: (1) Khảo sát → giới thiệu Holland → câu hỏi → kết quả
+//                            (2) Trò chuyện trực tiếp với AI (không cần khảo sát)
+// Kết quả: nhận xét AI → chat → nút xem nghề → nhóm nghề gợi ý → chi tiết nghề (có trải nghiệm)
 // Tiến độ lưu theo tài khoản (đồng bộ lên máy chủ khi đăng nhập).
 // ============================================================
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | "chat";
+type View = "home" | "intro" | "quiz" | "result" | "catalog" | "detail" | "chat" | "plan";
 
 interface Props {
   userId?: string;
   grade?: string;
 }
 
-const STEPS: { n: Exclude<Step, "chat">; label: string }[] = [
-  { n: 1, label: "Khám phá bản thân" },
-  { n: 2, label: "Tổng hợp" },
-  { n: 3, label: "Khám phá nghề" },
-  { n: 4, label: "Chi tiết nghề" },
-  { n: 5, label: "Trải nghiệm" },
-  { n: 6, label: "Kế hoạch" },
-];
+const TITLES: Record<View, string> = {
+  home: "",
+  intro: "Giới thiệu khảo sát",
+  quiz: "Khảo sát sở thích",
+  result: "Kết quả của bạn",
+  catalog: "Danh mục nghề",
+  detail: "Chi tiết nghề",
+  chat: "Trò chuyện với AI",
+  plan: "Kế hoạch khám phá",
+};
 
 export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade = "8" }) => {
   const [state, setState] = useState<CareerState>(() => loadCareerState(userId));
-  const [step, setStep] = useState<Step>(() => (loadCareerState(userId).completedAt ? 2 : 1));
+  const [view, setView] = useState<View>("home");
   const [detailId, setDetailId] = useState<string | null>(null);
-  const [expFocus, setExpFocus] = useState<string | null>(null);
+  const [detailFrom, setDetailFrom] = useState<View>("result");
+  const [catalogFrom, setCatalogFrom] = useState<View>("home");
+  const [catalogOpts, setCatalogOpts] = useState<{ compare?: boolean; filter?: "all" | "saved" | "rec" }>({});
   const [aboutOpen, setAboutOpen] = useState(false);
   const [prefill, setPrefill] = useState<{ text: string; extra?: string } | null>(null);
 
@@ -58,17 +64,23 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
   const update = (fn: (s: CareerState) => CareerState) => setState(fn);
   const scores = useMemo(() => computeScores(state.answers), [state.answers]);
   const hasQuiz = Boolean(state.completedAt) && answeredCount(state.answers) >= 10;
-  const suggestions = useMemo(() => (hasQuiz ? suggestCareers(state, scores, 8) : []), [hasQuiz, state, scores]);
-  const recommendedIds = suggestions.map((s) => s.career.id);
+  const suggestions = useMemo(() => (hasQuiz ? suggestCareers(state, scores, 9) : []), [hasQuiz, state, scores]);
+  const recommendedIds = academicFirst(suggestions).map((s) => s.career.id);
   const context = useMemo(() => aiContext(state, scores, grade), [state, scores, grade]);
 
-  const go = (s: Step) => {
-    setStep(s);
+  const go = (v: View) => {
+    setView(v);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const openCareer = (id: string) => {
+    setDetailFrom(view === "detail" ? detailFrom : view);
     setDetailId(id);
-    go(4);
+    go("detail");
+  };
+  const openCatalog = (opts: { compare?: boolean; filter?: "all" | "saved" | "rec" } = {}) => {
+    setCatalogOpts(opts);
+    if (view !== "catalog" && view !== "detail") setCatalogFrom(view);
+    go("catalog");
   };
   const toggleSave = (id: string) =>
     update((s) => ({ ...s, saved: s.saved.includes(id) ? s.saved.filter((x) => x !== id) : [...s.saved, id] }));
@@ -82,152 +94,153 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
     setPrefill({ text: `Mình muốn hỏi thêm về nghề ${c.name}: nghề này có hợp với mình không, và mình nên bắt đầu tìm hiểu từ đâu?`, extra: careerDetailForAI(c) });
     go("chat");
   };
-
-  const doneMark: Record<number, boolean> = {
-    1: hasQuiz,
-    2: hasQuiz,
-    3: state.saved.length > 0,
-    4: state.saved.length > 0 || state.compare.length > 0,
-    5: Object.values(state.experiences).some((e) => e.status === "done"),
-    6: state.plan.length > 0,
+  const startQuiz = () => go(answeredCount(state.answers) > 0 && !hasQuiz ? "quiz" : "intro");
+  const editQuiz = () => {
+    update((s) => ({ ...s, quizIndex: 0 }));
+    go("quiz");
   };
 
   const detail = detailId ? careerById(detailId) : undefined;
+  // Nút quay lại: về đúng màn hình trước đó
+  const backTarget: View = view === "detail" ? detailFrom : view === "quiz" ? "intro" : view === "catalog" ? catalogFrom : "home";
+  const backLabel = backTarget === "home" ? "Hướng nghiệp" : TITLES[backTarget];
 
   return (
     <div className="space-y-5 pb-6">
       {/* Đầu trang */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="w-12 h-12 rounded-2xl bg-teal text-white flex items-center justify-center">
+          <span className="w-12 h-12 rounded-2xl bg-clay-deep text-white flex items-center justify-center shrink-0">
             <Compass className="w-6 h-6" />
           </span>
           <div>
-            <h2 className="text-2xl font-extrabold text-navy tracking-tight">Hướng nghiệp</h2>
-            <p className="text-sm text-muted">Hiểu sở thích của mình, khám phá nghề, thử trải nghiệm nhỏ.</p>
+            <h2 className="text-2xl font-extrabold text-navy tracking-tight">
+              Hướng nghiệp
+              {TITLES[view] ? <span className="block sm:inline text-base sm:text-2xl text-clay-deep"><span className="hidden sm:inline"> · </span>{TITLES[view]}</span> : null}
+            </h2>
+            <p className="text-sm text-muted">Hiểu sở thích của mình, khám phá nghề, thử trải nghiệm nhỏ. Chưa cần chọn nghề ngay.</p>
           </div>
         </div>
-        <button
-          onClick={() => go("chat")}
-          aria-current={step === "chat" ? "page" : undefined}
-          className={`min-h-11 px-4 rounded-xl text-sm font-bold inline-flex items-center gap-2 border transition cursor-pointer ${
-            step === "chat" ? "bg-navy text-cream border-navy" : "bg-white text-navy border-line hover:border-teal"
-          }`}
-        >
-          <Bot className="w-4 h-4" /> Hỏi AI hướng nghiệp
-        </button>
       </div>
 
-      {/* Thanh 6 bước */}
-      <nav aria-label="Các bước hướng nghiệp" className="-mx-4 px-4 lg:mx-0 lg:px-0 overflow-x-auto no-scrollbar">
-        <ol className="flex gap-2 min-w-max lg:min-w-0 lg:grid lg:grid-cols-6">
-          {STEPS.map((s) => {
-            const active = step === s.n;
-            return (
-              <li key={s.n}>
-                <button
-                  onClick={() => (s.n === 4 && !detail ? go(3) : go(s.n))}
-                  aria-current={active ? "step" : undefined}
-                  className={`w-full min-h-12 px-3 rounded-xl border text-left flex items-center gap-2.5 transition cursor-pointer ${
-                    active ? "bg-navy border-navy text-cream" : "bg-white border-line text-navy hover:border-teal"
-                  }`}
-                >
-                  <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                      doneMark[s.n] ? "bg-teal text-white" : active ? "bg-white/15 text-cream" : "bg-mist text-navy"
-                    }`}
-                  >
-                    {doneMark[s.n] ? <Check className="w-4 h-4" /> : s.n}
-                  </span>
-                  <span className="text-sm lg:text-[13px] font-semibold whitespace-nowrap lg:whitespace-normal lg:leading-tight">{s.label}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
+      {view !== "home" && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {view !== "detail" ? (
+            <button
+              onClick={() => go(backTarget)}
+              className="min-h-10 px-3.5 rounded-xl bg-clay-card border border-clay-soft hover:border-clay text-navy text-sm font-semibold inline-flex items-center gap-2 cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 text-clay-deep" /> {backLabel}
+            </button>
+          ) : (
+            <span />
+          )}
+          {view !== "chat" && view !== "result" && (
+            <button
+              onClick={() => go("chat")}
+              className="min-h-10 px-3.5 rounded-xl bg-clay-card border border-clay-soft hover:border-clay text-navy text-sm font-bold inline-flex items-center gap-2 cursor-pointer"
+            >
+              <Bot className="w-4 h-4 text-clay-deep" /> Hỏi AI
+            </button>
+          )}
+        </div>
+      )}
 
-      {step === 1 && (
+      {view === "home" && (
+        <CareerHome
+          state={state}
+          hasQuiz={hasQuiz}
+          onStartQuiz={startQuiz}
+          onRestartQuiz={editQuiz}
+          onOpenResult={() => go("result")}
+          onOpenChat={() => go("chat")}
+          onOpenCatalog={() => openCatalog({ filter: "all" })}
+          onOpenSaved={() => openCatalog({ filter: "saved" })}
+          onOpenPlan={() => go("plan")}
+        />
+      )}
+
+      {view === "intro" && (
+        <HollandIntro
+          onStart={() => go("quiz")}
+          onOpenAbout={() => setAboutOpen(true)}
+          resumeAt={answeredCount(state.answers) > 0 && !hasQuiz ? Math.min(state.quizIndex + 1, INTEREST_ITEMS.length) : undefined}
+        />
+      )}
+
+      {view === "quiz" && (
         <QuizStep
           state={state}
           update={update}
           onOpenAbout={() => setAboutOpen(true)}
           onFinish={() => {
             update((s) => ({ ...s, completedAt: new Date().toISOString() }));
-            go(2);
+            go("result");
           }}
         />
       )}
 
-      {step === 2 &&
+      {view === "result" &&
         (hasQuiz ? (
-          <SummaryStep
+          <ResultView
             state={state}
             scores={scores}
             suggestions={suggestions}
             grade={grade}
             context={context}
-            onEditQuiz={() => {
-              update((s) => ({ ...s, quizIndex: 0 }));
-              go(1);
-            }}
+            update={update}
+            onEditQuiz={editQuiz}
             onOpenCareer={openCareer}
             onToggleSave={toggleSave}
-            onGoCatalog={() => go(3)}
+            onToggleCompare={toggleCompare}
+            onOpenCompare={() => openCatalog({ compare: true, filter: "rec" })}
+            onOpenCatalog={() => openCatalog({ filter: "all" })}
             onChatChange={setChat}
           />
         ) : (
-          <Card className="space-y-3">
-            <h3 className="text-lg font-extrabold text-navy">Chưa có kết quả tổng hợp</h3>
-            <p className="text-sm text-muted">Bạn làm khảo sát ngắn ở bước 1 (khoảng 5 phút) để web tổng hợp sở thích của bạn.</p>
-            <PrimaryBtn onClick={() => go(1)}>Bắt đầu khảo sát</PrimaryBtn>
-          </Card>
+          <section className="rounded-2xl bg-clay-card border border-clay-soft p-5 sm:p-6 space-y-3">
+            <h3 className="text-lg font-extrabold text-navy">Chưa có kết quả</h3>
+            <p className="text-sm text-muted">Bạn làm khảo sát ngắn (khoảng 5–7 phút) để có kết quả, hoặc trò chuyện trực tiếp với AI.</p>
+            <button onClick={startQuiz} className="min-h-11 px-4 rounded-xl bg-clay-deep hover:bg-clay-dark text-white font-bold text-sm cursor-pointer">
+              Bắt đầu khảo sát
+            </button>
+          </section>
         ))}
 
-      {step === 3 && (
+      {view === "catalog" && (
         <CatalogStep
+          key={`${catalogOpts.compare}-${catalogOpts.filter}`}
           state={state}
           recommendedIds={recommendedIds}
           onOpenCareer={openCareer}
           onToggleSave={toggleSave}
           onToggleCompare={toggleCompare}
           onClearCompare={() => update((s) => ({ ...s, compare: [] }))}
+          openCompare={catalogOpts.compare}
+          initialFilter={catalogOpts.filter}
         />
       )}
 
-      {step === 4 && detail && (
+      {view === "detail" && detail && (
         <CareerDetail
           career={detail}
           state={state}
           suggestion={suggestions.find((s) => s.career.id === detail.id)}
           hasQuiz={hasQuiz}
-          onBack={() => go(3)}
+          onBack={() => go(detailFrom)}
+          backLabel={backLabel}
           onOpenCareer={openCareer}
           onToggleSave={toggleSave}
           onToggleCompare={toggleCompare}
-          onTryActivity={(id) => {
-            setExpFocus(id);
-            go(5);
-          }}
+          update={update}
           onAskAI={askAboutCareer}
         />
       )}
 
-      {step === 5 && (
-        <ExperienceStep
-          state={state}
-          update={update}
-          candidateIds={[...state.saved, ...recommendedIds.slice(0, 3)]}
-          focusId={expFocus}
-          onFocus={setExpFocus}
-          onOpenCareer={openCareer}
-        />
-      )}
+      {view === "plan" && <PlanStep state={state} update={update} />}
 
-      {step === 6 && <PlanStep state={state} update={update} />}
-
-      {step === "chat" && (
-        <Card className="space-y-3">
+      {view === "chat" && (
+        <section className="rounded-2xl bg-clay-card border border-clay-soft p-5 sm:p-6 space-y-3">
           <h3 className="text-lg font-extrabold text-navy">Trò chuyện với AI hướng nghiệp</h3>
           <CareerChat
             grade={grade}
@@ -239,11 +252,12 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
             key="career-chat"
             onPrefillUsed={() => setPrefill(null)}
           />
-        </Card>
+        </section>
       )}
 
-      {step !== 1 && <Attribution onOpenAbout={() => setAboutOpen(true)} />}
+      {view !== "quiz" && view !== "intro" && <Attribution onOpenAbout={() => setAboutOpen(true)} />}
       {aboutOpen && <AboutQuestions onClose={() => setAboutOpen(false)} />}
     </div>
   );
 };
+

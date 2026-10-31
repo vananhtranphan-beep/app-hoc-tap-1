@@ -5,7 +5,7 @@ import { CareerState } from "../../lib/career";
 import { Card, CodeBadge, GhostBtn, PrimaryBtn } from "./ui";
 
 // ============================================================
-// BƯỚC 3: KHÁM PHÁ NHÓM NGHỀ (danh mục có sẵn, lọc theo nhóm, lưu, so sánh)
+// DANH MỤC NGHỀ (danh mục có sẵn, lọc theo nhóm, lưu, so sánh)
 // ============================================================
 
 interface Props {
@@ -15,6 +15,9 @@ interface Props {
   onToggleSave: (id: string) => void;
   onToggleCompare: (id: string) => void;
   onClearCompare: () => void;
+  /** Mở sẵn bảng so sánh / bộ lọc ban đầu */
+  openCompare?: boolean;
+  initialFilter?: "all" | "saved" | "rec";
 }
 
 type Filter = "all" | "saved" | "rec" | RiasecCode;
@@ -33,7 +36,7 @@ export const CompareTable: React.FC<{ ids: string[]; onClose: () => void; onRemo
     <Card className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-lg font-extrabold text-navy">So sánh {list.length} nghề</h3>
-        <button onClick={onClose} className="w-11 h-11 rounded-full flex items-center justify-center text-muted hover:bg-mist cursor-pointer" aria-label="Đóng so sánh">
+        <button onClick={onClose} className="w-11 h-11 rounded-full flex items-center justify-center text-muted hover:bg-clay-soft cursor-pointer" aria-label="Đóng so sánh">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -60,11 +63,11 @@ export const CompareTable: React.FC<{ ids: string[]; onClose: () => void; onRemo
             <tbody>
               {rows.map((r) => (
                 <tr key={r.label}>
-                  <th scope="row" className="text-left p-3 text-xs font-bold text-muted align-top border-b border-line">
+                  <th scope="row" className="text-left p-3 text-xs font-bold text-muted align-top border-b border-clay-soft">
                     {r.label}
                   </th>
                   {list.map((c) => (
-                    <td key={c.id} className="p-3 align-top border-b border-line text-ink">
+                    <td key={c.id} className="p-3 align-top border-b border-clay-soft text-ink">
                       {r.get(c)}
                     </td>
                   ))}
@@ -78,10 +81,10 @@ export const CompareTable: React.FC<{ ids: string[]; onClose: () => void; onRemo
   );
 };
 
-export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCareer, onToggleSave, onToggleCompare, onClearCompare }) => {
-  const [filter, setFilter] = useState<Filter>(recommendedIds.length ? "rec" : "all");
+export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCareer, onToggleSave, onToggleCompare, onClearCompare, openCompare, initialFilter }) => {
+  const [filter, setFilter] = useState<Filter>(initialFilter || (recommendedIds.length ? "rec" : "all"));
   const [q, setQ] = useState("");
-  const [showCompare, setShowCompare] = useState(false);
+  const [showCompare, setShowCompare] = useState(Boolean(openCompare));
 
   const list = useMemo(() => {
     const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d");
@@ -114,7 +117,7 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Tìm nghề, VD: bác sĩ, thiết kế..."
-              className="w-full min-h-11 pl-10 pr-3 rounded-xl border border-line bg-cream text-sm focus:outline-none focus:ring-2 focus:ring-teal"
+              className="w-full min-h-11 pl-10 pr-3 rounded-xl border border-clay-soft bg-white text-sm focus:outline-none focus:ring-2 focus:ring-clay"
             />
           </label>
           {state.compare.length > 0 && (
@@ -135,7 +138,7 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
               onClick={() => setFilter(f.id)}
               aria-pressed={filter === f.id}
               className={`min-h-10 px-3.5 rounded-full text-sm font-medium border whitespace-nowrap transition cursor-pointer ${
-                filter === f.id ? "bg-navy border-navy text-cream" : "bg-white border-line text-ink hover:border-teal"
+                filter === f.id ? "bg-navy border-navy text-cream" : "bg-white border-clay-soft text-ink hover:border-clay"
               }`}
             >
               {f.label}
@@ -155,11 +158,11 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
             const comparing = state.compare.includes(c.id);
             const rec = recommendedIds.includes(c.id);
             return (
-              <article key={c.id} className="lift p-4 rounded-2xl bg-white border border-line flex flex-col gap-2.5">
+              <article key={c.id} className="lift p-4 rounded-2xl bg-white border border-clay-soft flex flex-col gap-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     {rec && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-deep mb-1">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-clay-deep mb-1">
                         <Sparkles className="w-3 h-3" /> Hợp với sở thích của bạn
                       </span>
                     )}
@@ -170,7 +173,7 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
                     onClick={() => onToggleSave(c.id)}
                     aria-pressed={saved}
                     aria-label={saved ? `Bỏ lưu ${c.name}` : `Lưu ${c.name}`}
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center border shrink-0 cursor-pointer ${saved ? "bg-teal text-white border-teal" : "bg-white border-line text-muted hover:text-navy"}`}
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center border shrink-0 cursor-pointer ${saved ? "bg-clay-deep text-white border-clay" : "bg-white border-clay-soft text-muted hover:text-navy"}`}
                   >
                     {saved ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
                   </button>
@@ -187,12 +190,12 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
                     disabled={!comparing && state.compare.length >= 3}
                     aria-pressed={comparing}
                     className={`min-h-10 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                      comparing ? "bg-navy text-cream border-navy" : "bg-white border-line text-navy hover:border-teal"
+                      comparing ? "bg-navy text-cream border-navy" : "bg-white border-clay-soft text-navy hover:border-clay"
                     }`}
                   >
                     {comparing ? "Đang so sánh" : "So sánh"}
                   </button>
-                  <button onClick={() => onOpenCareer(c.id)} className="min-h-10 text-sm font-semibold text-teal-deep hover:text-navy inline-flex items-center gap-1 cursor-pointer">
+                  <button onClick={() => onOpenCareer(c.id)} className="min-h-10 text-sm font-semibold text-clay-deep hover:text-navy inline-flex items-center gap-1 cursor-pointer">
                     Xem chi tiết <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
