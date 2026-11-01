@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Sprout, MessageCircleHeart, Leaf, BookHeart, LifeBuoy, Lock, Info, Sparkles } from "lucide-react";
+import { Sprout, MessageCircleHeart, Leaf, BookHeart, LifeBuoy, Lock, Info, Sparkles, RotateCcw } from "lucide-react";
 import { CALM_LINES, DECOR, ENCOURAGE, STAGES, WANTS, weatherById } from "../data/moodData";
 import {
   MAX_CHECKINS_PER_DAY,
@@ -29,6 +29,8 @@ import { Garden } from "./mood/Garden";
 import { SupportPanel } from "./mood/SupportPanel";
 import { PinLock } from "./mood/PinLock";
 import { hasPin, isUnlocked, lockNow } from "../lib/pin";
+import { resetPart } from "../lib/reset";
+import { emptyMood } from "../lib/mood";
 
 // ============================================================
 // CÂY CẢM XÚC CỦA TÔI
@@ -137,7 +139,7 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
       msg =
         n.wilt > state.wilt
           ? `Đã ghi nhận. Cây rũ lá cùng bạn (mức héo ${n.wilt}/${MAX_WILT}). Buồn hay căng thẳng là bình thường; mỗi việc nhỏ chăm sóc bản thân sẽ giúp cây hồi lại từng chút.`
-          : "Đã ghi nhận. Cây vẫn rũ lá cùng bạn, nhưng không héo thêm nữa hôm nay. Cây luôn có thể hồi lại.";
+          : "Đã ghi nhận. Cây đang rũ lá nhiều nhất rồi, nhưng cây không bao giờ chết và luôn có thể hồi lại.";
     } else if (f === "sang") {
       msg = state.wilt > 0 ? "Đã ghi nhận. Trời sáng hơn, cây hướng lá về phía nắng. Lá vàng sẽ xanh lại dần khi bạn chăm sóc bản thân." : "Đã ghi nhận. Trời sáng lên, cây vươn lá đón nắng.";
     } else {
@@ -192,6 +194,20 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
             </button>
           )}
           <button
+            onClick={() => {
+              const ask = "Làm lại Cây cảm xúc từ đầu? Cây, các lần check-in, ghi chú và hoạt động đã làm sẽ bị xóa (mã PIN vẫn giữ).";
+              if (isGuest) {
+                if (window.confirm(ask)) {
+                  setState(emptyMood());
+                  setToast("Đã làm lại từ đầu. Cây bắt đầu lại từ hạt mầm.");
+                }
+              } else resetPart(userId, "mood", ask);
+            }}
+            className="min-h-11 px-4 rounded-xl bg-sun-card border border-sun-line hover:border-rose-300 text-navy text-sm font-semibold inline-flex items-center gap-2 cursor-pointer"
+          >
+            <RotateCcw className="w-4 h-4" /> Làm lại từ đầu
+          </button>
+          <button
             onClick={() => setShowHelp(!showHelp)}
             aria-expanded={showHelp}
             className="min-h-11 px-4 rounded-xl bg-sun-card border border-sun-line hover:border-rose-300 text-rose-700 text-sm font-bold inline-flex items-center gap-2 cursor-pointer"
@@ -237,7 +253,7 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
             </div>
             {next && (
               <span className="text-xs text-muted">
-                {stage === 1 && state.care.length === 0 && points >= next.min ? "Thử một hoạt động chăm sóc bản thân để cây lớn lên." : `Còn ${Math.max(0, next.min - points)} lá nữa đến "${next.name}"`}
+                {`Còn ${Math.max(0, next.min - points)} lần check-in hoặc chăm sóc nữa đến "${next.name}"`}
               </span>
             )}
           </div>

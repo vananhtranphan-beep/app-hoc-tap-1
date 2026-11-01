@@ -1,24 +1,21 @@
 import React from "react";
-import { ArrowLeft, ArrowRight, Check, X, Flag, Shuffle, Bot, RefreshCw, Pause, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, X, Flag, Bot, Pause } from "lucide-react";
 import { MathMarkdown } from "../MathMarkdown";
 import { LEVELS, MathChapter } from "../../data/mathMap";
 import { QuestRun } from "../../lib/quest";
 
 // ============================================================
 // LÀM BÀI TRẮC NGHIỆM DO AI TẠO (từng câu một)
-// Chọn đáp án → thấy ngay đúng/sai + lời giải. Có thể đổi câu (trước khi trả lời), báo câu sai,
-// hỏi Gia sư AI về câu đó, tạo bộ câu hỏi mới, tạm dừng.
+// Mỗi điểm đến 5 câu. Chọn đáp án → thấy ngay đúng/sai + lời giải. Có thể báo câu sai,
+// hỏi Gia sư AI về câu đó, tạm dừng. Không có nút đổi câu: mỗi lượt chơi mới AI tự tạo bộ câu khác.
 // ============================================================
 
 interface Props {
   run: QuestRun;
   chapter: MathChapter;
-  busy: string | null; // "swap" | "new" | null
   onPick: (opt: number) => void;
   onGo: (index: number) => void;
-  onSwap: () => void;
   onReport: () => void;
-  onNewSet: () => void;
   onPause: () => void;
   onFinish: () => void;
   onAskTutor: () => void;
@@ -26,7 +23,7 @@ interface Props {
 
 const LETTERS = ["A", "B", "C", "D"];
 
-export const QuizRunner: React.FC<Props> = ({ run, chapter, busy, onPick, onGo, onSwap, onReport, onNewSet, onPause, onFinish, onAskTutor }) => {
+export const QuizRunner: React.FC<Props> = ({ run, chapter, onPick, onGo, onReport, onPause, onFinish, onAskTutor }) => {
   const i = run.index;
   const q = run.questions[i];
   const pick = run.picks[i];
@@ -46,9 +43,6 @@ export const QuizRunner: React.FC<Props> = ({ run, chapter, busy, onPick, onGo, 
           <h3 className="text-lg font-extrabold text-navy leading-snug">{chapter.title}</h3>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={onNewSet} disabled={!!busy} className="min-h-10 px-3 rounded-xl bg-sky-soft hover:bg-lilac text-ocean text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50">
-            {busy === "new" ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Tạo bộ câu hỏi mới
-          </button>
           <button onClick={onPause} className="min-h-10 px-3 rounded-xl bg-white border border-sky-line hover:border-ocean text-navy text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer">
             <Pause className="w-4 h-4" /> Tạm dừng
           </button>
@@ -84,6 +78,7 @@ export const QuizRunner: React.FC<Props> = ({ run, chapter, busy, onPick, onGo, 
               <button
                 key={k}
                 role="radio"
+                data-sound="none"
                 aria-checked={isPick}
                 disabled={answered || reported}
                 onClick={() => onPick(k)}
@@ -123,11 +118,6 @@ export const QuizRunner: React.FC<Props> = ({ run, chapter, busy, onPick, onGo, 
         {reported && <p className="text-sm text-muted">Bạn đã báo câu này có vấn đề. Câu này không tính điểm. Cảm ơn bạn!</p>}
 
         <div className="flex flex-wrap gap-2">
-          {!answered && !reported && (
-            <button onClick={onSwap} disabled={!!busy} className="min-h-10 px-3 rounded-xl bg-white border border-sky-line hover:border-ocean text-navy text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50">
-              {busy === "swap" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shuffle className="w-4 h-4" />} Đổi câu hỏi
-            </button>
-          )}
           {answered && (
             <button onClick={onAskTutor} className="min-h-10 px-3 rounded-xl bg-white border border-sky-line hover:border-ocean text-navy text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer">
               <Bot className="w-4 h-4 text-grape" /> Hỏi Gia sư AI về câu này

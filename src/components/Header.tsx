@@ -1,5 +1,6 @@
-import React from "react";
-import { LogOut, Cloud, CloudOff, Loader2, HardDrive } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { LogOut, Cloud, CloudOff, Loader2, HardDrive, Volume2, VolumeX } from "lucide-react";
+import { isSoundOn, setSoundOn, subscribeSound } from "../lib/sound";
 import { StudentProfile } from "../types";
 import { CompassLogo } from "./CompassLogo";
 
@@ -21,6 +22,13 @@ const CLOUD_BADGE = {
 
 export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, onOpenProfile, onGoHome, onLogout }) => {
   const badge = CLOUD_BADGE[cloudStatus];
+  const [soundOn, setOn] = useState(isSoundOn());
+  useEffect(() => {
+    const off = subscribeSound(() => setOn(isSoundOn()));
+    return () => {
+      off();
+    };
+  }, []);
   const BadgeIcon = badge.Icon;
   return (
     <header className="sticky top-0 z-30 bg-cream/90 backdrop-blur-md border-b border-line px-4 lg:px-8 py-2.5">
@@ -46,6 +54,17 @@ export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, 
               {badge.text}
             </span>
           )}
+
+          <button
+            onClick={() => setSoundOn(!soundOn)}
+            data-sound="none"
+            aria-pressed={soundOn}
+            aria-label={soundOn ? "Tắt âm thanh" : "Bật âm thanh"}
+            title={soundOn ? "Tắt âm thanh" : "Bật âm thanh"}
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-line text-navy hover:border-teal transition cursor-pointer"
+          >
+            {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-muted" />}
+          </button>
 
           <button
             onClick={onOpenProfile}

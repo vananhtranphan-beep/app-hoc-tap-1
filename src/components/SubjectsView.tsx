@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { BookOpen, ExternalLink, Trash2, Plus, Edit3, Check, Upload, Copy, RotateCcw, X } from "lucide-react";
-import { SYSTEM_BOOKS, SystemBook } from "../data/systemBooks";
+import { HANH_TRANG_SO, SYSTEM_BOOKS, SystemBook } from "../data/systemBooks";
 import { cloud } from "../lib/cloud";
 
 // ============================================================
@@ -12,7 +12,7 @@ import { cloud } from "../lib/cloud";
 // Học sinh chỉ xem và mở sách, không thêm/sửa được.
 // ============================================================
 
-const ADMIN_ID = "tranphanvananh";
+import { isAdminId } from "../lib/admin";
 const GITHUB_EDIT_URL = "https://github.com/vananhtranphan-beep/app-hoc-tap-1/edit/main/src/data/systemBooks.ts";
 
 const DRAFT_KEY = "system_admin_books_overlay_v12"; // phần thay đổi của admin (khi chưa có máy chủ)
@@ -81,6 +81,9 @@ const buildSystemBooksFile = (books: BooksBySubject): string => {
 
 export type SystemBook = { id: string; name: string; url: string; imageUrl: string };
 
+// Trang tra cứu chung "Hành trang số" của NXB Giáo dục (dùng khi chưa có link riêng của cuốn sách)
+export const HANH_TRANG_SO = "${HANH_TRANG_SO}";
+
 export const SYSTEM_BOOKS: Record<string, SystemBook[]> = {
 ${subjects}
 };
@@ -97,6 +100,8 @@ const COVER: Record<string, { bg: string; icon: string }> = {
   "Giáo Dục Công Dân": { bg: "#7a5c58", icon: "🤝" },
   "Tin Học": { bg: "#34627d", icon: "💻" },
   "Công Nghệ": { bg: "#4f5f6b", icon: "⚙️" },
+  "Nghệ thuật": { bg: "#6555a5", icon: "🎨" },
+  "Giáo dục thể chất": { bg: "#2f7d6b", icon: "⚽" },
 };
 
 // Chuẩn hóa link admin dán vào: thêm https:// nếu thiếu, bỏ khoảng trắng, chỉ nhận http/https.
@@ -146,7 +151,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>(subjects[0]);
 
   const cleanId = (userId || "").toLowerCase().trim();
-  const isAdmin = cleanId === ADMIN_ID;
+  const isAdmin = isAdminId(cleanId);
 
   // "loading" -> đang hỏi máy chủ | "server" -> sách lưu trên máy chủ | "github" -> chưa có máy chủ
   const [mode, setMode] = useState<"loading" | "server" | "github">("loading");
@@ -327,7 +332,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
 
   const list = books[selectedSubject] || [];
   const personalList = personalBooks[selectedSubject] || [];
-  const linkedCount = list.filter((b) => b.url).length;
+  const linkedCount = list.filter((b) => b.url && b.url !== HANH_TRANG_SO).length;
 
   return (
     <div className="space-y-6 pb-12">
@@ -540,15 +545,18 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                       </div>
                       <div className="p-3 flex-1 flex flex-col gap-2">
                         <h4 className="font-bold text-ink text-sm leading-snug line-clamp-2">{book.name}</h4>
+                        {book.url === HANH_TRANG_SO && (
+                          <p className="text-[11px] text-muted leading-snug">Mở trang Hành trang số của NXB Giáo dục, gõ tên sách để đọc.</p>
+                        )}
                         {isAdmin && (
                           <p className={`text-[10px] font-bold ${book.url ? "text-emerald-600" : "text-amber-600"}`}>
-                            {book.url ? "✅ Đã có link" : "⚠️ Chưa gắn link"}
+                            {book.url === HANH_TRANG_SO ? "⚠️ Đang dùng link tra cứu chung" : book.url ? "✅ Đã có link" : "⚠️ Chưa gắn link"}
                           </p>
                         )}
                         <div className="mt-auto flex flex-wrap items-center gap-1.5">
                           {book.url ? (
                             <a href={book.url} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[6.5rem] min-h-10 rounded-xl bg-ocean hover:bg-ocean-dark text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition">
-                              <span>Đọc sách</span>
+                              <span>{book.url === HANH_TRANG_SO ? "Tìm sách" : "Đọc sách"}</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           ) : (

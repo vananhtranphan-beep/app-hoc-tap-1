@@ -11,6 +11,14 @@ const dbToken = () => process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS
 
 export const dbReady = () => Boolean(dbUrl() && dbToken());
 
+// Tài khoản quản trị (có thể đổi bằng biến môi trường ADMIN_IDS trên Vercel, cách nhau dấu phẩy)
+export const adminIds = () =>
+    String(process.env.ADMIN_IDS || "tranphanvananh,duongphuquy,nguyenhuukhanh")
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+export const isAdminId = (id) => adminIds().includes(String(id || "").toLowerCase());
+
 // Gửi 1 lệnh Redis, ví dụ: redis("SET", "khoa", "giá trị")
 export async function redis(...command) {
     const res = await fetch(dbUrl(), {

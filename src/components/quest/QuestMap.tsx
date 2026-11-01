@@ -164,9 +164,12 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string) => void;
   tint?: string;
+  /** Bảng nổi trên bản đồ (chọn mức độ, bắt đầu) */
+  children?: React.ReactNode;
+  popoverOpen?: boolean;
 }
 
-export const QuestMap: React.FC<Props> = ({ chapters, statusOf, selectedId, onSelect, tint }) => {
+export const QuestMap: React.FC<Props> = ({ chapters, statusOf, selectedId, onSelect, tint, children, popoverOpen }) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
@@ -459,7 +462,8 @@ export const QuestMap: React.FC<Props> = ({ chapters, statusOf, selectedId, onSe
           <Maximize2 className="w-5 h-5" />
         </button>
       </div>
-      <div className="absolute left-3 bottom-3 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+      {children}
+      <div className={`absolute left-3 bottom-3 flex-wrap gap-1.5 text-[11px] font-semibold ${popoverOpen ? "hidden lg:flex lg:left-auto lg:right-3" : "flex"}`}>
         <span className="px-2 py-1 rounded-full bg-white/90 text-navy inline-flex items-center gap-1">
           <span className="w-2.5 h-2.5 rounded-full bg-white border-2 border-ocean" /> Chưa khám phá
         </span>

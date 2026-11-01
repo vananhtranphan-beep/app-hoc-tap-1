@@ -5,8 +5,12 @@
 import {
     dbReady, redis, normalizeId, validId, hashPassword, checkPassword,
     createSession, userFromRequest, cleanProfile, readJson,
-    profileNeedsCleanup, loadUserData,
+    profileNeedsCleanup, loadUserData, isAdminId,
 } from "./_db.js";
+
+// Mật khẩu ban đầu của tài khoản admin lấy từ biến môi trường ADMIN_DEFAULT_PASSWORD trên Vercel
+// (KHÔNG ghi trong mã vì repo GitHub công khai). Tài khoản admin được tạo tự động ở lần đăng nhập đầu.
+const ADMIN_NAMES = { tranphanvananh: "Thầy Vân Anh", duongphuquy: "Quản trị Phú Quý", nguyenhuukhanh: "Quản trị Hữu Khánh" };
 
 export default async function handler(req, res) {
     if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
@@ -23,6 +27,9 @@ export default async function handler(req, res) {
             const password = String(body.password || "");
             if (!validId(id) || id.startsWith("__")) {
                 return res.status(400).json({ error: "ID chỉ gồm chữ không dấu, số, dấu _ . - và dài 3-40 ký tự." });
+            }
+            if (isAdminId(id)) {
+                return res.status(409).json({ error: "Tên đăng nhập này dành cho quản trị viên. Em chọn tên khác nhé!" });
             }
             if (password.trim().length < 5) {
                 return res.status(400).json({ error: "Mật khẩu phải có ít nhất 5 ký tự." });
@@ -56,7 +63,19 @@ export default async function handler(req, res) {
                 return res.status(429).json({ error: "Em nhập sai quá nhiều lần. Đợi 15 phút rồi thử lại nhé." });
             }
 
-            const user = await readJson(`user:${id}`);
+            let user = await readJson(`user:${id}`);
+            // Tài khoản admin chưa có: tạo tự động nếu mật khẩu đúng mật khẩu ban đầu cài trên Vercel
+            const adminPass = String(process.env.ADMIN_DEFAULT_PASSWORD || "");
+            if (!user && isAdminId(id) && adminPass && password === adminPass) {
+                const { salt, hash } = hashPassword(password);
+                user = {
+                    salt,
+                    hash,
+                    profile: { studentId: id, nickname: ADMIN_NAMES[id] || "Quản trị viên", grade: "9", avatar: "🧭", createdAt: new Date().toISOString() },
+                    createdAt: new Date().toISOString(),
+                };
+                await redis("SET", `user:${id}`, JSON.stringify(user), "NX");
+            }
             if (!user) return res.status(404).json({ error: "not_found" });
             if (!checkPassword(password, user.salt, user.hash)) {
                 return res.status(401).json({ error: "Mật khẩu không đúng." });
@@ -76,8 +95,7 @@ export default async function handler(req, res) {
         // Admin đặt lại mật khẩu cho học sinh quên mật khẩu
         if (action === "adminReset") {
             const session = await userFromRequest(req);
-            const admins = String(process.env.ADMIN_IDS || "tranphanvananh").split(",").map((s) => s.trim().toLowerCase());
-            if (!session || !admins.includes(String(session.id).toLowerCase())) {
+            if (!session || !isAdminId(session.id)) {
                 return res.status(403).json({ error: "Chỉ admin (đã đăng nhập) mới làm được việc này." });
             }
             const id = normalizeId(body.studentId);

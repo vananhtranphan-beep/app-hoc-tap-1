@@ -5,14 +5,8 @@
 // "overlay" = những cuốn admin đã sửa/thêm + danh sách cuốn đã xóa,
 // được gộp với danh sách gốc trong file src/data/systemBooks.ts.
 // ============================================================
-import { dbReady, redis, userFromRequest, readJson } from "./_db.js";
+import { dbReady, redis, userFromRequest, readJson, adminIds } from "./_db.js";
 
-// ID admin (có thể thêm nhiều ID, cách nhau dấu phẩy, bằng biến môi trường ADMIN_IDS trên Vercel)
-const adminIds = () =>
-    String(process.env.ADMIN_IDS || "tranphanvananh")
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean);
 
 const KEY = "system_books_v1";
 const MAX_BYTES = 300 * 1024;

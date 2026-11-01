@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Map as MapIcon, Play, RotateCcw, Bot, Trophy, BookOpenCheck, Clock, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { Map as MapIcon, Play, RotateCcw, Bot, Trophy, BookOpenCheck, AlertCircle, Loader2, X } from "lucide-react";
+import { isMusicOn, playChest, playCorrect, playWrong, setMusicOn, startMusic, stopMusic, subscribeSound } from "../../lib/sound";
 import { LEVELS, MATH_GRADES, MathChapter, QUESTIONS_PER_RUN, chapterById, gradeData } from "../../data/mathMap";
 import { QuestState, QuizQuestion, finishRun, loadQuest, nodeStatus, rememberSeen, runScore, saveQuest } from "../../lib/quest";
 import { QuestMap, spotsFor } from "./QuestMap";
 import { QuizRunner } from "./QuizRunner";
+import { resetPart } from "../../lib/reset";
 
 // ============================================================
 // BẢN ĐỒ CHINH PHỤC TRI THỨC – MÔN TOÁN
@@ -61,8 +63,24 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [showRun, setShowRun] = useState(Boolean(state.run));
+  const [popOpen, setPopOpen] = useState(false);
 
   useEffect(() => saveQuest(userId, state), [state, userId]);
+
+  // Nhạc nền vui nhộn khi ở bản đồ (tắt được)
+  const [musicOn, setMusicState] = useState(isMusicOn());
+  useEffect(() => {
+    const sync = () => {
+      setMusicState(isMusicOn());
+      if (isMusicOn()) startMusic();
+    };
+    const off = subscribeSound(sync);
+    startMusic();
+    return () => {
+      off();
+      stopMusic();
+    };
+  }, []);
 
   const selected = (selectedId && data.chapters.find((c) => c.id === selectedId)) || null;
   const spotIdx = selected ? data.chapters.indexOf(selected) : 0;
@@ -86,7 +104,7 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
   const scrollToRunner = () => setTimeout(() => document.getElementById("quest-runner")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
 
   const start = async (c: MathChapter, lv: number, opts: { review?: boolean } = {}) => {
-    setBusy(run ? "new" : "start");
+    setBusy("start");
     setError("");
     setResult(null);
     try {
@@ -107,34 +125,10 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
         )
       );
       setShowRun(true);
+      setPopOpen(false);
       scrollToRunner();
     } catch (e: any) {
       setError(`AI tạm chưa tạo được câu hỏi (${e.message}). Bạn thử lại sau ít phút nhé.`);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const swap = async () => {
-    if (!run || !runChapter) return;
-    setBusy("swap");
-    setError("");
-    try {
-      const [nq] = await fetchQuestions({
-        grade: run.grade,
-        chapter: `${runChapter.no}: ${runChapter.title}`,
-        lessons: runChapter.lessons,
-        level: run.level,
-        count: 1,
-        avoid: [...(state.seen[run.chapterId] || []), ...run.questions.map((q) => q.q)],
-      });
-      setState((s) => {
-        if (!s.run) return s;
-        const questions = s.run.questions.map((q, k) => (k === s.run!.index ? nq : q));
-        return rememberSeen({ ...s, run: { ...s.run, questions, picks: s.run.picks.map((p, k) => (k === s.run!.index ? null : p)) } }, s.run.chapterId, [nq]);
-      });
-    } catch (e: any) {
-      setError(`Chưa đổi được câu hỏi (${e.message}). Bạn thử lại nhé.`);
     } finally {
       setBusy(null);
     }
@@ -148,6 +142,7 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
     const after = next.nodes[run.chapterId];
     setState(next);
     setResult({ chapterId: run.chapterId, score, total, level: run.level, nextLevel: after.level, firstDone: after.done && !before?.done, wrongs: after.wrongs, review: run.review });
+    if ((after.done && !before?.done) || (total && score / total >= 0.8)) setTimeout(playChest, 350);
     setShowRun(false);
     setTimeout(() => document.getElementById("quest-result")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
   };
@@ -196,6 +191,13 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
             <p className="text-sm text-muted">Môn Toán · Mỗi điểm đến là một chương SGK Kết nối tri thức. Chọn điểm nào cũng được.</p>
           </div>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => resetPart(userId, "quest", "Làm lại Bản đồ chinh phục từ đầu? Tiến độ mọi chương, lượt đang làm và kết quả sẽ bị xóa.")}
+          className="min-h-10 px-3.5 rounded-xl bg-white border border-sky-line hover:border-rose-300 text-navy text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+        >
+          <RotateCcw className="w-4 h-4" /> Làm lại từ đầu
+        </button>
         <div className="flex gap-1.5 p-1 rounded-2xl bg-sky-soft" role="radiogroup" aria-label="Chọn lớp">
           {MATH_GRADES.map((gd) => (
             <button
@@ -208,6 +210,7 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
               Toán {gd.grade}
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -281,9 +284,101 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
       <div>
         <div className="flex items-baseline justify-between gap-2 mb-2">
           <h3 className="font-extrabold text-navy">Toán {g}: {data.land}</h3>
-          <span className="text-xs text-muted">Kéo để di chuyển · Nút +/− để phóng to</span>
+          <span className="flex items-center gap-2">
+            <span className="hidden sm:inline text-xs text-muted">Bấm vào một điểm đến để chọn mức độ và bắt đầu</span>
+            <button
+              onClick={() => setMusicOn(!musicOn)}
+              aria-pressed={musicOn}
+              className={`min-h-9 px-3 rounded-full text-xs font-bold border cursor-pointer ${musicOn ? "bg-lilac border-lilac text-grape" : "bg-white border-sky-line text-muted"}`}
+            >
+              {musicOn ? "♪ Nhạc nền: bật" : "♪ Nhạc nền: tắt"}
+            </button>
+          </span>
         </div>
-        <QuestMap key={g} chapters={data.chapters} statusOf={(id) => nodeStatus(state, id)} selectedId={selectedId} onSelect={(id) => (setSelectedId(id), setResult(null))} tint={TINTS[g]} />
+        <QuestMap
+          key={g}
+          chapters={data.chapters}
+          statusOf={(id) => nodeStatus(state, id)}
+          selectedId={selectedId}
+          onSelect={(id) => (setSelectedId(id), setPopOpen(true))}
+          tint={TINTS[g]}
+          popoverOpen={popOpen}
+        >
+          {selected && popOpen && (
+            <div
+              role="dialog"
+              aria-label={`${selected.no}: ${selected.title}`}
+              className="absolute z-30 inset-x-2 bottom-2 max-h-[78%] overflow-y-auto lg:inset-x-auto lg:left-3 lg:top-3 lg:bottom-auto lg:w-[360px] lg:max-h-[calc(100%-1.5rem)] rounded-2xl bg-white border border-sky-line shadow-[0_18px_40px_-18px_rgba(23,59,80,0.55)] p-4 space-y-3 animate-rise"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[11px] font-bold text-grape uppercase tracking-wide">
+                    {land} · {selected.no}
+                  </div>
+                  <h3 className="text-lg font-extrabold text-navy leading-snug">{selected.title}</h3>
+                  <div className="text-xs text-muted mt-0.5">
+                    {nodeStatus(state, selected.id) === "done" ? "Đã hoàn thành" : nodeStatus(state, selected.id) === "doing" ? "Đang khám phá" : "Chưa khám phá"}
+                    {node ? ` · ${node.attempts} lượt · tốt nhất ${Math.round(node.best * 100)}%` : ""}
+                  </div>
+                </div>
+                <button onClick={() => setPopOpen(false)} aria-label="Đóng" className="w-10 h-10 -mt-1 -mr-1 rounded-full text-muted hover:bg-sky-soft flex items-center justify-center shrink-0 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-navy mb-1.5">Chọn mức độ</div>
+                <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Mức độ khó">
+                  {LEVELS.map((l) => (
+                    <button
+                      key={l.id}
+                      role="radio"
+                      aria-checked={level === l.id}
+                      onClick={() => setLevel(l.id)}
+                      className={`min-h-11 rounded-xl text-sm font-bold border cursor-pointer ${level === l.id ? "bg-grape border-grape text-white" : "bg-white border-sky-line text-navy hover:border-grape"}`}
+                    >
+                      {l.name}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted mt-1">
+                  {LEVELS.find((l) => l.id === level)?.hint} · <b>{QUESTIONS_PER_RUN} câu trắc nghiệm</b>
+                </p>
+              </div>
+              {run && run.chapterId === selected.id ? (
+                <button onClick={() => (setShowRun(true), setPopOpen(false), scrollToRunner())} className="w-full min-h-12 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold inline-flex items-center justify-center gap-2 cursor-pointer">
+                  <Play className="w-4 h-4" /> Tiếp tục lượt đang làm
+                </button>
+              ) : (
+                <button onClick={() => start(selected, level)} disabled={!!busy} className="w-full min-h-12 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
+                  {busy === "start" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />} {busy === "start" ? "AI đang soạn và kiểm tra câu hỏi..." : "Bắt đầu khám phá"}
+                </button>
+              )}
+              {run && run.chapterId !== selected.id && <p className="text-xs text-muted">Bắt đầu chương này sẽ thay lượt đang làm dở ở chương khác.</p>}
+              <div className="grid grid-cols-2 gap-1.5">
+                {node?.wrongs?.length ? (
+                  <button onClick={() => start(selected, Math.max(1, (node.level || 1) - 1), { review: true })} disabled={!!busy} className="min-h-10 px-2 rounded-xl bg-lilac hover:bg-sky-soft text-grape text-xs font-bold inline-flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50">
+                    <BookOpenCheck className="w-4 h-4" /> Ôn lại phần sai
+                  </button>
+                ) : null}
+                <button
+                  onClick={() => onAskTutor(`Em đang học Toán ${g}, ${selected.no}: ${selected.title}. Thầy/cô tóm tắt giúp em kiến thức chính của chương này, kèm ví dụ dễ hiểu nhé.`)}
+                  className={`min-h-10 px-2 rounded-xl bg-white border border-sky-line hover:border-ocean text-navy text-xs font-semibold inline-flex items-center justify-center gap-1 cursor-pointer ${node?.wrongs?.length ? "" : "col-span-2"}`}
+                >
+                  <Bot className="w-4 h-4 text-grape" /> Hỏi Gia sư AI về chương
+                </button>
+              </div>
+              <details className="text-sm text-ink">
+                <summary className="min-h-9 flex items-center cursor-pointer text-xs font-semibold text-ocean">Các bài trong chương ({selected.lessons.length})</summary>
+                <ul className="list-disc pl-5 space-y-0.5 mt-1">
+                  {selected.lessons.map((l) => (
+                    <li key={l}>{l}</li>
+                  ))}
+                </ul>
+              </details>
+            </div>
+          )}
+        </QuestMap>
       </div>
 
       {error && (
@@ -348,10 +443,11 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
         <QuizRunner
           run={run}
           chapter={runChapter}
-          busy={busy === "swap" || busy === "new" ? busy : null}
-          onPick={(opt) => setState((s) => (s.run ? { ...s, run: { ...s.run, picks: s.run.picks.map((p, k) => (k === s.run!.index ? opt : p)) } } : s))}
+          onPick={(opt) => {
+            (opt === run.questions[run.index].answer ? playCorrect : playWrong)();
+            setState((s) => (s.run ? { ...s, run: { ...s.run, picks: s.run.picks.map((p, k) => (k === s.run!.index ? opt : p)) } } : s));
+          }}
           onGo={(index) => setState((s) => (s.run ? { ...s, run: { ...s.run, index: Math.max(0, Math.min(index, s.run.questions.length - 1)) } } : s))}
-          onSwap={swap}
           onReport={() =>
             setState((s) => {
               if (!s.run) return s;
@@ -359,90 +455,12 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
               return { ...s, run: { ...s.run, reported: [...s.run.reported, q.id] }, reports: [...s.reports, { chapterId: s.run.chapterId, q: q.q, at: new Date().toISOString() }].slice(-100) };
             })
           }
-          onNewSet={() => {
-            if (run.picks.some((p) => p !== null) && !window.confirm("Tạo bộ câu hỏi mới? Các câu đã làm trong lượt này sẽ không được tính.")) return;
-            start(runChapter, run.level, { review: run.review });
-          }}
           onPause={() => setShowRun(false)}
           onFinish={finish}
           onAskTutor={askAboutQuestion}
         />
       )}
 
-      {/* Thông tin điểm đến đang chọn */}
-      {selected && !(run && showRun && run.chapterId === selected.id) && (
-        <section className="rounded-2xl bg-white border border-sky-line p-5 sm:p-6 grid lg:grid-cols-[1.3fr_1fr] gap-5">
-          <div className="space-y-3">
-            <div>
-              <div className="text-xs font-bold text-grape uppercase tracking-wide">
-                {land} · {selected.no}
-              </div>
-              <h3 className="text-xl font-extrabold text-navy mt-1">{selected.title}</h3>
-            </div>
-            <div className="text-sm text-ink">
-              <div className="text-xs font-semibold text-muted mb-1">Các bài trong chương</div>
-              <ul className="list-disc pl-5 space-y-0.5">
-                {selected.lessons.map((l) => (
-                  <li key={l}>{l}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex flex-wrap gap-3 text-xs text-muted">
-              <span className="inline-flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-grape" /> {nodeStatus(state, selected.id) === "done" ? "Đã hoàn thành" : nodeStatus(state, selected.id) === "doing" ? "Đang khám phá" : "Chưa khám phá"}
-              </span>
-              {node && (
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" /> {node.attempts} lượt · tốt nhất {Math.round(node.best * 100)}%
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="space-y-3 p-4 rounded-xl bg-sky-bg border border-sky-soft">
-            <div>
-              <div className="text-sm font-bold text-navy mb-1.5">Mức độ khó</div>
-              <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Mức độ khó">
-                {LEVELS.map((l) => (
-                  <button
-                    key={l.id}
-                    role="radio"
-                    aria-checked={level === l.id}
-                    onClick={() => setLevel(l.id)}
-                    className={`min-h-11 rounded-xl text-sm font-bold border cursor-pointer ${level === l.id ? "bg-grape border-grape text-white" : "bg-white border-sky-line text-navy hover:border-grape"}`}
-                  >
-                    {l.name}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted mt-1.5">{LEVELS.find((l) => l.id === level)?.hint}</p>
-            </div>
-            <p className="text-sm text-ink">
-              Số câu dự kiến: <b>{QUESTIONS_PER_RUN} câu trắc nghiệm</b> do AI tạo mới mỗi lượt.
-            </p>
-            {run && run.chapterId === selected.id ? (
-              <button onClick={() => (setShowRun(true), scrollToRunner())} className="w-full min-h-12 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold inline-flex items-center justify-center gap-2 cursor-pointer">
-                <Play className="w-4 h-4" /> Tiếp tục lượt đang làm
-              </button>
-            ) : (
-              <button onClick={() => start(selected, level)} disabled={!!busy} className="w-full min-h-12 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
-                {busy === "start" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />} {busy === "start" ? "AI đang soạn và kiểm tra câu hỏi..." : "Bắt đầu khám phá"}
-              </button>
-            )}
-            {run && run.chapterId !== selected.id && <p className="text-xs text-muted">Bắt đầu chương này sẽ thay lượt đang làm dở ở chương khác.</p>}
-            {node?.wrongs?.length ? (
-              <button onClick={() => start(selected, Math.max(1, (node.level || 1) - 1), { review: true })} disabled={!!busy} className="w-full min-h-11 rounded-xl bg-lilac hover:bg-sky-soft text-grape text-sm font-bold inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
-                <BookOpenCheck className="w-4 h-4" /> Ôn lại phần làm sai (câu tương tự, dễ hơn)
-              </button>
-            ) : null}
-            <button
-              onClick={() => onAskTutor(`Em đang học Toán ${g}, ${selected.no}: ${selected.title}. Thầy/cô tóm tắt giúp em kiến thức chính của chương này, kèm ví dụ dễ hiểu nhé.`)}
-              className="w-full min-h-11 rounded-xl bg-white border border-sky-line hover:border-ocean text-navy text-sm font-semibold inline-flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Bot className="w-4 h-4 text-grape" /> Hỏi Gia sư AI về chương này
-            </button>
-          </div>
-        </section>
-      )}
     </div>
   );
 };

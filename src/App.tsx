@@ -6,6 +6,8 @@ import { SubjectsView } from "./components/SubjectsView";
 import { AITutorView } from "./components/AITutorView";
 import { StudyPlanView } from "./components/StudyPlanView";
 import { KnowledgeQuest } from "./components/quest/KnowledgeQuest";
+import { isAdminId } from "./lib/admin";
+import { playTing } from "./lib/sound";
 import { MoodTrackerView } from "./components/MoodTrackerView";
 import { CareerGuidanceView } from "./components/CareerGuidanceView";
 import { VideoHubView } from "./components/VideoHubView";
@@ -65,6 +67,17 @@ export default function App() {
   const [currentSection, setCurrentSection] = useState<NavSection>("home");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState("");
+
+  // Tiếng "ting" nhẹ khi bấm nút (tắt được ở nút loa trên đầu trang)
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const el = (e.target as Element | null)?.closest?.("button, a, [role=button], [role=radio], [role=tab]");
+      if (!el || el.closest("[data-sound=none]") || (el as HTMLButtonElement).disabled) return;
+      playTing();
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
 
   const [accounts, setAccounts] = useState<StudentProfile[]>(loadAccounts);
   const [activeUserId, setActiveUserId] = useState<string | null>(() => {
@@ -155,15 +168,18 @@ export default function App() {
     }
     return res.reason === "network"
       ? "Không kết nối được máy chủ. Bạn kiểm tra mạng, hoặc bấm “Dùng thử không cần tài khoản”."
-      : "Máy chủ tài khoản chưa sẵn sàng. Bạn bấm “Dùng thử không cần tài khoản” nhé.";
+      : NO_DB_MSG;
   };
+
+  const NO_DB_MSG =
+    "Web chưa nối kho dữ liệu tài khoản (Upstash) nên chưa tạo/đăng nhập tài khoản được. Thầy cô quản lý web cần bật Upstash trên Vercel (kiểm tra ở địa chỉ /api/health). Trong lúc chờ, bạn bấm “Dùng thử không cần tài khoản” nhé.";
 
   const handleRegister = async (newProfile: StudentProfile, password: string): Promise<string> => {
     const res = await cloud.register(publicProfile(newProfile), password);
     if (!res.ok) {
       if (res.reason === "exists" || res.reason === "invalid") return res.message;
       if (res.reason === "network") return "Không kết nối được máy chủ. Bạn thử lại sau, hoặc dùng thử không cần tài khoản.";
-      return "Máy chủ tài khoản chưa sẵn sàng. Bạn bấm “Dùng thử không cần tài khoản” nhé.";
+      return NO_DB_MSG;
     }
     upsertAccount(sanitizeProfile({ ...newProfile, ...res.profile }));
     enterApp(res.profile.studentId);
@@ -262,7 +278,7 @@ export default function App() {
                 go("ai_tutor");
               }}
               profile={activeProfile}
-              isAdmin={!activeProfile.isGuest && activeProfile.studentId.toLowerCase() === "tranphanvananh"}
+              isAdmin={!activeProfile.isGuest && isAdminId(activeProfile.studentId)}
             />
           )}
 

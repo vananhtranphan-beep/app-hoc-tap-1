@@ -7,10 +7,11 @@
 //      Nắng nhẹ, Cầu vồng → "sáng" (lá vươn, trời sáng, có thể nở hoa)
 //      Có mây (hoặc tự gọi tên) → "dịu" (giữ nguyên)
 //      Mưa, Gió mạnh, Sấm chớp → "nặng nề" (lá rũ, trời tối hơn)
-//   2. ĐỘ HÉO (0–3): mỗi lần check-in nặng nề héo thêm 1 mức (tối đa 2 mức mỗi ngày);
+//   2. ĐỘ HÉO (0–3): mỗi lần check-in nặng nề héo thêm 1 mức;
 //      mỗi hoạt động chăm sóc bản thân hồi 1 mức; tâm sự với AI hồi tối đa 1 mức mỗi ngày.
 //      Cây KHÔNG hồi chỉ vì em chọn cảm xúc vui (để em không phải giả vui cho cây đẹp).
-// - Cây lớn lên nhờ check-in (cảm xúc nào cũng như nhau), chăm sóc bản thân, nhìn lại hành trình.
+// - Cây lớn lên NGAY sau mỗi lần check-in (cảm xúc nào cũng như nhau): 4 lần check-in là cây lớn hết cỡ.
+//   Chăm sóc bản thân, tâm sự, nhìn lại hành trình cũng giúp cây lớn. Hình dạng được lưu sang ngày hôm sau.
 // - Tối đa 5 lần check-in mỗi ngày. Cây không bao giờ chết, không tụt giai đoạn.
 // ============================================================
 import { SELF_CARE, STAGES, WEATHERS, activityById, weatherById } from "../data/moodData";
@@ -166,11 +167,8 @@ export function saveMood(userId: string, s: MoodState) {
 
 // ---------- Điểm phát triển ----------
 export function growthPoints(s: MoodState): number {
-  // Check-in: tính tối đa 3 lần mỗi ngày (để cây không lớn nhờ bấm liên tục)
-  const perDay: Record<string, number> = {};
-  for (const e of s.entries) perDay[dayKey(e.at)] = Math.min(3, (perDay[dayKey(e.at)] || 0) + 1);
-  const checkins = Object.values(perDay).reduce((a, b) => a + b, 0);
-  return checkins + s.care.length * 2 + s.chatCare + s.reviews.length * 2;
+  // Mỗi lần check-in (tối đa 5 lần/ngày) là một chiếc lá mới
+  return s.entries.length + s.care.length + s.chatCare + s.reviews.length;
 }
 
 export function stageIndex(s: MoodState): number {
@@ -179,8 +177,6 @@ export function stageIndex(s: MoodState): number {
   STAGES.forEach((st, i) => {
     if (pts >= st.min) idx = i;
   });
-  // Từ "Cây non" trở lên cần đã thử ít nhất 1 hoạt động chăm sóc
-  if (idx >= 2 && s.care.length === 0) idx = 1;
   return idx;
 }
 
@@ -216,12 +212,9 @@ export function addEntry(s: MoodState, e: Omit<MoodEntry, "id" | "at">): MoodSta
   const entry: MoodEntry = { ...e, id: newId("ci"), at: new Date().toISOString() };
   const next: MoodState = { ...s, entries: [entry, ...s.entries].slice(0, 400) };
   if (formOf(e.weathers) !== "nang-ne") return next; // cảm xúc nhẹ nhàng KHÔNG tự làm cây hồi
-  const today = dayKey(new Date());
-  const usedToday = s.wiltDay === today ? s.wiltToday : 0;
   const heavy = e.weathers.map((w) => weatherById(w)).find((w) => w?.heavy);
-  if (usedToday >= 2 || s.wilt >= MAX_WILT) return { ...next, wiltWeather: heavy?.id || s.wiltWeather };
-  const wilt = s.wilt + 1;
-  return { ...next, wilt, wilted: true, wiltWeather: heavy?.id || s.wiltWeather, wiltDay: today, wiltToday: usedToday + 1 };
+  if (s.wilt >= MAX_WILT) return { ...next, wiltWeather: heavy?.id || s.wiltWeather };
+  return { ...next, wilt: s.wilt + 1, wilted: true, wiltWeather: heavy?.id || s.wiltWeather };
 }
 
 /** Chăm sóc bản thân: cây hồi 1 mức (về 0 thì tính là một lần "tươi lại") */

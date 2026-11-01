@@ -22,6 +22,7 @@ import { CareerDetail } from "./career/CareerDetail";
 import { PlanStep } from "./career/PlanStep";
 import { CareerChat } from "./career/CareerChat";
 import { AboutQuestions } from "./career/AboutQuestions";
+import { resetPart } from "../lib/reset";
 
 // ============================================================
 // HƯỚNG NGHIỆP
@@ -157,6 +158,9 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
           onOpenCatalog={() => openCatalog({ filter: "all" })}
           onOpenSaved={() => openCatalog({ filter: "saved" })}
           onOpenPlan={() => go("plan")}
+          onReset={() =>
+            resetPart(userId, "career", "Làm lại Hướng nghiệp từ đầu? Câu trả lời khảo sát, nhận xét của AI, nghề đã lưu, trải nghiệm, kế hoạch và cuộc trò chuyện sẽ bị xóa.")
+          }
         />
       )}
 

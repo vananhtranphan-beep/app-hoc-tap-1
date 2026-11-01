@@ -110,9 +110,9 @@ export const activityById = (id: string) => SELF_CARE.find((a) => a.id === id);
 export const STAGES = [
   { name: "Hạt mầm", min: 0, text: "Hành trình tìm hiểu cảm xúc bắt đầu từ đây." },
   { name: "Nảy mầm", min: 1, text: "Bạn đã bắt đầu quan sát cảm xúc của mình." },
-  { name: "Cây non", min: 5, text: "Bạn đã thử chăm sóc bản thân." },
-  { name: "Cây phát triển", min: 12, text: "Khu vườn có thêm nhiều trải nghiệm của bạn." },
-  { name: "Khu vườn cá nhân", min: 25, text: "Một khu vườn nhỏ lớn lên từ những lần bạn để ý đến mình." },
+  { name: "Cây non", min: 2, text: "Cây lớn lên mỗi lần bạn để ý đến cảm xúc của mình." },
+  { name: "Cây phát triển", min: 3, text: "Khu vườn có thêm nhiều trải nghiệm của bạn." },
+  { name: "Khu vườn cá nhân", min: 4, text: "Một khu vườn nhỏ lớn lên từ những lần bạn để ý đến mình." },
 ];
 
 // ---------- Vật trang trí tự xuất hiện trên cây khi đạt mốc (theo hoạt động, không theo chuỗi ngày) ----------

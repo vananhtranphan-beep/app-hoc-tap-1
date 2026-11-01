@@ -74,7 +74,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
 
         <div className="mt-auto pt-6 flex items-center gap-2.5 px-2 text-xs text-mist/70">
           <CompassLogo size={28} />
-          <span>La bàn nhỏ cho hành trình lớn</span>
+          <span className="whitespace-nowrap">La bàn nhỏ cho hành trình to</span>
         </div>
       </aside>
 

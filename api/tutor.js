@@ -125,21 +125,12 @@ function validQuestions(list) {
         .filter((q) => q.q && q.options.length === 4 && q.options.every(Boolean) && new Set(q.options).size === 4 && Number.isInteger(q.answer) && q.answer >= 0 && q.answer <= 3 && q.explain);
 }
 
-async function makeQuiz(groq, body) {
-    const lop = /^[6-9]$/.test(String(body.grade)) ? body.grade : "8";
-    const level = [1, 2, 3].includes(Number(body.level)) ? Number(body.level) : 1;
-    const count = Math.min(Math.max(Number(body.count) || 5, 1), 6);
-    const chapter = clean(body.chapter, 160);
-    const lessons = (Array.isArray(body.lessons) ? body.lessons : []).map((l) => clean(l, 140)).slice(0, 12);
-    const avoid = (Array.isArray(body.avoid) ? body.avoid : []).map((a) => clean(a, 200)).slice(-25);
-    const focus = (Array.isArray(body.focus) ? body.focus : []).map((a) => clean(a, 200)).slice(0, 5);
-    if (!chapter) throw Object.assign(new Error("Thiếu tên chương."), { status: 400 });
-
+async function generateAndCheck(groq, { lop, level, need, chapter, lessons, avoid, focus }) {
     const spec = [
-        `Soạn ${count} câu hỏi trắc nghiệm MÔN TOÁN LỚP ${lop} cho chương "${chapter}" (SGK Toán ${lop}, bộ Kết nối tri thức với cuộc sống, chương trình GDPT 2018).`,
+        `Soạn ${need} câu hỏi trắc nghiệm MÔN TOÁN LỚP ${lop} cho chương "${chapter}" (SGK Toán ${lop}, bộ Kết nối tri thức với cuộc sống, chương trình GDPT 2018).`,
         lessons.length ? `Chương gồm các bài: ${lessons.join("; ")}. Chỉ hỏi kiến thức trong các bài này, đúng phạm vi lớp ${lop}.` : "",
         `Độ khó: ${LEVEL_PLAN[level]}.`,
-        count >= 4 ? "Bộ câu hỏi phải có đủ các loại: nhận biết, thông hiểu, vận dụng, suy luận hoặc tình huống thực tế." : "",
+        need >= 4 ? "Bộ câu hỏi phải có đủ các loại: nhận biết, thông hiểu, vận dụng, suy luận hoặc tình huống thực tế." : "",
         focus.length ? `Học sinh vừa làm sai các câu sau; hãy tạo câu TƯƠNG TỰ nhưng DỄ HƠN để ôn lại đúng phần kiến thức đó: ${focus.join(" | ")}` : "",
         avoid.length ? `KHÔNG lặp lại hoặc chỉ đổi số liệu của các câu đã dùng: ${avoid.join(" | ")}` : "",
         "Yêu cầu: mỗi câu có đủ dữ kiện, có ĐÚNG 1 đáp án đúng trong 4 lựa chọn, các lựa chọn khác nhau và hợp lý. Tự giải lại từng câu trước khi trả lời. Không bịa kiến thức, công thức.",
@@ -151,8 +142,8 @@ async function makeQuiz(groq, body) {
         { role: "system", content: "Bạn là giáo viên Toán THCS Việt Nam giỏi, soạn câu hỏi trắc nghiệm chính xác, rõ ràng, đúng chương trình. Chỉ trả về JSON." },
         { role: "user", content: spec },
     ], 0.8);
-    let questions = validQuestions(parseJsonLoose(text)?.questions);
-    if (!questions.length) throw new Error("AI chưa tạo được câu hỏi đúng định dạng.");
+    let questions = validQuestions(parseJsonLoose(text)?.questions).slice(0, need);
+    if (!questions.length) return { questions: [], verified: false };
 
     // Bước 2: kiểm tra lại đáp án (AI giải độc lập, không biết đáp án đã chọn)
     let verified = false;
@@ -171,6 +162,29 @@ async function makeQuiz(groq, body) {
             verified = true;
         }
     } catch {}
+    return { questions, verified };
+}
+
+async function makeQuiz(groq, body) {
+    const lop = /^[6-9]$/.test(String(body.grade)) ? body.grade : "8";
+    const level = [1, 2, 3].includes(Number(body.level)) ? Number(body.level) : 1;
+    const count = Math.min(Math.max(Number(body.count) || 5, 1), 6);
+    const chapter = clean(body.chapter, 160);
+    const lessons = (Array.isArray(body.lessons) ? body.lessons : []).map((l) => clean(l, 140)).slice(0, 12);
+    const avoid = (Array.isArray(body.avoid) ? body.avoid : []).map((a) => clean(a, 200)).slice(-25);
+    const focus = (Array.isArray(body.focus) ? body.focus : []).map((a) => clean(a, 200)).slice(0, 5);
+    if (!chapter) throw Object.assign(new Error("Thiếu tên chương."), { status: 400 });
+
+    // Tạo + kiểm tra; nếu bị loại bớt thì tạo bù (tối đa 3 vòng) để đủ số câu
+    let questions = [];
+    let verified = false;
+    for (let round = 0; round < 3 && questions.length < count; round++) {
+        const need = count - questions.length;
+        const used = [...avoid, ...questions.map((q) => q.q)];
+        const r = await generateAndCheck(groq, { lop, level, need, chapter, lessons, avoid: used, focus });
+        verified = verified || r.verified;
+        questions = [...questions, ...r.questions];
+    }
     if (!questions.length) throw new Error("Các câu AI vừa tạo chưa qua được bước kiểm tra đáp án.");
     return { questions: questions.slice(0, count).map((q, i) => ({ id: `${Date.now().toString(36)}-${i}`, ...q })), verified };
 }

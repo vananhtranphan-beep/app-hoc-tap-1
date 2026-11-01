@@ -10,6 +10,9 @@
 //
 // Link sách: bộ "Kết nối tri thức với cuộc sống" (bộ SGK thống nhất toàn quốc từ
 // năm học 2026-2027) trên trang taphuan.nxbgd.vn của NXB Giáo dục Việt Nam.
+// Link "https://taphuan.nxbgd.vn/tap-huan" = trang tra cứu chung (chưa có link riêng của cuốn đó).
+
+export const HANH_TRANG_SO = "https://taphuan.nxbgd.vn/tap-huan";
 // ============================================================
 
 export type SystemBook = { id: string; name: string; url: string; imageUrl: string };
@@ -45,7 +48,7 @@ export const SYSTEM_BOOKS: Record<string, SystemBook[]> = {
   ],
   "Tiếng Anh": [
     { id: "ta-6", name: "Tiếng Anh lớp 6 - Tập 1 (Global Success)", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/sgk-tieng-anh-6-tap-1-global-success.4879705889", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
-    { id: "ta-6-2", name: "Tiếng Anh lớp 6 - Tập 2 (Global Success)", url: "", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
+    { id: "ta-6-2", name: "Tiếng Anh lớp 6 - Tập 2 (Global Success)", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
     { id: "ta-7", name: "Tiếng Anh lớp 7 (Global Success)", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/shs-tieng-anh-7-global-success.4539950416", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
     { id: "ta-8", name: "Tiếng Anh lớp 8 (Global Success)", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/sgk-tieng-anh-8-global-success.4879728870", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
     { id: "ta-9", name: "Tiếng Anh lớp 9 (Global Success)", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/sgk-tieng-anh-9-global-success.4879734378", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80" },
@@ -63,7 +66,7 @@ export const SYSTEM_BOOKS: Record<string, SystemBook[]> = {
     { id: "lsdl-9", name: "Lịch Sử & Địa Lý lớp 9", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/sgk-lich-su-va-dia-li-9.4844021301", imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=300&q=80" },
   ],
   "Giáo Dục Công Dân": [
-    { id: "gdcd-6", name: "GDCD lớp 6", url: "", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
+    { id: "gdcd-6", name: "GDCD lớp 6", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
     { id: "gdcd-7", name: "GDCD lớp 7", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/sgk-giao-duc-cong-dan-7.4726822635", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
     { id: "gdcd-8", name: "GDCD lớp 8", url: "https://taphuan.nxbgd.vn/tap-huan/chi-tiet-sach/giao-duc-cong-dan-8-940161565.940161565", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
     { id: "gdcd-9", name: "GDCD lớp 9", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/sgk-giao-duc-cong-dan-9.4714947143", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" },
@@ -79,5 +82,23 @@ export const SYSTEM_BOOKS: Record<string, SystemBook[]> = {
     { id: "cn-7", name: "Công nghệ lớp 7", url: "https://taphuan.nxbgd.vn/tap-huan/chi-tiet-sach/cong-nghe-7-939937878.939937878", imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80" },
     { id: "cn-8", name: "Công nghệ lớp 8", url: "https://taphuan.nxbgd.vn/tap-huan/doc-sach/sgk-cong-nghe-8.4700127878", imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80" },
     { id: "cn-9", name: "Công nghệ lớp 9 - Định hướng nghề nghiệp", url: "https://taphuan.nxbgd.vn/tap-huan/chi-tiet-sach/cong-nghe-9-dinh-huong-nghe-nghiep-940004971.940004971", imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80" },
+  ],
+  // Nghệ thuật và Giáo dục thể chất: tạm dẫn tới trang tra cứu sách "Hành trang số" của NXB Giáo dục.
+  // Admin bấm cây bút trên từng cuốn để dán link đọc sách chính xác.
+  "Nghệ thuật": [
+    { id: "am-6", name: "Âm nhạc lớp 6", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "am-7", name: "Âm nhạc lớp 7", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "am-8", name: "Âm nhạc lớp 8", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "am-9", name: "Âm nhạc lớp 9", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "mt-6", name: "Mĩ thuật lớp 6", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "mt-7", name: "Mĩ thuật lớp 7", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "mt-8", name: "Mĩ thuật lớp 8", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "mt-9", name: "Mĩ thuật lớp 9", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+  ],
+  "Giáo dục thể chất": [
+    { id: "gdtc-6", name: "Giáo dục thể chất lớp 6", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "gdtc-7", name: "Giáo dục thể chất lớp 7", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "gdtc-8", name: "Giáo dục thể chất lớp 8", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
+    { id: "gdtc-9", name: "Giáo dục thể chất lớp 9", url: "https://taphuan.nxbgd.vn/tap-huan", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=300&q=80" },
   ],
 };

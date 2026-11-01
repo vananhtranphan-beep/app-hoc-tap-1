@@ -19,9 +19,10 @@ interface Props {
   onOpenCatalog: () => void;
   onOpenSaved: () => void;
   onOpenPlan: () => void;
+  onReset: () => void;
 }
 
-export const CareerHome: React.FC<Props> = ({ state, hasQuiz, onStartQuiz, onRestartQuiz, onOpenResult, onOpenChat, onOpenCatalog, onOpenSaved, onOpenPlan }) => {
+export const CareerHome: React.FC<Props> = ({ state, hasQuiz, onStartQuiz, onRestartQuiz, onOpenResult, onOpenChat, onOpenCatalog, onOpenSaved, onOpenPlan, onReset }) => {
   const done = answeredCount(state.answers);
   const inProgress = !hasQuiz && done > 0;
 
@@ -84,7 +85,7 @@ export const CareerHome: React.FC<Props> = ({ state, hasQuiz, onStartQuiz, onRes
       </div>
 
       {/* Lối tắt */}
-      <div className="grid sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         <button onClick={onOpenCatalog} className="min-h-14 px-4 rounded-xl bg-clay-card border border-clay-soft hover:border-clay text-left flex items-center gap-3 cursor-pointer">
           <LayoutGrid className="w-5 h-5 text-clay-deep shrink-0" />
           <span className="text-sm font-semibold text-navy">Xem tất cả {CAREERS.length} nghề</span>
@@ -96,6 +97,10 @@ export const CareerHome: React.FC<Props> = ({ state, hasQuiz, onStartQuiz, onRes
         <button onClick={onOpenPlan} className="min-h-14 px-4 rounded-xl bg-clay-card border border-clay-soft hover:border-clay text-left flex items-center gap-3 cursor-pointer">
           <Target className="w-5 h-5 text-clay-deep shrink-0" />
           <span className="text-sm font-semibold text-navy">Kế hoạch khám phá ({state.plan.length})</span>
+        </button>
+        <button onClick={onReset} className="min-h-14 px-4 rounded-xl bg-clay-card border border-clay-soft hover:border-rose-300 text-left flex items-center gap-3 cursor-pointer">
+          <RotateCcw className="w-5 h-5 text-rose-600 shrink-0" />
+          <span className="text-sm font-semibold text-navy">Làm lại từ đầu</span>
         </button>
       </div>
     </div>
