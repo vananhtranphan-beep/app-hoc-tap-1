@@ -108,21 +108,8 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
 
   return (
     <div className="space-y-5 pb-6">
-      {/* Đầu trang */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="w-12 h-12 rounded-2xl bg-clay-deep text-white flex items-center justify-center shrink-0">
-            <Compass className="w-6 h-6" />
-          </span>
-          <div>
-            <h2 className="text-2xl font-extrabold text-navy tracking-tight">
-              Hướng nghiệp
-              {TITLES[view] ? <span className="block sm:inline text-base sm:text-2xl text-clay-deep"><span className="hidden sm:inline"> · </span>{TITLES[view]}</span> : null}
-            </h2>
-            <p className="text-sm text-muted">Hiểu sở thích của mình, khám phá nghề, thử trải nghiệm nhỏ. Chưa cần chọn nghề ngay.</p>
-          </div>
-        </div>
-      </div>
+      {/* Tên phần đang xem (đầu trang chung đã có tên "Hướng nghiệp") */}
+      {TITLES[view] ? <h3 className="text-xl font-black text-clay-dark tracking-tight">{TITLES[view]}</h3> : null}
 
       {view !== "home" && (
         <div className="flex flex-wrap items-center justify-between gap-2">

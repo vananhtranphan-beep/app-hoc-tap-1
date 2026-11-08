@@ -181,16 +181,7 @@ export const KnowledgeQuest: React.FC<Props> = ({ userId = "default", grade = "8
 
   return (
     <div className="space-y-5 pb-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="w-12 h-12 rounded-2xl bg-grape text-white flex items-center justify-center shrink-0">
-            <MapIcon className="w-6 h-6" />
-          </span>
-          <div>
-            <h2 className="text-2xl font-extrabold text-navy tracking-tight">Bản đồ chinh phục tri thức</h2>
-            <p className="text-sm text-muted">Môn Toán · Mỗi điểm đến là một chương SGK Kết nối tri thức. Chọn điểm nào cũng được.</p>
-          </div>
-        </div>
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => resetPart(userId, "quest", "Làm lại Bản đồ chinh phục từ đầu? Tiến độ mọi chương, lượt đang làm và kết quả sẽ bị xóa.")}

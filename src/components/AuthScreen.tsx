@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 import { User, Lock, LogIn, UserPlus, ShieldCheck, Trash2, RefreshCw, ArrowRight } from "lucide-react";
 import { StudentProfile } from "../types";
-import { CompassLogo } from "./CompassLogo";
+import { CompassHero } from "./CompassLogo";
+import { FunIcon } from "./FunIcon";
 import { AVATARS, generateNickname, randomAvatar } from "../lib/profile";
 
 // ============================================================
@@ -118,19 +119,36 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
   };
 
   return (
-    <div className="min-h-screen bg-cream text-ink flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-md space-y-6">
-        {/* Thương hiệu */}
-        <div className="text-center space-y-3 rise-1">
-          <CompassLogo size={64} animate className="mx-auto drop-shadow-sm" />
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-navy">AI Youth Compass</h1>
-            <p className="text-base font-bold text-teal-deep">La bàn tuổi teen</p>
-            <p className="text-sm text-muted mt-1">La bàn nhỏ cho hành trình hiểu mình và chọn hướng đi</p>
+    <div className="min-h-screen bg-cream dots-bg text-ink lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+      {/* Thương hiệu: tấm hải đồ xanh đêm với la bàn (điện thoại: dải trên cùng; máy tính: nửa trái) */}
+      <section className="chart-band relative overflow-hidden text-cream px-5 py-5 lg:px-14 lg:py-12 lg:min-h-screen lg:flex lg:flex-col lg:justify-center">
+        <div className="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-8 max-w-xl">
+          <CompassHero className="w-24 sm:w-28 lg:w-72 h-auto shrink-0 drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)]" />
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-black tracking-tight text-[#fffaf0] leading-tight">AI Youth Compass</h1>
+            <p className="text-base lg:text-xl font-extrabold text-[#ffd66b]">La bàn tuổi teen</p>
+            <p className="text-sm lg:text-base text-[#c3d0e3] mt-1 lg:mt-3 max-w-[48ch] text-balance">La bàn nhỏ cho hành trình hiểu mình và chọn hướng đi</p>
           </div>
         </div>
+        <ul className="hidden lg:grid gap-3 mt-10 max-w-md">
+          {(
+            [
+              ["🧭", "peach", "Khám phá sở thích và tìm hiểu các nghề"],
+              ["🌱", "lime", "Ghi lại cảm xúc, chăm sóc bản thân mỗi ngày"],
+              ["🗺️", "sun", "Học Toán qua bản đồ chinh phục, hỏi bài Gia sư AI"],
+            ] as const
+          ).map(([e, t, text]) => (
+            <li key={text} className="flex items-center gap-3 text-[#e3eaf4] font-bold">
+              <FunIcon emoji={e} tone={t} size="sm" />
+              {text}
+            </li>
+          ))}
+        </ul>
+      </section>
 
-        <div className="rounded-2xl bg-white border border-line shadow-[0_12px_40px_-20px_rgba(23,59,80,0.35)] overflow-hidden rise-2">
+      <div className="flex items-start lg:items-center justify-center px-4 py-6 sm:py-10">
+      <div className="w-full max-w-md space-y-5">
+        <div className="rounded-2xl bg-white border-2 border-line shadow-[0_5px_0_#ece3cf] overflow-hidden">
           {/* Thẻ chọn */}
           <div className="grid grid-cols-2 border-b border-line" role="tablist">
             {(
@@ -148,8 +166,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
                   setLoginError("");
                   setRegError("");
                 }}
-                className={`min-h-12 flex items-center justify-center gap-2 text-sm font-bold transition cursor-pointer border-b-2 ${
-                  activeTab === key ? "border-teal text-navy bg-mist/40" : "border-transparent text-muted hover:text-navy"
+                className={`min-h-12 flex items-center justify-center gap-2 text-sm font-extrabold transition cursor-pointer border-b-[3px] ${
+                  activeTab === key ? "border-[#ffc93c] text-navy bg-[#fffaf0]" : "border-transparent text-muted hover:text-navy"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -182,7 +200,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
               <button
                 type="submit"
                 disabled={isBusy}
-                className="w-full min-h-12 rounded-xl bg-teal hover:bg-teal-deep disabled:opacity-60 disabled:cursor-wait text-white font-bold text-sm transition cursor-pointer flex items-center justify-center gap-2"
+                className="btn-3d btn-mint w-full min-h-12 rounded-xl disabled:opacity-60 disabled:cursor-wait font-black text-sm cursor-pointer flex items-center justify-center gap-2"
               >
                 <LogIn className="w-4 h-4" />
                 {isBusy ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -199,11 +217,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
 
               {/* Biệt danh tự tạo */}
               <div className="p-3.5 rounded-xl bg-mist/60 border border-line flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-white border border-line flex items-center justify-center text-2xl shrink-0" aria-hidden>
+                <div className="w-12 h-12 rounded-xl bg-white border border-line flex items-center justify-center text-2xl shrink-0" aria-hidden>
                   {regAvatar}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[11px] font-semibold text-muted uppercase tracking-wide">Biệt danh của bạn</div>
+                  <div className="text-xs font-bold text-muted">Biệt danh của bạn</div>
                   <div className="font-bold text-navy leading-snug">{regNickname}</div>
                 </div>
                 <button
@@ -225,7 +243,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
                     type="button"
                     onClick={() => setRegAvatar(a)}
                     aria-label={`Biểu tượng ${a}`}
-                    className={`w-10 h-10 rounded-full text-lg flex items-center justify-center border transition cursor-pointer ${
+                    className={`w-10 h-10 rounded-lg text-lg flex items-center justify-center border transition cursor-pointer ${
                       regAvatar === a ? "border-teal bg-teal-soft" : "border-line bg-white hover:border-teal"
                     }`}
                   >
@@ -257,7 +275,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
               <button
                 type="submit"
                 disabled={isBusy}
-                className="w-full min-h-12 rounded-xl bg-teal hover:bg-teal-deep disabled:opacity-60 disabled:cursor-wait text-white font-bold text-sm transition cursor-pointer flex items-center justify-center gap-2"
+                className="btn-3d btn-mint w-full min-h-12 rounded-xl disabled:opacity-60 disabled:cursor-wait font-black text-sm cursor-pointer flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
                 {isBusy ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
@@ -267,7 +285,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
         </div>
 
         {/* Dùng thử không cần tài khoản */}
-        <div className="rounded-2xl border border-dashed border-line bg-white/60 p-4 rise-3">
+        <div className="rounded-2xl border-2 border-dashed border-line bg-white/70 p-4">
           {!guestOpen ? (
             <button onClick={() => setGuestOpen(true)} className="w-full min-h-11 flex items-center justify-between gap-3 text-left cursor-pointer group">
               <div>
@@ -284,7 +302,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
                 <button onClick={() => setGuestOpen(false)} className="min-h-11 px-4 rounded-xl border border-line text-sm font-semibold text-muted hover:text-navy cursor-pointer">
                   Hủy
                 </button>
-                <button onClick={() => onGuest(guestGrade)} className="flex-1 min-h-11 rounded-xl bg-navy hover:bg-navy-deep text-cream text-sm font-bold cursor-pointer">
+                <button onClick={() => onGuest(guestGrade)} className="btn-3d btn-sun flex-1 min-h-11 rounded-xl text-sm font-black cursor-pointer">
                   Vào dùng thử
                 </button>
               </div>
@@ -294,8 +312,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
 
         {/* Tài khoản đã dùng trên máy này */}
         {savedAccounts.length > 0 && (
-          <div className="space-y-2 rise-4">
-            <div className="text-xs font-semibold text-muted uppercase tracking-wide px-1">Đã dùng trên máy này</div>
+          <div className="space-y-2">
+            <div className="text-sm font-bold text-navy px-1">Đã dùng trên máy này</div>
             <div className="space-y-2">
               {savedAccounts.map((acc) => (
                 <div key={acc.studentId} className="flex items-center gap-2 p-2 pl-3 rounded-xl bg-white border border-line">
@@ -331,6 +349,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ accounts, onLogin, onReg
           <ShieldCheck className="w-4 h-4 text-teal shrink-0" />
           <span>Không hỏi tên thật, ngày sinh hay trường lớp. Nhật ký cảm xúc chỉ lưu trên máy của bạn.</span>
         </p>
+      </div>
       </div>
     </div>
   );

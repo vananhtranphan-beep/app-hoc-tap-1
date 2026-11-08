@@ -10,6 +10,15 @@
   --animate-fadeIn: fadeIn 0.2s ease-out;
   --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 
+  /* Góc cạnh: bo nhẹ, không tròn tròn (nhìn sắc nét, nghiêm túc hơn) */
+  --radius-sm: 2px;
+  --radius: 3px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 5px;
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
+
   /* Bảng màu AI Youth Compass */
   --color-navy: #263a56;
   --color-navy-deep: #1a2b42;
@@ -73,12 +82,12 @@
   background-size: 22px 22px;
 }
 .cute-card {
-  border-radius: 28px;
+  border-radius: 8px;
   border: 2px solid var(--color-line);
   box-shadow: 0 6px 0 -1px rgba(236, 227, 207, 0.9), 0 14px 28px -20px rgba(38, 58, 86, 0.35);
 }
 .cute-panel {
-  border-radius: 28px;
+  border-radius: 8px;
   background: #fffdf3;
   border: 2px solid #f1e6c4;
   box-shadow: 0 6px 0 -1px #f4ead0, 0 16px 30px -22px rgba(38, 58, 86, 0.4);
@@ -100,8 +109,41 @@
 .btn-lime { --btn-edge: #7fae45; background: #a7d672; color: #24420a; box-shadow: 0 4px 0 var(--btn-edge); }
 .btn-mint { --btn-edge: #23897a; background: #34b39e; color: #fff; box-shadow: 0 4px 0 var(--btn-edge); }
 
+/* Đầu trang chủ: hải đồ ban đêm (lưới kinh tuyến – vĩ tuyến mờ trên nền xanh đêm) */
+.chart-hero {
+  background-color: #1d3150;
+  background-image:
+    radial-gradient(circle at 82% 45%, rgba(95, 194, 186, 0.22), transparent 42%),
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: auto, 34px 34px, 34px 34px;
+  box-shadow: 0 6px 0 #14233a, 0 22px 40px -24px rgba(20, 35, 58, 0.7);
+}
+
+/* Dải đầu trang của các trang bên trong: cùng chất liệu hải đồ */
+.chart-band {
+  background-color: #1d3150;
+  background-image:
+    radial-gradient(circle at 92% 30%, rgba(95, 194, 186, 0.18), transparent 38%),
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: auto, 34px 34px, 34px 34px;
+  box-shadow: 0 4px 0 #14233a;
+}
+
+/* Cột menu (máy tính): cùng màu xanh đêm với đầu trang chủ, giữ nguyên ở mọi trang */
+.nav-panel {
+  border-radius: 8px;
+  background-color: #1d3150;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 34px 34px;
+  box-shadow: 0 6px 0 #14233a, 0 18px 34px -22px rgba(20, 35, 58, 0.7);
+}
+
 /* Băng dính trang trí (kiểu sổ tay) */
-.tape { width: 74px; height: 16px; border-radius: 4px; transform: rotate(-4deg); opacity: 0.85; }
+.tape { width: 74px; height: 16px; border-radius: 2px; transform: rotate(-4deg); opacity: 0.85; }
 .tape-mint { background: repeating-linear-gradient(45deg, #a8e3cc 0 6px, #c9f0e0 6px 12px); }
 .tape-pink { background: repeating-linear-gradient(45deg, #f6b9cf 0 6px, #fbd6e3 6px 12px); }
 

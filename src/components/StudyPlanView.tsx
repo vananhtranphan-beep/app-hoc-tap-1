@@ -32,13 +32,13 @@ const INITIAL_7_DAYS_PLAN: DayPlan[] = [
     dayName: "Thứ Hai",
     tasks: [
       { id: "m1", taskName: "Giải 5 bài tập Toán 8 (Hằng đẳng thức)", hours: 1.5, completed: true },
-      { id: "m2", taskName: "Học 15 từ vựng Tiếng Anh Unit 1", hours: 1.0, completed: false },
+      { id: "m2", taskName: "Học 15 từ vựng tiếng Anh Unit 1", hours: 1.0, completed: false },
     ],
   },
   {
     dayName: "Thứ Ba",
     tasks: [
-      { id: "t1", taskName: "Soạn bài Ngữ Văn 8 (Lão Hạc)", hours: 1.0, completed: true },
+      { id: "t1", taskName: "Soạn bài Ngữ văn 8 (Lão Hạc)", hours: 1.0, completed: true },
       { id: "t2", taskName: "Làm bài tập KHTN (Hóa học)", hours: 1.5, completed: false },
     ],
   },
@@ -46,20 +46,20 @@ const INITIAL_7_DAYS_PLAN: DayPlan[] = [
     dayName: "Thứ Tư",
     tasks: [
       { id: "w1", taskName: "Ôn tập Lý thuyết Lịch Sử 8", hours: 1.0, completed: false },
-      { id: "w2", taskName: "Luyện bài tập Tin Học Python", hours: 1.0, completed: false },
+      { id: "w2", taskName: "Luyện bài tập Tin học Python", hours: 1.0, completed: false },
     ],
   },
   {
     dayName: "Thứ Năm",
     tasks: [
       { id: "th1", taskName: "Luyện đề Toán THCS tổng hợp", hours: 2.0, completed: false },
-      { id: "th2", taskName: "Luyện đọc Ngữ Văn Cấp 2", hours: 1.0, completed: false },
+      { id: "th2", taskName: "Luyện đọc hiểu Ngữ văn", hours: 1.0, completed: false },
     ],
   },
   {
     dayName: "Thứ Sáu",
     tasks: [
-      { id: "f1", taskName: "Ôn tập Ngữ Pháp Tiếng Anh THCS", hours: 1.5, completed: false },
+      { id: "f1", taskName: "Ôn tập ngữ pháp tiếng Anh", hours: 1.5, completed: false },
       { id: "f2", taskName: "Làm bài tập KHTN (Sinh học)", hours: 1.0, completed: false },
     ],
   },
@@ -185,27 +185,15 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
   return (
     <div className="space-y-6 pb-12">
       {/* Top Banner */}
-      <div className="p-6 rounded-2xl bg-ocean text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ocean/30 text-mist text-xs font-bold border border-ocean/40">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>Thời Khóa Biểu Tự Nhập Tay 7 Ngày Trong Tuần</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            📅 Lập Kế Hoạch Học Tập Tuần
-          </h2>
-          <p className="text-xs sm:text-sm text-mist leading-relaxed">
-            Nhập tay tự do danh sách việc cần làm và số giờ học cho từng ngày (Thứ 2 đến Chủ Nhật). Thêm/xóa dòng tùy thích, sau đó liên kết AI để phân tích sự cân bằng và nhận lời khuyên học tập!
-          </p>
-        </div>
-
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="text-sm text-muted max-w-2xl">Thêm hoặc xóa việc tùy ý cho từng ngày từ thứ Hai đến Chủ nhật. Khi đã có việc, bấm nút bên cạnh để AI xem lịch của bạn có cân bằng không.</p>
         <button
           onClick={handleAnalyzePlannerWithAI}
           disabled={isAnalyzing || !hasTasks}
-          className="px-6 py-3.5 rounded-2xl bg-ocean hover:bg-ocean-dark text-white font-extrabold text-xs sm:text-sm shadow-lg transition cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-ocean/50 disabled:opacity-50 disabled:cursor-default"
+          className="btn-3d btn-sun min-h-12 px-5 rounded-xl font-black text-sm cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-default"
         >
-          <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
-          <span>{isAnalyzing ? "AI Đang Phân Tích Lịch..." : hasTasks ? "🤖 Kết Nối AI Phân Tích Kế Hoạch" : "Thêm việc để AI phân tích"}</span>
+          <Sparkles className="w-5 h-5" />
+          <span>{isAnalyzing ? "AI đang xem lịch..." : hasTasks ? "Nhờ AI nhận xét kế hoạch" : "Thêm việc để AI nhận xét"}</span>
         </button>
       </div>
 
@@ -231,7 +219,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
             <div className="text-2xl font-extrabold text-amber-600">
               {totalTasksCount ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0}%
             </div>
-            <div className="text-xs text-muted font-medium">Tỷ lệ tiến độ tuần này</div>
+            <div className="text-xs text-muted font-medium">Tiến độ tuần này</div>
           </div>
         </div>
       </div>
@@ -247,7 +235,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-ocean" />
               <h3 className="font-extrabold text-navy text-base">
-                Báo Cáo Phân Tích & Lời Khuyên Kế Hoạch Học Tập AI
+                Nhận xét của AI về kế hoạch tuần
               </h3>
             </div>
             <span className="px-2.5 py-0.5 rounded-full bg-sky-soft text-navy font-bold text-xs">
@@ -307,7 +295,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
                 </span>
               </div>
               <span className="text-xs font-extrabold text-ocean bg-sky-soft/60 px-2.5 py-1 rounded-lg">
-                Tổng: {dayItem.tasks.reduce((sum, t) => sum + (Number(t.hours) || 0), 0)} Giờ
+                Tổng: {dayItem.tasks.reduce((sum, t) => sum + (Number(t.hours) || 0), 0)} giờ
               </span>
             </div>
 
@@ -380,7 +368,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ userId, grade = "8
               className="w-full py-2.5 rounded-2xl bg-sky-soft hover:bg-sky-soft/60 text-ink hover:text-ocean text-xs font-bold border border-dashed border-sky-line hover:border-ocean/50 transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Thêm Việc Cần Làm Cho {dayItem.dayName}</span>
+              <span>Thêm việc cho {dayItem.dayName}</span>
             </button>
           </div>
         ))}

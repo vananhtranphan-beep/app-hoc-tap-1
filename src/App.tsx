@@ -17,7 +17,7 @@ import { StudentProfileModal } from "./components/StudentProfileModal";
 import { AuthScreen } from "./components/AuthScreen";
 import { CompassLogo } from "./components/CompassLogo";
 import { NavSection, StudentProfile } from "./types";
-import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "./components/PageHeader";
 import { cloud, CloudStatus } from "./lib/cloud";
 import { GUEST_ID, generateNickname, randomAvatar, needsCleanup, publicProfile, sanitizeProfile } from "./lib/profile";
 
@@ -266,13 +266,7 @@ export default function App() {
 
         <main className="flex-1 px-4 pt-4 lg:p-8 pb-bottom-nav min-w-0 overflow-x-hidden space-y-4">
           {currentSection !== "home" && (
-            <button
-              onClick={() => go(isStudyPage ? "study" : "home")}
-              className="inline-flex items-center gap-2 min-h-10 px-3.5 rounded-xl bg-white border border-line hover:border-teal text-navy font-semibold text-sm transition cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4 text-teal" />
-              {isStudyPage ? "Học tập thông minh" : "Trang chủ"}
-            </button>
+            <PageHeader section={currentSection} backLabel={isStudyPage ? "Học tập thông minh" : "Trang chủ"} onBack={() => go(isStudyPage ? "study" : "home")} />
           )}
 
           {currentSection === "home" && (

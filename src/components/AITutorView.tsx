@@ -127,39 +127,30 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] min-h-[560px] max-w-5xl mx-auto p-2 sm:p-4 space-y-3">
+    <div className="flex flex-col h-[calc(100vh-14rem)] min-h-[560px] max-w-5xl mx-auto space-y-3">
       {/* Header Bar */}
-      <div className="p-4 rounded-2xl bg-ocean text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-grape shadow-inner">
-            <Bot className="w-6 h-6 text-white animate-pulse" />
-          </div>
-          <div>
-            <h2 className="text-lg sm:text-xl font-extrabold">Gia sư AI</h2>
-            <p className="text-xs text-mist">Giải thích từng bước, giúp em hiểu cách làm chứ không chỉ đưa đáp án</p>
-          </div>
-        </div>
-
+      <div className="p-2.5 rounded-2xl bg-white border-2 border-sky-line flex items-center justify-between gap-2">
+        <span className="pl-1 text-sm font-bold text-navy">Bạn đang hỏi môn</span>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-lilac">Môn:</span>
+          <span className="sr-only">Môn:</span>
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-ocean-dark border border-white/30 text-xs font-bold text-white focus:outline-none"
+            className="min-h-10 px-3 rounded-xl bg-sky-bg border-2 border-sky-line text-sm font-bold text-navy focus:outline-none focus:border-ocean"
           >
-            <option value="Toán Học">Toán Học</option>
-            <option value="Ngữ Văn">Ngữ Văn</option>
+            <option value="Toán Học">Toán</option>
+            <option value="Ngữ Văn">Ngữ văn</option>
             <option value="Tiếng Anh">Tiếng Anh</option>
-            <option value="Khoa Học Tự Nhiên">Khoa Học Tự Nhiên</option>
-            <option value="Lịch Sử & Địa Lý">Lịch Sử & Địa Lý</option>
-            <option value="Tin Học">Tin Học</option>
+            <option value="Khoa Học Tự Nhiên">Khoa học tự nhiên</option>
+            <option value="Lịch Sử & Địa Lý">Lịch sử và Địa lí</option>
+            <option value="Tin Học">Tin học</option>
           </select>
           <button
             type="button"
             onClick={handleNewChat}
             disabled={isLoading}
             title="Bắt đầu cuộc trò chuyện mới"
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer disabled:opacity-50"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border-2 border-sky-line hover:border-ocean text-ocean transition cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className="w-4 h-4" />
           </button>

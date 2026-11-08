@@ -176,17 +176,8 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
 
   return (
     <div className="space-y-5 pb-6">
-      {/* Tiêu đề */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="w-12 h-12 rounded-2xl bg-leaf-deep text-white flex items-center justify-center">
-            <Sprout className="w-6 h-6" />
-          </span>
-          <div>
-            <h2 className="text-2xl font-extrabold text-navy tracking-tight">Cây cảm xúc của tôi</h2>
-            <p className="text-sm text-muted">Quan sát cảm xúc, chăm sóc bản thân, cây lớn lên cùng bạn.</p>
-          </div>
-        </div>
+      {/* Các nút thao tác (tên trang nằm ở đầu trang chung) */}
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-2">
           {onLock && (
             <button onClick={onLock} className="min-h-11 px-4 rounded-xl bg-sun-card border border-sun-line hover:border-leaf text-navy text-sm font-semibold inline-flex items-center gap-2 cursor-pointer">

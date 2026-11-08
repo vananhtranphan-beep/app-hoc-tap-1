@@ -96,25 +96,15 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
   return (
     <div className="space-y-6 pb-12">
       {/* Header Banner */}
-      <div className="p-6 rounded-2xl bg-ocean text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-ocean/20 border border-ocean/40 flex items-center justify-center text-lilac">
-            <Video className="w-7 h-7" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">🎥 Kho Video Bài Giảng YouTube Học Sinh THCS</h2>
-            <p className="text-xs text-mist mt-0.5">
-              Tìm kiếm và tự thêm các link video YouTube bài giảng môn học để lưu trữ và xem lại trực tiếp
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="text-sm text-muted">Dán link YouTube của bài giảng bạn thấy hay, web sẽ lưu lại để bạn xem lại ngay trong trang.</p>
 
         <button
           onClick={() => setShowAddModal(true)}
           className="px-5 py-2.5 rounded-xl bg-ocean hover:bg-ocean-dark text-white font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-md self-start md:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>Thêm Link Video YouTube Mới</span>
+          <span>Thêm video YouTube</span>
         </button>
       </div>
 
@@ -143,7 +133,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-extrabold text-navy text-lg flex items-center gap-2">
             <Youtube className="w-5 h-5 text-ocean" />
-            <span>Danh Sách Video Bài Giảng Đã Lưu ({customVideos.length})</span>
+            <span>Video đã lưu ({customVideos.length})</span>
           </h3>
         </div>
 
@@ -220,14 +210,14 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
               Chưa có video bài giảng nào trong kho của bạn
             </h4>
             <p className="text-xs text-muted max-w-md mx-auto">
-              Nhấn nút "Thêm Link Video YouTube Mới" để tự thêm bất kì bài giảng hay nào bạn tìm thấy trên YouTube.
+              Nhấn nút "Thêm video YouTube" để tự thêm bất kì bài giảng hay nào bạn tìm thấy trên YouTube.
             </p>
             <button
               onClick={() => setShowAddModal(true)}
               className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-ocean hover:bg-ocean-dark text-white text-xs font-bold transition cursor-pointer shadow-md"
             >
               <Plus className="w-4 h-4" />
-              <span>Thêm Link Video Đầu Tiên</span>
+              <span>Thêm video đầu tiên</span>
             </button>
           </div>
         )}
@@ -240,7 +230,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
             <div className="flex items-center justify-between border-b border-sky-line pb-3">
               <h3 className="font-extrabold text-navy text-lg flex items-center gap-2">
                 <Youtube className="w-5 h-5 text-ocean" />
-                <span>Thêm Link Video Bài Giảng</span>
+                <span>Thêm video bài giảng</span>
               </h3>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -267,7 +257,7 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
                   <option value="Lịch sử & Địa lí">Lịch sử và Địa lí</option>
                   <option value="Tin học">Tin học</option>
                   <option value="Giáo dục công dân">Giáo dục công dân</option>
-                  <option value="Khác">Môn Khác</option>
+                  <option value="Khác">Môn khác</option>
                 </select>
               </div>
 
@@ -289,12 +279,12 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
 
               <div>
                 <label className="block text-xs font-bold text-ink mb-1">
-                  Tiêu Đề Video Bài Giảng: *
+                  Tên video: *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="VD: Phương trình bậc hai môn Toán Lớp 9"
+                  placeholder="VD: Phương trình bậc hai, Toán 9"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-sky-line text-xs font-medium focus:ring-2 focus:ring-ocean"
@@ -317,11 +307,11 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
 
               <div>
                 <label className="block text-xs font-bold text-ink mb-1">
-                  Nguồn / Tên Giáo Viên (Tùy chọn):
+                  Kênh hoặc thầy cô dạy (không bắt buộc):
                 </label>
                 <input
                   type="text"
-                  placeholder="VD: Kênh Học Tốt Cấp 2"
+                  placeholder="VD: Kênh học tốt cấp 2"
                   value={instructor}
                   onChange={(e) => setInstructor(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-sky-line text-xs font-medium"

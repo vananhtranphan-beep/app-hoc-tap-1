@@ -150,15 +150,7 @@ export const PrivacyView: React.FC<Props> = ({ profile, onAccountRemoved }) => {
 
   return (
     <div className="space-y-5 pb-6">
-      <div className="flex items-center gap-3">
-        <span className="w-12 h-12 rounded-2xl bg-navy text-cream flex items-center justify-center shrink-0">
-          <ShieldCheck className="w-6 h-6" />
-        </span>
-        <div>
-          <h2 className="text-2xl font-extrabold text-navy tracking-tight">Quyền riêng tư</h2>
-          <p className="text-sm text-muted">Không thu thì không lộ: dữ liệu nhạy cảm nhất chỉ nằm trên máy của bạn.</p>
-        </div>
-      </div>
+      <p className="text-sm font-bold text-navy">Không thu thì không lộ: dữ liệu nhạy cảm nhất chỉ nằm trên máy của bạn.</p>
 
       {done && (
         <div role="status" className="p-3.5 rounded-xl bg-teal-soft text-sm text-navy font-medium flex items-center gap-2 animate-rise">

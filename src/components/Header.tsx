@@ -61,17 +61,17 @@ export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, 
             aria-pressed={soundOn}
             aria-label={soundOn ? "Tắt âm thanh" : "Bật âm thanh"}
             title={soundOn ? "Tắt âm thanh" : "Bật âm thanh"}
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] text-navy hover:border-teal transition cursor-pointer"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] text-navy hover:border-teal transition cursor-pointer"
           >
             {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-muted" />}
           </button>
 
           <button
             onClick={onOpenProfile}
-            className="flex items-center gap-2 min-h-11 p-1 pr-1 sm:pr-3 rounded-full bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] hover:border-teal transition cursor-pointer"
+            className="flex items-center gap-2 min-h-11 p-1 pr-1 sm:pr-3 rounded-xl bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] hover:border-teal transition cursor-pointer"
             aria-label="Hồ sơ của bạn"
           >
-            <span className="w-9 h-9 rounded-full bg-[#fff0b3] flex items-center justify-center text-lg" aria-hidden>
+            <span className="w-9 h-9 rounded-lg bg-[#fff0b3] flex items-center justify-center text-lg" aria-hidden>
               {profile.avatar}
             </span>
             <span className="hidden sm:block text-left leading-tight">
@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, 
           {onLogout && (
             <button
               onClick={onLogout}
-              className="w-11 h-11 flex items-center justify-center rounded-full bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] text-muted hover:text-rose-600 hover:border-rose-200 transition cursor-pointer"
+              className="w-11 h-11 flex items-center justify-center rounded-xl bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] text-muted hover:text-rose-600 hover:border-rose-200 transition cursor-pointer"
               aria-label={profile.isGuest ? "Thoát chế độ khách" : "Đăng xuất"}
               title={profile.isGuest ? "Thoát chế độ khách" : "Đăng xuất"}
             >

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { NavSection, StudentProfile } from "../types";
 import { AdminPanel } from "./AdminPanel";
-import { CompassLogo } from "./CompassLogo";
+import { CompassHero } from "./CompassLogo";
 import { FunIcon, TONES } from "./FunIcon";
 import { MAIN_ITEMS, NavItem, STUDY_HUB_ITEM, STUDY_ITEMS } from "./Navigation";
 
@@ -63,38 +63,59 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
 
   return (
     <div className="relative space-y-4 sm:space-y-5 pb-10">
-      {/* LỜI CHÀO (gọn để menu hiện ngay bên dưới) */}
-      <section className="rise-1 cute-card relative overflow-hidden px-4 py-4 sm:px-6 sm:py-5 bg-gradient-to-br from-[#fff3c4] via-[#ffe8d8] to-[#dff0ff]">
-        <span className="tape tape-mint absolute -top-1 left-6" aria-hidden />
-        <span className="hidden sm:block absolute right-4 top-2 text-2xl opacity-80 select-none" aria-hidden>
-          ✨
-        </span>
-        <div className="flex items-center gap-3 sm:gap-5">
-          <span className="shrink-0 rounded-full bg-white/80 p-1.5 shadow-[inset_0_-4px_0_#f3d9a8]">
-            <CompassLogo size={52} animate />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs sm:text-sm font-extrabold text-teal-deep">
-              {greeting()}, {profile.nickname} 👋 · Lớp {profile.grade}
+      {/* ĐẦU TRANG: tấm "hải đồ" ban đêm, la bàn lớn là điểm nhấn */}
+      <section className="rise-1 chart-hero relative overflow-hidden rounded-3xl text-cream">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden preserveAspectRatio="none">
+          <circle className="star-twinkle" cx="8%" cy="18%" r="1.6" fill="#ffd66b" />
+          <circle className="star-twinkle" style={{ animationDelay: "0.8s" }} cx="31%" cy="84%" r="1.3" fill="#fff" />
+          <circle className="star-twinkle" style={{ animationDelay: "1.6s" }} cx="52%" cy="12%" r="1.2" fill="#fff" />
+          <circle className="star-twinkle" style={{ animationDelay: "0.4s" }} cx="93%" cy="80%" r="1.6" fill="#ffd66b" />
+          <circle className="star-twinkle" style={{ animationDelay: "2.1s" }} cx="62%" cy="70%" r="1" fill="#fff" />
+        </svg>
+        <div className="relative grid grid-cols-[1fr_auto] items-center gap-3 sm:gap-6 p-4 pr-3 sm:p-8 lg:px-10 lg:py-9">
+          <div className="min-w-0 space-y-2 sm:space-y-3">
+            <p className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-extrabold text-[#ffd66b]">
+              <span>
+                {greeting()}, {profile.nickname}!
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-white/12 text-cream/90 text-[11px] sm:text-xs">Lớp {profile.grade}</span>
             </p>
-            <h1 className="text-[1.05rem] leading-snug sm:text-2xl lg:text-3xl font-black text-navy tracking-tight">
+            <h1 className="text-[1.12rem] leading-[1.25] sm:text-3xl lg:text-[2.5rem] lg:leading-[1.15] font-black tracking-tight text-[#fffaf0] max-w-[18ch]">
               Tương lai của bạn bắt đầu từ việc hiểu chính mình
             </h1>
+            <p className="hidden sm:block text-sm lg:text-base text-[#c9d6e8] max-w-[46ch]">
+              Khám phá sở thích, thử tìm hiểu các nghề và chăm sóc cảm xúc mỗi ngày. Không cần chọn nghề ngay, chỉ cần bắt đầu tìm hiểu.
+            </p>
+            <div className="hidden sm:flex flex-wrap gap-2.5 pt-1">
+              <button onClick={() => onNavigate("career")} className="btn-3d btn-sun min-h-12 px-5 rounded-2xl font-black text-sm cursor-pointer">
+                Khám phá nghề
+              </button>
+              <button
+                onClick={() => onNavigate("mood")}
+                className="min-h-12 px-5 rounded-2xl border-2 border-white/25 hover:bg-white/10 text-cream font-bold text-sm transition cursor-pointer"
+              >
+                Check-in cảm xúc
+              </button>
+            </div>
+          </div>
+          <div className="relative">
+            <span className="absolute inset-[8%] rounded-full bg-[#5fc2ba]/20 blur-2xl" aria-hidden />
+            <CompassHero className="relative w-[132px] sm:w-52 lg:w-72 h-auto drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)]" />
           </div>
         </div>
       </section>
 
       {/* MENU CHÍNH */}
-      <section aria-labelledby="home-menu" className="rise-2">
+      <section aria-labelledby="home-menu" className="">
         <h2 id="home-menu" className="px-1 mb-2.5 text-base sm:text-lg font-black text-navy">
-          Hôm nay bạn muốn làm gì? 🌈
+          Hôm nay bạn muốn làm gì?
         </h2>
         <div className="grid grid-cols-4 gap-2 sm:gap-3">
           {MENU.map((item) => (
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className="menu-tile group flex flex-col items-center justify-start gap-1.5 sm:gap-2 px-1 pt-2.5 pb-2 sm:p-4 rounded-[22px] bg-white text-center cursor-pointer"
+              className="menu-tile group flex flex-col items-center justify-start gap-1.5 sm:gap-2 px-1 pt-2.5 pb-2 sm:p-4 rounded-3xl bg-white text-center cursor-pointer"
               style={{ ["--edge" as string]: TONES[item.tone].edge }}
             >
               <FunIcon emoji={item.emoji} tone={item.tone} size="lg" className="group-hover:-rotate-6 transition" />
@@ -110,7 +131,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
           e.preventDefault();
           askAI(quickQuestion);
         }}
-        className="rise-3 cute-card flex items-center gap-2 p-2 pl-2.5 bg-white"
+        className="cute-card flex items-center gap-2 p-2 pl-2.5 bg-white"
       >
         <FunIcon emoji="🤖" tone="mint" size="sm" />
         <label className="flex-1 min-w-0">
@@ -132,7 +153,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
 
       {/* HƯỚNG NGHIỆP + CÂY CẢM XÚC */}
       <div className="grid lg:grid-cols-3 gap-4">
-        <section className="rise-3 lg:col-span-2 cute-card bg-[#fffaf5] p-5 sm:p-6 flex flex-col gap-4">
+        <section className="lg:col-span-2 cute-card bg-[#fffaf5] p-5 sm:p-6 flex flex-col gap-4">
           <div className="flex items-start gap-3.5">
             <FunIcon emoji="🧭" tone="peach" size="md" />
             <div className="min-w-0">
@@ -176,7 +197,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
           </div>
         </section>
 
-        <section className="rise-4 cute-card bg-[#f6fbe9] p-5 sm:p-6 flex flex-col gap-3">
+        <section className="cute-card bg-[#f6fbe9] p-5 sm:p-6 flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <FunIcon emoji="🌱" tone="lime" size="md" />
             <h2 className="text-lg font-black text-navy">Cây cảm xúc của tôi</h2>

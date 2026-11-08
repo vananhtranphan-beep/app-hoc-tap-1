@@ -1,6 +1,6 @@
 import React from "react";
 import { NavSection } from "../types";
-import { FunIcon, Tone, TONES } from "./FunIcon";
+import { FunIcon, Tone } from "./FunIcon";
 
 interface NavigationProps {
   currentSection: NavSection;
@@ -31,11 +31,11 @@ const SideButton: React.FC<{ item: NavItem; active: boolean; onClick: () => void
   <button
     onClick={onClick}
     aria-current={active ? "page" : undefined}
-    className={`w-full flex items-center gap-3 min-h-12 px-2 rounded-2xl text-sm font-bold transition cursor-pointer ${
-      active ? "text-navy" : "text-navy/75 hover:bg-white hover:text-navy"
+    className={`relative w-full flex items-center gap-3 min-h-12 px-2 rounded-2xl text-sm font-bold transition cursor-pointer ${
+      active ? "bg-white/12 text-white" : "text-[#c3d0e3] hover:bg-white/6 hover:text-white"
     }`}
-    style={active ? { background: TONES[item.tone].bg, boxShadow: `inset 0 -3px 0 ${TONES[item.tone].edge}` } : undefined}
   >
+    {active && <span className="absolute -left-3 top-2.5 bottom-2.5 w-1.5 rounded-r-full bg-[#ffd66b]" aria-hidden />}
     <FunIcon emoji={item.emoji} tone={item.tone} size="sm" />
     <span>{item.label}</span>
   </button>
@@ -53,7 +53,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
     <>
       {/* Máy tính: thanh bên dạng thẻ kem bo tròn */}
       <aside className="hidden lg:flex flex-col w-64 shrink-0 p-4 sticky top-[61px] self-start h-[calc(100vh-61px)]">
-        <div className="cute-panel flex-1 flex flex-col p-3 overflow-y-auto no-scrollbar">
+        <div className="nav-panel flex-1 flex flex-col p-3 overflow-y-auto no-scrollbar">
           <nav className="space-y-1" aria-label="Điều hướng chính">
             {MAIN_ITEMS.map((item) => (
               <SideButton key={item.id} item={item} active={currentSection === item.id} onClick={() => onSelectSection(item.id)} />
@@ -62,9 +62,9 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
 
           <button
             onClick={() => onSelectSection("study")}
-            className={`mt-4 mb-1 px-3 text-left text-[11px] font-black uppercase tracking-wider cursor-pointer ${currentSection === "study" ? "text-grape" : "text-muted hover:text-navy"}`}
+            className={`mt-5 mb-1.5 px-2 pt-4 border-t border-white/10 text-left text-xs font-extrabold cursor-pointer ${currentSection === "study" ? "text-[#ffd66b]" : "text-[#8fa3bf] hover:text-white"}`}
           >
-            🎒 Học tập thông minh
+            Học tập thông minh
           </button>
           <nav className="space-y-1" aria-label="Học tập thông minh">
             {STUDY_ITEMS.map((item) => (
@@ -72,7 +72,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
             ))}
           </nav>
 
-          <div className="mt-auto pt-5 flex items-center gap-2.5 px-2 text-xs font-bold text-teal-deep">
+          <div className="mt-auto pt-5 flex items-center gap-2.5 px-2 text-xs font-bold text-[#ffd66b]">
             <span className="text-xl" aria-hidden>
               🧭
             </span>
@@ -84,7 +84,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
       {/* Điện thoại, máy tính bảng: thanh điều hướng dưới đáy */}
       <nav
         aria-label="Điều hướng chính"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#fffdf6]/95 backdrop-blur-md border-t-2 border-line rounded-t-3xl shadow-[0_-6px_20px_-12px_rgba(43,58,85,0.35)] pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#1d3150] rounded-t-3xl shadow-[0_-8px_24px_-12px_rgba(20,35,58,0.55)] pb-[env(safe-area-inset-bottom)]"
       >
         <div className="grid grid-cols-4 max-w-xl mx-auto px-1">
           {mobileItems.map((item) => (
@@ -93,12 +93,11 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
               onClick={() => onSelectSection(item.id)}
               aria-current={item.active ? "page" : undefined}
               className={`min-h-[68px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-extrabold transition cursor-pointer ${
-                item.active ? "text-navy" : "text-muted"
+                item.active ? "text-[#ffd66b]" : "text-[#a9b9d0]"
               }`}
             >
               <span
-                className={`w-12 h-9 rounded-full flex items-center justify-center text-[22px] leading-none transition ${item.active ? "scale-110" : "opacity-80"}`}
-                style={item.active ? { background: TONES[item.tone].bg, boxShadow: `inset 0 -3px 0 ${TONES[item.tone].edge}` } : undefined}
+                className={`w-12 h-9 rounded-full flex items-center justify-center text-[22px] leading-none transition ${item.active ? "bg-white/14 scale-110" : "opacity-85"}`}
                 aria-hidden
               >
                 {item.emoji}

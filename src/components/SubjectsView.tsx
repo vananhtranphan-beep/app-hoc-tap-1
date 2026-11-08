@@ -146,6 +146,16 @@ const BookCover: React.FC<{ book: SystemBook; subject: string }> = ({ book, subj
   );
 };
 
+// Tên môn hiển thị (khóa dữ liệu giữ nguyên vì link sách admin đã sửa lưu theo khóa này)
+const SUBJECT_LABEL: Record<string, string> = {
+  "Khoa Học Tự Nhiên": "Khoa học tự nhiên",
+  "Lịch Sử & Địa Lý": "Lịch sử và Địa lí",
+  "Giáo Dục Công Dân": "Giáo dục công dân",
+  "Tin Học": "Tin học",
+  "Công Nghệ": "Công nghệ",
+};
+const subjectLabel = (s: string) => SUBJECT_LABEL[s] || s;
+
 export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   const subjects = Object.keys(SYSTEM_BOOKS);
   const [selectedSubject, setSelectedSubject] = useState<string>(subjects[0]);
@@ -337,19 +347,8 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
   return (
     <div className="space-y-6 pb-12">
       {/* Đầu trang + chọn môn */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-ocean text-white shadow-xl space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-white/10 border border-white/15">
-            <BookOpen className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold">Thư Viện Sách Giáo Khoa</h2>
-            <p className="text-xs sm:text-sm text-mist">
-              Bộ sách <b>Kết nối tri thức với cuộc sống</b> lớp 6 – 9. Bấm "Đọc sách" để mở sách trên trang của NXB Giáo dục.
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pt-1">
+      <div>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1" role="tablist" aria-label="Chọn môn">
           {subjects.map((subj) => (
             <button
               key={subj}
@@ -357,13 +356,13 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
                 setSelectedSubject(subj);
                 setEditingId(null);
               }}
-              className={`px-4 py-2 rounded-2xl border text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${
+              className={`min-h-10 px-3.5 rounded-xl border-2 text-sm font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${
                 selectedSubject === subj
-                  ? "bg-white text-navy border-white shadow-md"
-                  : "bg-white/10 text-mist border-white/15 hover:bg-white/20"
+                  ? "bg-navy text-white border-navy shadow-[0_3px_0_#14233a]"
+                  : "bg-white text-navy border-sky-line hover:border-ocean"
               }`}
             >
-              {COVER[subj]?.icon} {subj}
+              {COVER[subj]?.icon} {subjectLabel(subj)}
             </button>
           ))}
         </div>
@@ -442,7 +441,7 @@ export const SubjectsView: React.FC<{ userId?: string }> = ({ userId }) => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-lg font-extrabold text-navy">
-              {COVER[selectedSubject]?.icon} {selectedSubject}
+              {COVER[selectedSubject]?.icon} {subjectLabel(selectedSubject)}
             </h3>
             <p className="text-xs text-muted">
               {list.length} cuốn{isAdmin ? ` • ${linkedCount} cuốn đã có link` : ""}
