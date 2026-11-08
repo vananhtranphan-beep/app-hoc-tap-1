@@ -4,22 +4,22 @@
    Hiệu ứng động dùng trong web (trước đây code có gọi nhưng chưa định nghĩa)
    ============================================================ */
 @theme {
-  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Nunito", "Be Vietnam Pro", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --animate-spin-slow: spin 14s linear infinite;
   --animate-shake: shake 0.45s ease-in-out;
   --animate-fadeIn: fadeIn 0.2s ease-out;
   --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 
   /* Bảng màu AI Youth Compass */
-  --color-navy: #173b50;
-  --color-navy-deep: #0f2a3a;
-  --color-navy-soft: #2a5670;
+  --color-navy: #263a56;
+  --color-navy-deep: #1a2b42;
+  --color-navy-soft: #3a5577;
   --color-teal: #328f89;
   --color-teal-deep: #287470;
-  --color-teal-soft: #d6ebe9;
-  --color-cream: #f7f8f5;
-  --color-mist: #e8eef5;
-  --color-line: #d5dee6;
+  --color-teal-soft: #d3f4e5;
+  --color-cream: #fffaf0;
+  --color-mist: #eef3fb;
+  --color-line: #ece3cf;
   --color-ink: #1b2b36;
   --color-muted: #5b6b77;
 
@@ -64,6 +64,46 @@
     to { opacity: 1; }
   }
 }
+
+/* ============================================================
+   GIAO DIỆN DỄ THƯƠNG: thẻ bo tròn, nút nổi 3D, băng dính trang trí, nền chấm bi
+   ============================================================ */
+.dots-bg {
+  background-image: radial-gradient(rgba(38, 58, 86, 0.06) 1.2px, transparent 1.3px);
+  background-size: 22px 22px;
+}
+.cute-card {
+  border-radius: 28px;
+  border: 2px solid var(--color-line);
+  box-shadow: 0 6px 0 -1px rgba(236, 227, 207, 0.9), 0 14px 28px -20px rgba(38, 58, 86, 0.35);
+}
+.cute-panel {
+  border-radius: 28px;
+  background: #fffdf3;
+  border: 2px solid #f1e6c4;
+  box-shadow: 0 6px 0 -1px #f4ead0, 0 16px 30px -22px rgba(38, 58, 86, 0.4);
+}
+.menu-tile {
+  border: 2px solid var(--color-line);
+  box-shadow: 0 4px 0 var(--edge, #ece3cf);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.menu-tile:hover { transform: translateY(-2px); border-color: var(--edge, #ece3cf); box-shadow: 0 6px 0 var(--edge, #ece3cf); }
+.menu-tile:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #ece3cf); }
+.fun-emoji { filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.7)) drop-shadow(0 3px 3px rgba(38, 58, 86, 0.18)); }
+
+.btn-3d { transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease; }
+.btn-3d:hover { filter: brightness(1.04); }
+.btn-3d:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--btn-edge) !important; }
+.btn-sun { --btn-edge: #d9a400; background: #ffc93c; color: #4a3600; box-shadow: 0 4px 0 var(--btn-edge); }
+.btn-peach { --btn-edge: #c96f45; background: #f59a6b; color: #fff; box-shadow: 0 4px 0 var(--btn-edge); }
+.btn-lime { --btn-edge: #7fae45; background: #a7d672; color: #24420a; box-shadow: 0 4px 0 var(--btn-edge); }
+.btn-mint { --btn-edge: #23897a; background: #34b39e; color: #fff; box-shadow: 0 4px 0 var(--btn-edge); }
+
+/* Băng dính trang trí (kiểu sổ tay) */
+.tape { width: 74px; height: 16px; border-radius: 4px; transform: rotate(-4deg); opacity: 0.85; }
+.tape-mint { background: repeating-linear-gradient(45deg, #a8e3cc 0 6px, #c9f0e0 6px 12px); }
+.tape-pink { background: repeating-linear-gradient(45deg, #f6b9cf 0 6px, #fbd6e3 6px 12px); }
 
 /* Ẩn thanh cuộn ngang (menu điện thoại, bàn phím công thức) */
 .no-scrollbar { scrollbar-width: none; }
@@ -271,7 +311,7 @@
   .compass-needle, .compass-idle, .compass-orbit, .rise-1, .rise-2, .rise-3, .rise-4, .animate-rise {
     animation: none !important;
   }
-  .lift:hover { transform: none; }
+  .lift:hover, .menu-tile:hover, .menu-tile:active, .btn-3d:active { transform: none; }
   .tree-sway, .grass-sway, .firefly, .leaf-fall, .rain-drop, .soil-ripple, .butterfly,
   .butterfly-wing, .fruit-twinkle, .sun-glow, .cloud-drift, .cloud-drift-slow, .bar-shimmer,
   .report-pop, .animate-spin-slow, .star-twinkle, .sun-rays, .rainbow-glow, .bird-fly, .bird-wing,

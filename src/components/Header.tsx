@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, 
   }, []);
   const BadgeIcon = badge.Icon;
   return (
-    <header className="sticky top-0 z-30 bg-cream/90 backdrop-blur-md border-b border-line px-4 lg:px-8 py-2.5">
+    <header className="sticky top-0 z-30 bg-[#fffdf6]/90 backdrop-blur-md border-b-2 border-line px-4 lg:px-8 py-2.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         <button onClick={onGoHome} className="flex items-center gap-2.5 min-w-0 cursor-pointer" aria-label="Về trang chủ">
           <CompassLogo size={36} animate />
@@ -61,17 +61,17 @@ export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, 
             aria-pressed={soundOn}
             aria-label={soundOn ? "Tắt âm thanh" : "Bật âm thanh"}
             title={soundOn ? "Tắt âm thanh" : "Bật âm thanh"}
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-line text-navy hover:border-teal transition cursor-pointer"
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] text-navy hover:border-teal transition cursor-pointer"
           >
             {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-muted" />}
           </button>
 
           <button
             onClick={onOpenProfile}
-            className="flex items-center gap-2 min-h-11 p-1 pr-1 sm:pr-3 rounded-full bg-white border border-line hover:border-teal transition cursor-pointer"
+            className="flex items-center gap-2 min-h-11 p-1 pr-1 sm:pr-3 rounded-full bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] hover:border-teal transition cursor-pointer"
             aria-label="Hồ sơ của bạn"
           >
-            <span className="w-9 h-9 rounded-full bg-mist flex items-center justify-center text-lg" aria-hidden>
+            <span className="w-9 h-9 rounded-full bg-[#fff0b3] flex items-center justify-center text-lg" aria-hidden>
               {profile.avatar}
             </span>
             <span className="hidden sm:block text-left leading-tight">
@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, 
           {onLogout && (
             <button
               onClick={onLogout}
-              className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-line text-muted hover:text-rose-600 hover:border-rose-200 transition cursor-pointer"
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white border-2 border-line shadow-[0_3px_0_#ece3cf] text-muted hover:text-rose-600 hover:border-rose-200 transition cursor-pointer"
               aria-label={profile.isGuest ? "Thoát chế độ khách" : "Đăng xuất"}
               title={profile.isGuest ? "Thoát chế độ khách" : "Đăng xuất"}
             >

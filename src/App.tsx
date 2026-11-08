@@ -126,6 +126,11 @@ export default function App() {
 
   const activeProfile = accounts.find((a) => a.studentId === activeUserId) || null;
 
+  // Vừa đăng nhập / vào dùng thử: luôn hiện từ đầu trang (thấy ngay lời chào và menu)
+  useEffect(() => {
+    if (activeUserId) window.scrollTo(0, 0);
+  }, [activeUserId]);
+
   const upsertAccount = (profile: StudentProfile) => {
     setAccounts((prev) => [...prev.filter((a) => a.studentId.toLowerCase() !== profile.studentId.toLowerCase()), profile]);
   };
@@ -246,7 +251,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen font-sans text-ink flex flex-col antialiased selection:bg-teal selection:text-white transition-colors duration-300 ${MODULE_BG[currentSection] || "bg-cream"}`}
+      className={`dots-bg min-h-screen font-sans text-ink flex flex-col antialiased selection:bg-teal selection:text-white transition-colors duration-300 ${MODULE_BG[currentSection] || "bg-cream"}`}
     >
       <Header
         cloudStatus={cloudStatus}
