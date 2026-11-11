@@ -1,6 +1,6 @@
 import React from "react";
 import { NavSection } from "../types";
-import { FunIcon, Tone } from "./FunIcon";
+import { Emoji3D, FunIcon, Tone } from "./FunIcon";
 
 interface NavigationProps {
   currentSection: NavSection;
@@ -32,10 +32,10 @@ const SideButton: React.FC<{ item: NavItem; active: boolean; onClick: () => void
     onClick={onClick}
     aria-current={active ? "page" : undefined}
     className={`relative w-full flex items-center gap-3 min-h-12 px-2 rounded-2xl text-sm font-bold transition cursor-pointer ${
-      active ? "bg-white/12 text-white" : "text-[#c3d0e3] hover:bg-white/6 hover:text-white"
+      active ? "bg-white/20 text-white" : "text-[#e1ecfb] hover:bg-white/10 hover:text-white"
     }`}
   >
-    {active && <span className="absolute -left-3 top-2.5 bottom-2.5 w-1.5 rounded-r-full bg-[#ffd66b]" aria-hidden />}
+    {active && <span className="absolute -left-3 top-2.5 bottom-2.5 w-1.5 rounded-r-full bg-[#d9b76a]" aria-hidden />}
     <FunIcon emoji={item.emoji} tone={item.tone} size="sm" />
     <span>{item.label}</span>
   </button>
@@ -62,7 +62,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
 
           <button
             onClick={() => onSelectSection("study")}
-            className={`mt-5 mb-1.5 px-2 pt-4 border-t border-white/10 text-left text-xs font-extrabold cursor-pointer ${currentSection === "study" ? "text-[#ffd66b]" : "text-[#8fa3bf] hover:text-white"}`}
+            className={`mt-5 mb-1.5 px-2 pt-4 border-t border-white/20 text-left text-xs font-extrabold cursor-pointer ${currentSection === "study" ? "text-[#f1dfae]" : "text-[#b9cde8] hover:text-white"}`}
           >
             Học tập thông minh
           </button>
@@ -72,7 +72,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
             ))}
           </nav>
 
-          <div className="mt-auto pt-5 flex items-center gap-2.5 px-2 text-xs font-bold text-[#ffd66b]">
+          <div className="mt-auto pt-5 flex items-center gap-2.5 px-2 text-xs font-bold text-[#f1dfae]">
             <span className="text-xl" aria-hidden>
               🧭
             </span>
@@ -84,7 +84,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
       {/* Điện thoại, máy tính bảng: thanh điều hướng dưới đáy */}
       <nav
         aria-label="Điều hướng chính"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#1d3150] rounded-t-3xl shadow-[0_-8px_24px_-12px_rgba(20,35,58,0.55)] pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#1f4f8c] rounded-t-3xl shadow-[0_-8px_24px_-12px_rgba(22,58,104,0.55)] border-t border-[#d9b76a]/40 pb-[env(safe-area-inset-bottom)]"
       >
         <div className="grid grid-cols-4 max-w-xl mx-auto px-1">
           {mobileItems.map((item) => (
@@ -93,14 +93,14 @@ export const Navigation: React.FC<NavigationProps> = ({ currentSection, onSelect
               onClick={() => onSelectSection(item.id)}
               aria-current={item.active ? "page" : undefined}
               className={`min-h-[68px] flex flex-col items-center justify-center gap-0.5 text-[11px] font-extrabold transition cursor-pointer ${
-                item.active ? "text-[#ffd66b]" : "text-[#a9b9d0]"
+                item.active ? "text-[#f1dfae]" : "text-[#d3e1f4]"
               }`}
             >
               <span
-                className={`w-12 h-9 rounded-full flex items-center justify-center text-[22px] leading-none transition ${item.active ? "bg-white/14 scale-110" : "opacity-85"}`}
+                className={`w-12 h-9 rounded-full flex items-center justify-center text-[22px] leading-none transition ${item.active ? "bg-white/22 scale-110" : "opacity-90"}`}
                 aria-hidden
               >
-                {item.emoji}
+                <Emoji3D emoji={item.emoji} className="w-7 h-7 object-contain" />
               </span>
               {item.label}
             </button>

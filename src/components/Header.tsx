@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ cloudStatus = "local", profile, 
   }, []);
   const BadgeIcon = badge.Icon;
   return (
-    <header className="sticky top-0 z-30 bg-[#fffdf6]/90 backdrop-blur-md border-b-2 border-line px-4 lg:px-8 py-2.5">
+    <header className="sticky top-0 z-40 bg-[#fffdf6]/90 backdrop-blur-md border-b-2 border-line px-4 lg:px-8 py-2.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         <button onClick={onGoHome} className="flex items-center gap-2.5 min-w-0 cursor-pointer" aria-label="Về trang chủ">
           <CompassLogo size={36} animate />

@@ -3,7 +3,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { NavSection, StudentProfile } from "../types";
 import { AdminPanel } from "./AdminPanel";
 import { CompassHero } from "./CompassLogo";
-import { FunIcon, TONES } from "./FunIcon";
+import { BRIGHT, FunIcon, TONES } from "./FunIcon";
 import { MAIN_ITEMS, NavItem, STUDY_HUB_ITEM, STUDY_ITEMS } from "./Navigation";
 
 interface DashboardProps {
@@ -63,36 +63,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
 
   return (
     <div className="relative space-y-4 sm:space-y-5 pb-10">
-      {/* ĐẦU TRANG: tấm "hải đồ" ban đêm, la bàn lớn là điểm nhấn */}
+      {/* ĐẦU TRANG: khung xanh sapphire có lưới mảnh, la bàn vàng đồng là điểm nhấn */}
       <section className="rise-1 chart-hero relative overflow-hidden rounded-3xl text-cream">
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden preserveAspectRatio="none">
-          <circle className="star-twinkle" cx="8%" cy="18%" r="1.6" fill="#ffd66b" />
-          <circle className="star-twinkle" style={{ animationDelay: "0.8s" }} cx="31%" cy="84%" r="1.3" fill="#fff" />
-          <circle className="star-twinkle" style={{ animationDelay: "1.6s" }} cx="52%" cy="12%" r="1.2" fill="#fff" />
-          <circle className="star-twinkle" style={{ animationDelay: "0.4s" }} cx="93%" cy="80%" r="1.6" fill="#ffd66b" />
-          <circle className="star-twinkle" style={{ animationDelay: "2.1s" }} cx="62%" cy="70%" r="1" fill="#fff" />
-        </svg>
-        <div className="relative grid grid-cols-[1fr_auto] items-center gap-3 sm:gap-6 p-4 pr-3 sm:p-8 lg:px-10 lg:py-9">
+        <div className="relative grid grid-cols-[1fr_auto] items-center gap-3 sm:gap-6 p-4 pr-3 sm:px-7 sm:py-5 lg:px-9 lg:py-6">
           <div className="min-w-0 space-y-2 sm:space-y-3">
-            <p className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-extrabold text-[#ffd66b]">
+            <p className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-extrabold text-[#f1dfae]">
               <span>
                 {greeting()}, {profile.nickname}!
               </span>
               <span className="px-2 py-0.5 rounded-full bg-white/12 text-cream/90 text-[11px] sm:text-xs">Lớp {profile.grade}</span>
             </p>
-            <h1 className="text-[1.12rem] leading-[1.25] sm:text-3xl lg:text-[2.5rem] lg:leading-[1.15] font-black tracking-tight text-[#fffaf0] max-w-[18ch]">
+            <h1 className="text-[1.12rem] leading-[1.25] sm:text-[1.7rem] lg:text-[2.1rem] lg:leading-[1.15] font-black tracking-tight text-white max-w-[22ch]">
               Tương lai của bạn bắt đầu từ việc hiểu chính mình
             </h1>
-            <p className="hidden sm:block text-sm lg:text-base text-[#c9d6e8] max-w-[46ch]">
-              Khám phá sở thích, thử tìm hiểu các nghề và chăm sóc cảm xúc mỗi ngày. Không cần chọn nghề ngay, chỉ cần bắt đầu tìm hiểu.
-            </p>
             <div className="hidden sm:flex flex-wrap gap-2.5 pt-1">
               <button onClick={() => onNavigate("career")} className="btn-3d btn-sun min-h-12 px-5 rounded-2xl font-black text-sm cursor-pointer">
                 Khám phá nghề
               </button>
               <button
                 onClick={() => onNavigate("mood")}
-                className="min-h-12 px-5 rounded-2xl border-2 border-white/25 hover:bg-white/10 text-cream font-bold text-sm transition cursor-pointer"
+                className="min-h-12 px-5 rounded-2xl border-2 border-white/50 bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition cursor-pointer"
               >
                 Check-in cảm xúc
               </button>
@@ -100,7 +90,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
           </div>
           <div className="relative">
             <span className="absolute inset-[8%] rounded-full bg-[#5fc2ba]/20 blur-2xl" aria-hidden />
-            <CompassHero className="relative w-[132px] sm:w-52 lg:w-72 h-auto drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)]" />
+            <CompassHero tone="royal" className="relative w-[124px] sm:w-40 lg:w-48 h-auto drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)]" />
           </div>
         </div>
       </section>
@@ -115,10 +105,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className="menu-tile group flex flex-col items-center justify-start gap-1.5 sm:gap-2 px-1 pt-2.5 pb-2 sm:p-4 rounded-3xl bg-white text-center cursor-pointer"
-              style={{ ["--edge" as string]: TONES[item.tone].edge }}
+              className="menu-tile group flex flex-col items-center justify-start gap-1.5 sm:gap-2 px-1 pt-2.5 pb-2 sm:p-4 rounded-3xl text-center cursor-pointer"
+              style={{ background: BRIGHT[item.tone], borderColor: TONES[item.tone].edge, ["--edge" as string]: TONES[item.tone].edge }}
             >
-              <FunIcon emoji={item.emoji} tone={item.tone} size="lg" className="group-hover:-rotate-6 transition" />
+              <FunIcon emoji={item.emoji} tone={item.tone} size="lg" onColor className="group-hover:-rotate-6 group-hover:scale-110 transition" />
               <span className="text-[11.5px] sm:text-sm font-extrabold text-navy leading-tight">{item.label}</span>
             </button>
           ))}

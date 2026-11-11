@@ -92,16 +92,16 @@ ${subjects}
 
 // Bìa sách theo môn: màu dịu trong bảng màu chung, biểu tượng môn học
 const COVER: Record<string, { bg: string; icon: string }> = {
-  "Ngữ văn": { bg: "#173b50", icon: "📖" },
-  "Toán": { bg: "#328f89", icon: "📐" },
-  "Tiếng Anh": { bg: "#2a5670", icon: "🌏" },
-  "Khoa Học Tự Nhiên": { bg: "#287470", icon: "🔬" },
-  "Lịch Sử & Địa Lý": { bg: "#5a6f4e", icon: "🗺️" },
-  "Giáo Dục Công Dân": { bg: "#7a5c58", icon: "🤝" },
-  "Tin Học": { bg: "#34627d", icon: "💻" },
-  "Công Nghệ": { bg: "#4f5f6b", icon: "⚙️" },
-  "Nghệ thuật": { bg: "#6555a5", icon: "🎨" },
-  "Giáo dục thể chất": { bg: "#2f7d6b", icon: "⚽" },
+  "Ngữ văn": { bg: "#ec4f78", icon: "📖" },
+  "Toán": { bg: "#2f7fe0", icon: "📐" },
+  "Tiếng Anh": { bg: "#8656ea", icon: "🌏" },
+  "Khoa Học Tự Nhiên": { bg: "#27a862", icon: "🔬" },
+  "Lịch Sử & Địa Lý": { bg: "#ee7d1c", icon: "🗺️" },
+  "Giáo Dục Công Dân": { bg: "#139c94", icon: "🤝" },
+  "Tin Học": { bg: "#2b97d6", icon: "💻" },
+  "Công Nghệ": { bg: "#cf850a", icon: "⚙️" },
+  "Nghệ thuật": { bg: "#d9479a", icon: "🎨" },
+  "Giáo dục thể chất": { bg: "#45a32a", icon: "⚽" },
 };
 
 // Chuẩn hóa link admin dán vào: thêm https:// nếu thiếu, bỏ khoảng trắng, chỉ nhận http/https.
@@ -131,8 +131,11 @@ const BookCover: React.FC<{ book: SystemBook; subject: string }> = ({ book, subj
   const tap = book.name.match(/Tập\s*\d/i)?.[0];
   const lop = book.name.match(/lớp\s*\d/i)?.[0] || book.name.match(/\b[6-9]\b/)?.[0];
   return (
-    <div className="relative w-full h-full p-3 flex flex-col justify-between text-white overflow-hidden" style={{ background: c.bg }}>
-      <div className="absolute -right-6 -bottom-6 text-7xl opacity-25 rotate-12 select-none">{c.icon}</div>
+    <div
+      className="relative w-full h-full p-3 flex flex-col justify-between text-white overflow-hidden"
+      style={{ backgroundColor: c.bg, backgroundImage: "radial-gradient(rgba(255,255,255,0.18) 1.5px, transparent 1.6px)", backgroundSize: "14px 14px" }}
+    >
+      <div className="absolute -right-5 -bottom-5 text-7xl opacity-35 rotate-12 select-none">{c.icon}</div>
       <div className="absolute left-0 top-0 bottom-0 w-2 bg-black/15" />
       <div className="flex items-start justify-between gap-2 pl-1">
         <span className="text-2xl drop-shadow">{c.icon}</span>

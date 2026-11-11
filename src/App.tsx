@@ -27,12 +27,13 @@ const ACCOUNTS_KEY = "ai_study_hub_accounts_list";
 const MODULE_BG: Partial<Record<NavSection, string>> = {
   career: "bg-clay-bg",
   mood: "bg-sun-bg",
-  study: "bg-sky-bg",
-  subjects: "bg-sky-bg",
-  quest: "bg-sky-bg",
-  ai_tutor: "bg-sky-bg",
-  planner: "bg-sky-bg",
-  videos: "bg-sky-bg",
+  study: "bg-study",
+  subjects: "bg-study",
+  quest: "bg-study",
+  ai_tutor: "bg-study",
+  planner: "bg-study",
+  videos: "bg-study",
+  privacy: "bg-[#eafaf3]",
 };
 const ACTIVE_KEY = "ai_study_hub_active_user_id";
 
@@ -65,6 +66,8 @@ function loadAccounts(): StudentProfile[] {
 
 export default function App() {
   const [currentSection, setCurrentSection] = useState<NavSection>("home");
+  // Bấm lại đúng mục đang mở (VD đang xem chi tiết một nghề, bấm "Hướng nghiệp") thì quay về trang đầu của mục đó
+  const [sectionReset, setSectionReset] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState("");
 
@@ -243,6 +246,7 @@ export default function App() {
   }
 
   const go = (sec: NavSection) => {
+    if (sec === currentSection) setSectionReset((n) => n + 1);
     setCurrentSection(sec);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -251,7 +255,7 @@ export default function App() {
 
   return (
     <div
-      className={`dots-bg min-h-screen font-sans text-ink flex flex-col antialiased selection:bg-teal selection:text-white transition-colors duration-300 ${MODULE_BG[currentSection] || "bg-cream"}`}
+      className={`dots-bg min-h-screen font-sans text-ink flex flex-col antialiased selection:bg-teal selection:text-white transition-colors duration-300 ${MODULE_BG[currentSection] || "bg-[#f2f7fd]"}`}
     >
       <Header
         cloudStatus={cloudStatus}
@@ -305,7 +309,7 @@ export default function App() {
               }}
             />
           )}
-          {currentSection === "career" && <CareerGuidanceView key={activeUserId} userId={activeUserId} grade={activeProfile.grade} />}
+          {currentSection === "career" && <CareerGuidanceView key={`${activeUserId}-${sectionReset}`} userId={activeUserId} grade={activeProfile.grade} />}
           {currentSection === "videos" && <VideoHubView key={activeUserId} userId={activeUserId} />}
           {currentSection === "privacy" && (
             <PrivacyView key={activeUserId} profile={activeProfile} onAccountRemoved={() => handleDeleteAccount(activeProfile.studentId)} />

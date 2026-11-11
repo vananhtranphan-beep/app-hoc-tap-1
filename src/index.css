@@ -23,8 +23,8 @@
   --color-navy: #263a56;
   --color-navy-deep: #1a2b42;
   --color-navy-soft: #3a5577;
-  --color-teal: #328f89;
-  --color-teal-deep: #287470;
+  --color-teal: #17977f;
+  --color-teal-deep: #10796a;
   --color-teal-soft: #d3f4e5;
   --color-cream: #fffaf0;
   --color-mist: #eef3fb;
@@ -33,30 +33,30 @@
   --color-muted: #5b6b77;
 
   /* Hướng nghiệp: cam đất */
-  --color-clay-bg: #fff3ea;
+  --color-clay-bg: #fff2e2;
   --color-clay-card: #fffaf6;
-  --color-clay-soft: #fce1d1;
-  --color-clay: #d98a61;
-  --color-clay-deep: #a85d3d;
-  --color-clay-dark: #8c4a2f;
+  --color-clay-soft: #ffe0c4;
+  --color-clay: #ff9a4d;
+  --color-clay-deep: #e2621b;
+  --color-clay-dark: #b44a0e;
 
   /* Cây cảm xúc: vàng kem và xanh lá */
-  --color-sun-bg: #fff1c7;
-  --color-sun-card: #fffae9;
-  --color-sun-line: #f0dfa8;
-  --color-leaf-soft: #e3edcf;
-  --color-leaf: #91ad75;
-  --color-leaf-deep: #557b4c;
-  --color-leaf-dark: #45663d;
+  --color-sun-bg: #effadc;
+  --color-sun-card: #fffdf0;
+  --color-sun-line: #e9df8e;
+  --color-leaf-soft: #dcf3c2;
+  --color-leaf: #6cc04a;
+  --color-leaf-deep: #2e9a3c;
+  --color-leaf-dark: #237a2f;
 
   /* Học tập thông minh: xanh dương và tím */
-  --color-sky-bg: #f0f4ff;
+  --color-sky-bg: #eef6ff;
   --color-sky-soft: #e1eaff;
   --color-sky-line: #cfdaf5;
-  --color-lilac: #ded9fa;
-  --color-ocean: #4268a8;
-  --color-ocean-dark: #34548a;
-  --color-grape: #6555a5;
+  --color-lilac: #e8ddff;
+  --color-ocean: #2a78dc;
+  --color-ocean-dark: #1d5fb8;
+  --color-grape: #7650d8;
 
   @keyframes rise {
     from { opacity: 0; transform: translateY(10px); }
@@ -111,13 +111,15 @@
 
 /* Đầu trang chủ: hải đồ ban đêm (lưới kinh tuyến – vĩ tuyến mờ trên nền xanh đêm) */
 .chart-hero {
-  background-color: #1d3150;
+  /* Xanh sapphire tầm trung + lưới vuông mảnh + viền vàng đồng mảnh (kiểu app cao cấp) */
+  background-color: #1f4f8c;
   background-image:
-    radial-gradient(circle at 82% 45%, rgba(95, 194, 186, 0.22), transparent 42%),
     linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
-  background-size: auto, 34px 34px, 34px 34px;
-  box-shadow: 0 6px 0 #14233a, 0 22px 40px -24px rgba(20, 35, 58, 0.7);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    radial-gradient(ellipse at 82% 40%, rgba(255, 255, 255, 0.12), transparent 45%),
+    linear-gradient(120deg, #25599a 0%, #1f4f8c 55%, #1a4479 100%);
+  background-size: 28px 28px, 28px 28px, auto, auto;
+  box-shadow: inset 0 0 0 1px rgba(217, 183, 106, 0.45), 0 6px 0 #163a68, 0 22px 40px -24px rgba(22, 58, 104, 0.55);
 }
 
 /* Dải đầu trang của các trang bên trong: cùng chất liệu hải đồ */
@@ -134,13 +136,26 @@
 /* Cột menu (máy tính): cùng màu xanh đêm với đầu trang chủ, giữ nguyên ở mọi trang */
 .nav-panel {
   border-radius: 8px;
-  background-color: #1d3150;
+  background-color: #1f4f8c;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 34px 34px;
-  box-shadow: 0 6px 0 #14233a, 0 18px 34px -22px rgba(20, 35, 58, 0.7);
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(180deg, #25599a 0%, #1f4f8c 45%, #1a4479 100%);
+  background-size: 28px 28px, 28px 28px, auto;
+  box-shadow: inset 0 0 0 1px rgba(217, 183, 106, 0.45), 0 6px 0 #163a68, 0 18px 34px -22px rgba(22, 58, 104, 0.55);
 }
+
+/* Nền khu Học tập: vàng nhạt có chấm bi */
+.bg-study { background-color: #fff9de; }
+
+/* Dải đầu trang nhiều màu: viền dưới đậm kiểu nút nổi, hình vẽ trôi nhẹ */
+.fun-band { box-shadow: 0 5px 0 var(--band-edge); }
+.fun-band .doodle { animation: doodle-float 6s ease-in-out infinite; transform-origin: center; }
+.fun-band .doodle:nth-child(2n) { animation-duration: 7.5s; animation-delay: -2s; }
+.fun-band .mascot { animation: mascot-bob 4s ease-in-out infinite; }
+@keyframes doodle-float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-5px) rotate(8deg); } }
+@keyframes mascot-bob { 0%, 100% { transform: rotate(-6deg) translateY(0); } 50% { transform: rotate(4deg) translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .fun-band .doodle, .fun-band .mascot { animation: none; } }
 
 /* Băng dính trang trí (kiểu sổ tay) */
 .tape { width: 74px; height: 16px; border-radius: 2px; transform: rotate(-4deg); opacity: 0.85; }
@@ -362,3 +377,6 @@
     animation: none !important;
   }
 }
+
+/* Hình 3D: bóng nhẹ cho nổi khối */
+.img-3d { filter: drop-shadow(0 4px 4px rgba(38, 58, 86, 0.18)); }

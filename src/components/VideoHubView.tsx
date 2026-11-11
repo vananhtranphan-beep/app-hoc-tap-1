@@ -44,6 +44,13 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
 
   // Form states
   const [showAddModal, setShowAddModal] = useState(false);
+  // Bấm Esc để đóng khung thêm video
+  useEffect(() => {
+    if (!showAddModal) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setShowAddModal(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showAddModal]);
   const [title, setTitle] = useState("");
   const [grade, setGrade] = useState<number>(6);
   const [subjectName, setSubjectName] = useState("Toán");
@@ -225,7 +232,13 @@ export const VideoHubView: React.FC<{ userId?: string }> = ({ userId }) => {
 
       {/* MODAL ADD VIDEO */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-navy/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 bg-navy/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Thêm video bài giảng"
+        >
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-sky-line space-y-4">
             <div className="flex items-center justify-between border-b border-sky-line pb-3">
               <h3 className="font-extrabold text-navy text-lg flex items-center gap-2">

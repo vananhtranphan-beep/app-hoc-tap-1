@@ -40,22 +40,35 @@ const RIASEC = [
   { code: "C", label: "Nghiệp vụ" },
 ];
 
-export const CompassHero: React.FC<{ className?: string }> = ({ className = "" }) => (
+// tone "azure": mặt la bàn xanh sáng, viền xanh ngọc (dùng trên khung xanh Royal Blue ở trang chủ)
+// tone "night": mặt la bàn xanh đêm (màn hình đăng nhập); tone "royal": xanh đêm + vàng đồng (trang chủ)
+const HERO_TONES = {
+  night: { face1: "#2a5670", face2: "#0f2a3a", ring: "#328f89", ringW: 2, orbit: "#5fc2ba", node: "#173b50", nodeRing: "#5fc2ba", north: "#5fc2ba", south: "#f7f8f5", pin: "#0f2a3a", label: "#d6ebe9", tick: "#e8eef5" },
+  azure: { face1: "#2d8fe8", face2: "#0d5cb4", ring: "#7fe6ff", ringW: 3.5, orbit: "#bff3ff", node: "#1268c6", nodeRing: "#8fe9ff", north: "#5fc2ba", south: "#f7f8f5", pin: "#0f2a3a", label: "#d6ebe9", tick: "#e8eef5" },
+  // Sang trọng: mặt xanh đêm sâu, viền kép, kim và nút vàng đồng
+  royal: { face1: "#16335c", face2: "#081a33", ring: "#d9b76a", ringW: 4, orbit: "#f0d48f", node: "#0d2445", nodeRing: "#d9b76a", north: "#e9c66f", south: "#eef1f6", pin: "#d9b76a", label: "#f1dfae", tick: "#f0d48f" },
+};
+
+export const CompassHero: React.FC<{ className?: string; tone?: keyof typeof HERO_TONES }> = ({ className = "", tone = "night" }) => {
+  const c = HERO_TONES[tone];
+  const faceId = `hero-face-${tone}`;
+  return (
   <svg viewBox="0 0 320 320" className={className} role="img" aria-label="La bàn 6 nhóm sở thích nghề nghiệp">
     <defs>
-      <radialGradient id="hero-face" cx="50%" cy="45%" r="60%">
-        <stop offset="0%" stopColor="#2a5670" />
-        <stop offset="100%" stopColor="#0f2a3a" />
+      <radialGradient id={faceId} cx="50%" cy="45%" r="60%">
+        <stop offset="0%" stopColor={c.face1} />
+        <stop offset="100%" stopColor={c.face2} />
       </radialGradient>
     </defs>
 
     {/* Vòng quỹ đạo xoay rất chậm */}
     <g className="compass-orbit" opacity="0.55">
-      <circle cx="160" cy="160" r="150" fill="none" stroke="#5fc2ba" strokeWidth="1" strokeDasharray="2 7" />
+      <circle cx="160" cy="160" r="150" fill="none" stroke={c.orbit} strokeWidth="1" strokeDasharray="2 7" />
     </g>
-    <circle cx="160" cy="160" r="128" fill="url(#hero-face)" stroke="#328f89" strokeWidth="2" />
-    <circle cx="160" cy="160" r="104" fill="none" stroke="#e8eef5" strokeOpacity="0.18" />
-    <circle cx="160" cy="160" r="64" fill="none" stroke="#e8eef5" strokeOpacity="0.12" />
+    <circle cx="160" cy="160" r="128" fill={`url(#${faceId})`} stroke={c.ring} strokeWidth={c.ringW} />
+    {tone === "royal" && <circle cx="160" cy="160" r="121" fill="none" stroke={c.ring} strokeOpacity="0.45" strokeWidth="1" />}
+    <circle cx="160" cy="160" r="104" fill="none" stroke={c.tick} strokeOpacity="0.18" />
+    <circle cx="160" cy="160" r="64" fill="none" stroke={c.tick} strokeOpacity="0.12" />
 
     {/* Vạch chia */}
     {Array.from({ length: 36 }).map((_, i) => (
@@ -65,7 +78,7 @@ export const CompassHero: React.FC<{ className?: string }> = ({ className = "" }
         y1="36"
         x2="160"
         y2={i % 3 === 0 ? 46 : 41}
-        stroke="#e8eef5"
+        stroke={c.tick}
         strokeOpacity={i % 3 === 0 ? 0.55 : 0.25}
         strokeWidth="1.4"
         transform={`rotate(${i * 10} 160 160)`}
@@ -81,11 +94,11 @@ export const CompassHero: React.FC<{ className?: string }> = ({ className = "" }
       const labelY = Math.sin(angle) < 0 ? y - 24 : y + 31;
       return (
         <g key={g.code}>
-          <circle cx={x} cy={y} r="16" fill="#173b50" stroke="#5fc2ba" strokeWidth="1.4" />
+          <circle cx={x} cy={y} r="16" fill={c.node} stroke={c.nodeRing} strokeWidth="1.4" />
           <text x={x} y={y + 5} textAnchor="middle" fontSize="15" fontWeight="800" fill="#f7f8f5" fontFamily="Be Vietnam Pro, sans-serif">
             {g.code}
           </text>
-          <text x={x} y={labelY} textAnchor="middle" fontSize="10.5" fontWeight="600" fill="#d6ebe9" fontFamily="Be Vietnam Pro, sans-serif">
+          <text x={x} y={labelY} textAnchor="middle" fontSize="10.5" fontWeight="600" fill={c.label} fontFamily="Be Vietnam Pro, sans-serif">
             {g.label}
           </text>
         </g>
@@ -95,10 +108,11 @@ export const CompassHero: React.FC<{ className?: string }> = ({ className = "" }
     {/* Kim la bàn */}
     <g className="compass-needle">
       <g className="compass-idle">
-        <path d="M160 106 L170 160 L160 155 L150 160 Z" fill="#5fc2ba" />
-        <path d="M160 214 L170 160 L160 165 L150 160 Z" fill="#f7f8f5" opacity="0.92" />
+        <path d="M160 106 L170 160 L160 155 L150 160 Z" fill={c.north} />
+        <path d="M160 214 L170 160 L160 165 L150 160 Z" fill={c.south} opacity="0.92" />
       </g>
     </g>
-    <circle cx="160" cy="160" r="7" fill="#0f2a3a" stroke="#f7f8f5" strokeWidth="2.5" />
+    <circle cx="160" cy="160" r="7" fill={c.pin} stroke="#f7f8f5" strokeWidth="2.5" />
   </svg>
-);
+  );
+};

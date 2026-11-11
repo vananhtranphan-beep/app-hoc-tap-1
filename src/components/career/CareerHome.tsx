@@ -1,12 +1,13 @@
 import React from "react";
-import { ClipboardList, MessagesSquare, ArrowRight, Sparkles, LayoutGrid, Bookmark, Target, RotateCcw } from "lucide-react";
+import { ArrowRight, RotateCcw } from "lucide-react";
 import { CAREERS, INTEREST_ITEMS } from "../../data/careerData";
 import { CareerState, answeredCount } from "../../lib/career";
+import { Emoji3D, FunIcon, TONES, Tone } from "../FunIcon";
 
 // ============================================================
-// TRANG ĐẦU HƯỚNG NGHIỆP: 2 lựa chọn
-// 1. Khám phá bản thân qua khảo sát (khuyến khích, không bắt buộc)
-// 2. Trò chuyện trực tiếp với AI (không cần làm khảo sát trước)
+// TRANG ĐẦU HƯỚNG NGHIỆP: 2 lựa chọn lớn, nhìn hình là biết bấm gì
+// 1. Làm trắc nghiệm sở thích (khuyến khích, không bắt buộc)
+// 2. Hỏi AI tư vấn nghề (không cần làm trắc nghiệm trước)
 // ============================================================
 
 interface Props {
@@ -22,85 +23,118 @@ interface Props {
   onReset: () => void;
 }
 
+const Chip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/70 text-navy text-xs sm:text-sm font-extrabold">{children}</span>
+);
+
+// Nút to màu xanh đêm, nổi rõ trên nền thẻ màu
+const BigButton: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+  <button
+    onClick={onClick}
+    className="btn-3d w-full sm:w-auto min-h-14 px-6 rounded-xl bg-navy text-white text-base font-black inline-flex items-center justify-center gap-2 cursor-pointer"
+    style={{ ["--btn-edge" as string]: "#14233a", boxShadow: "0 5px 0 #14233a" }}
+  >
+    {children}
+  </button>
+);
+
 export const CareerHome: React.FC<Props> = ({ state, hasQuiz, onStartQuiz, onRestartQuiz, onOpenResult, onOpenChat, onOpenCatalog, onOpenSaved, onOpenPlan, onReset }) => {
   const done = answeredCount(state.answers);
   const inProgress = !hasQuiz && done > 0;
 
+  const shortcuts: { emoji: string; tone: Tone; label: string; onClick: () => void }[] = [
+    { emoji: "📚", tone: "sky", label: `Xem tất cả ${CAREERS.length} nghề`, onClick: onOpenCatalog },
+    { emoji: "🔖", tone: "pink", label: `Nghề đã lưu (${state.saved.length})`, onClick: onOpenSaved },
+    { emoji: "🎯", tone: "lilac", label: `Kế hoạch khám phá (${state.plan.length})`, onClick: onOpenPlan },
+  ];
+
   return (
     <div className="space-y-5">
-      <div className="grid md:grid-cols-2 gap-4">
-        {/* Lựa chọn 1 */}
-        <section className="lift rise-1 relative rounded-2xl bg-clay-card border-2 border-clay p-5 sm:p-6 flex flex-col gap-4">
-          <span className="absolute -top-3 left-5 px-2.5 py-0.5 rounded-full bg-clay-deep text-white text-xs font-bold inline-flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" /> Khuyến khích
-          </span>
-          <span className="w-14 h-14 rounded-2xl bg-clay-soft text-clay-deep flex items-center justify-center">
-            <ClipboardList className="w-7 h-7" />
-          </span>
-          <div>
-            <div className="text-xs font-bold text-clay-deep uppercase tracking-wide">Lựa chọn 1</div>
-            <h3 className="text-xl font-extrabold text-navy mt-1">Khám phá bản thân qua khảo sát hướng nghiệp</h3>
-            <p className="text-sm text-ink mt-2 leading-relaxed">
-              Khoảng 5–7 phút với {INTEREST_ITEMS.length} câu về sở thích, kèm vài câu về môn học yêu thích, điểm mạnh bạn tự thấy và lĩnh vực quan tâm. Nhờ vậy AI hiểu bạn hơn và gợi ý nghề có cơ sở hơn.
-            </p>
-            <p className="text-xs text-muted mt-2">Không bắt buộc. Không cần tên thật hay thông tin cá nhân.</p>
+      <div className="grid md:grid-cols-2 gap-4 sm:gap-5">
+        {/* Lựa chọn 1: trắc nghiệm */}
+        <section
+          className="relative overflow-hidden rounded-3xl p-5 sm:p-6 flex flex-col gap-4"
+          style={{ background: "#ffd84a", boxShadow: "0 6px 0 #e0b21c" }}
+        >
+          <span className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-[#ff7a3d] text-white text-xs font-black shadow-[0_3px_0_#d65a20]">⭐ Khuyến khích</span>
+          <div className="flex items-end gap-1 select-none" aria-hidden>
+            <Emoji3D emoji="📝" className="w-20 h-20 sm:w-24 sm:h-24 -rotate-6" />
+            <Emoji3D emoji="🎯" className="w-11 h-11 sm:w-12 sm:h-12 mb-1 rotate-12" />
           </div>
-          <div className="mt-auto flex flex-wrap gap-2">
+          <div>
+            <h3 className="text-2xl sm:text-[1.7rem] font-black text-navy leading-tight tracking-tight">Làm trắc nghiệm sở thích</h3>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <Chip>📋 {INTEREST_ITEMS.length} câu</Chip>
+              <Chip>⏱️ 5–7 phút</Chip>
+              <Chip>🔒 Không cần tên thật</Chip>
+            </div>
+          </div>
+          <div className="mt-auto flex flex-wrap gap-2.5 pt-1">
             {hasQuiz ? (
               <>
-                <button onClick={onOpenResult} className="min-h-12 px-5 rounded-xl bg-clay-deep hover:bg-clay-dark text-white font-bold text-sm inline-flex items-center gap-2 cursor-pointer">
-                  Xem kết quả của bạn <ArrowRight className="w-4 h-4" />
-                </button>
-                <button onClick={onRestartQuiz} className="min-h-12 px-4 rounded-xl bg-white border border-clay-soft hover:border-clay text-navy font-semibold text-sm inline-flex items-center gap-2 cursor-pointer">
+                <BigButton onClick={onOpenResult}>
+                  Xem kết quả của bạn <ArrowRight className="w-5 h-5" />
+                </BigButton>
+                <button
+                  onClick={onRestartQuiz}
+                  className="min-h-14 px-5 rounded-xl bg-white/80 hover:bg-white text-navy font-extrabold text-sm inline-flex items-center gap-2 cursor-pointer"
+                >
                   <RotateCcw className="w-4 h-4" /> Sửa câu trả lời
                 </button>
               </>
             ) : (
-              <button onClick={onStartQuiz} className="min-h-12 px-5 rounded-xl bg-clay-deep hover:bg-clay-dark text-white font-bold text-sm inline-flex items-center gap-2 cursor-pointer">
-                {inProgress ? `Làm tiếp (đã trả lời ${done}/${INTEREST_ITEMS.length} câu)` : "Bắt đầu khám phá"} <ArrowRight className="w-4 h-4" />
-              </button>
+              <BigButton onClick={onStartQuiz}>
+                {inProgress ? `Làm tiếp (đã trả lời ${done}/${INTEREST_ITEMS.length} câu)` : "Bắt đầu khám phá"} <ArrowRight className="w-5 h-5" />
+              </BigButton>
             )}
           </div>
         </section>
 
-        {/* Lựa chọn 2 */}
-        <section className="lift rise-2 rounded-2xl bg-clay-card border border-clay-soft p-5 sm:p-6 flex flex-col gap-4">
-          <span className="w-14 h-14 rounded-2xl bg-navy text-cream flex items-center justify-center">
-            <MessagesSquare className="w-7 h-7" />
-          </span>
-          <div>
-            <div className="text-xs font-bold text-clay-deep uppercase tracking-wide">Lựa chọn 2</div>
-            <h3 className="text-xl font-extrabold text-navy mt-1">Trò chuyện trực tiếp với AI</h3>
-            <p className="text-sm text-ink mt-2 leading-relaxed">
-              Hỏi AI bất cứ điều gì về nghề nghiệp, ngành học, lĩnh vực công việc, sở thích, thế mạnh hay con đường sau lớp 9. Không cần làm khảo sát trước.
-            </p>
-            <p className="text-xs text-muted mt-2">AI có thể sai và không có số liệu thị trường mới nhất. Hãy hỏi thêm thầy cô, bố mẹ.</p>
+        {/* Lựa chọn 2: hỏi AI */}
+        <section
+          className="relative overflow-hidden rounded-3xl p-5 sm:p-6 flex flex-col gap-4"
+          style={{ background: "#8fd76a", boxShadow: "0 6px 0 #5fae3c" }}
+        >
+          <div className="flex items-end gap-1 select-none" aria-hidden>
+            <Emoji3D emoji="🤖" className="w-20 h-20 sm:w-24 sm:h-24 rotate-3" />
+            <Emoji3D emoji="💬" className="w-11 h-11 sm:w-12 sm:h-12 mb-10 -rotate-6" />
           </div>
-          <div className="mt-auto">
-            <button onClick={onOpenChat} className="min-h-12 px-5 rounded-xl bg-navy hover:bg-navy-soft text-cream font-bold text-sm inline-flex items-center gap-2 cursor-pointer">
-              Bắt đầu trò chuyện <ArrowRight className="w-4 h-4" />
-            </button>
+          <div>
+            <h3 className="text-2xl sm:text-[1.7rem] font-black text-navy leading-tight tracking-tight">Hỏi AI tư vấn nghề</h3>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <Chip>💡 Hỏi gì về nghề cũng được</Chip>
+              <Chip>⚡ Không cần làm trắc nghiệm</Chip>
+            </div>
+          </div>
+          <div className="mt-auto pt-1 space-y-2">
+            <BigButton onClick={onOpenChat}>
+              Bắt đầu trò chuyện <ArrowRight className="w-5 h-5" />
+            </BigButton>
+            <p className="text-xs font-semibold text-navy/75">AI có thể sai. Hãy hỏi thêm thầy cô, bố mẹ.</p>
           </div>
         </section>
       </div>
 
       {/* Lối tắt */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        <button onClick={onOpenCatalog} className="min-h-14 px-4 rounded-xl bg-clay-card border border-clay-soft hover:border-clay text-left flex items-center gap-3 cursor-pointer">
-          <LayoutGrid className="w-5 h-5 text-clay-deep shrink-0" />
-          <span className="text-sm font-semibold text-navy">Xem tất cả {CAREERS.length} nghề</span>
-        </button>
-        <button onClick={onOpenSaved} className="min-h-14 px-4 rounded-xl bg-clay-card border border-clay-soft hover:border-clay text-left flex items-center gap-3 cursor-pointer">
-          <Bookmark className="w-5 h-5 text-clay-deep shrink-0" />
-          <span className="text-sm font-semibold text-navy">Nghề đã lưu ({state.saved.length})</span>
-        </button>
-        <button onClick={onOpenPlan} className="min-h-14 px-4 rounded-xl bg-clay-card border border-clay-soft hover:border-clay text-left flex items-center gap-3 cursor-pointer">
-          <Target className="w-5 h-5 text-clay-deep shrink-0" />
-          <span className="text-sm font-semibold text-navy">Kế hoạch khám phá ({state.plan.length})</span>
-        </button>
-        <button onClick={onReset} className="min-h-14 px-4 rounded-xl bg-clay-card border border-clay-soft hover:border-rose-300 text-left flex items-center gap-3 cursor-pointer">
-          <RotateCcw className="w-5 h-5 text-rose-600 shrink-0" />
-          <span className="text-sm font-semibold text-navy">Làm lại từ đầu</span>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+        {shortcuts.map((s) => (
+          <button
+            key={s.emoji}
+            onClick={s.onClick}
+            className="menu-tile min-h-16 px-3 rounded-2xl bg-white text-left flex items-center gap-3 cursor-pointer"
+            style={{ ["--edge" as string]: TONES[s.tone].edge, borderColor: TONES[s.tone].edge }}
+          >
+            <FunIcon emoji={s.emoji} tone={s.tone} size="sm" />
+            <span className="text-sm font-extrabold text-navy leading-tight">{s.label}</span>
+          </button>
+        ))}
+        <button
+          onClick={onReset}
+          className="menu-tile min-h-16 px-3 rounded-2xl bg-white text-left flex items-center gap-3 cursor-pointer"
+          style={{ ["--edge" as string]: "#f3b0c9" }}
+        >
+          <FunIcon emoji="🔄" tone="pink" size="sm" />
+          <span className="text-sm font-extrabold text-navy leading-tight">Làm lại từ đầu</span>
         </button>
       </div>
     </div>
