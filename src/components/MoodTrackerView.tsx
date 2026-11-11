@@ -82,6 +82,7 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
   const [showHelp, setShowHelp] = useState(false);
 
   const stateRef = useRef(state);
+  const treeRef = useRef<HTMLDivElement>(null);
   stateRef.current = state;
   useEffect(() => {
     if (isGuest) saveGuestMood(userId, state);
@@ -132,6 +133,11 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
   const saveCheckIn = (r: CheckInResult) => {
     const n = addEntry(state, r);
     if (n === state) return; // đã đủ 5 lần hôm nay
+    // Điện thoại: cây đang bị khuất phía trên thì tự cuộn lên cho thấy cây vừa đổi
+    setTimeout(() => {
+      const el = treeRef.current;
+      if (el && el.getBoundingClientRect().top < 70) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
     const f = formOf(r.weathers);
     const grew = stageIndex(n) > stage ? ` Cây đã lớn thành "${STAGES[stageIndex(n)].name}".` : "";
     let msg: string;
@@ -210,17 +216,12 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
 
       {showHelp && <SupportPanel message="Nếu bạn đang gặp chuyện khó khăn hoặc không an toàn, hãy nói với người lớn bạn tin hoặc gọi số dưới đây." />}
 
-      <p className="flex items-start gap-1.5 text-xs text-muted">
-        <Info className="w-4 h-4 text-leaf-deep shrink-0" />
-        Phần này giúp bạn quan sát cảm xúc và thử cách tự chăm sóc, không phải công cụ chẩn đoán hay điều trị.{" "}
-        {isGuest ? "Ở chế độ khách, cây và các lần check-in chỉ giữ tạm khi bạn đang mở trang." : "Nhật ký chỉ lưu trên máy này."}
-      </p>
 
       {/* CÂY + CHECK-IN cùng một khu vực */}
       {/* Điện thoại: cây → check-in → giai đoạn; máy tính: cây và giai đoạn bên trái, check-in bên phải */}
       <section className="rounded-3xl bg-sun-card border border-sun-line p-4 sm:p-6 grid lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_1fr] gap-5 lg:gap-x-7 items-start">
         <div className="space-y-3 lg:col-start-1 lg:row-start-1">
-          <div className="rounded-2xl overflow-hidden shadow-[0_10px_30px_-18px_rgba(85,123,76,0.6)]">
+          <div ref={treeRef} className="scroll-mt-24 rounded-2xl overflow-hidden shadow-[0_10px_30px_-18px_rgba(85,123,76,0.6)]">
             <Tree stage={stage} form={form} wilt={state.wilt} decor={decor} pulse={pulse} />
           </div>
           {toast && (
@@ -273,6 +274,12 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
           </div>
         </div>
       </section>
+
+      <p className="flex items-start gap-1.5 text-xs text-muted">
+        <Info className="w-4 h-4 text-leaf-deep shrink-0" />
+        Phần này giúp bạn quan sát cảm xúc và thử cách tự chăm sóc, không phải công cụ chẩn đoán hay điều trị.{" "}
+        {isGuest ? "Ở chế độ khách, cây và các lần check-in chỉ giữ tạm khi bạn đang mở trang." : "Nhật ký chỉ lưu trên máy này."}
+      </p>
 
       {/* Chăm sóc bản thân / Góc tâm sự / Vườn ký ức */}
       <div id="mood-tabs" className="scroll-mt-24 space-y-4">

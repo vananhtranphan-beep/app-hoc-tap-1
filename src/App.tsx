@@ -68,6 +68,17 @@ export default function App() {
   const [currentSection, setCurrentSection] = useState<NavSection>("home");
   // Bấm lại đúng mục đang mở (VD đang xem chi tiết một nghề, bấm "Hướng nghiệp") thì quay về trang đầu của mục đó
   const [sectionReset, setSectionReset] = useState(0);
+
+  // Nút "quay lại" của điện thoại / trình duyệt: về trang trước trong web (không thoát web)
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const sec = (e.state && e.state.aiyc && e.state.section) as NavSection | undefined;
+      setCurrentSection(sec || "home");
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState("");
 
@@ -131,7 +142,10 @@ export default function App() {
 
   // Vừa đăng nhập / vào dùng thử: luôn hiện từ đầu trang (thấy ngay lời chào và menu)
   useEffect(() => {
-    if (activeUserId) window.scrollTo(0, 0);
+    if (activeUserId) {
+      window.scrollTo(0, 0);
+      window.history.replaceState({ aiyc: 1, section: "home" }, "");
+    }
   }, [activeUserId]);
 
   const upsertAccount = (profile: StudentProfile) => {
@@ -247,6 +261,7 @@ export default function App() {
 
   const go = (sec: NavSection) => {
     if (sec === currentSection) setSectionReset((n) => n + 1);
+    else window.history.pushState({ aiyc: 1, section: sec }, "");
     setCurrentSection(sec);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -270,7 +285,7 @@ export default function App() {
 
         <main className="flex-1 px-4 pt-4 lg:p-8 pb-bottom-nav min-w-0 overflow-x-hidden space-y-4">
           {currentSection !== "home" && (
-            <PageHeader section={currentSection} backLabel={isStudyPage ? "Học tập thông minh" : "Trang chủ"} onBack={() => go(isStudyPage ? "study" : "home")} />
+            <PageHeader compact={currentSection === "ai_tutor"} section={currentSection} backLabel={isStudyPage ? "Học tập thông minh" : "Trang chủ"} onBack={() => go(isStudyPage ? "study" : "home")} />
           )}
 
           {currentSection === "home" && (

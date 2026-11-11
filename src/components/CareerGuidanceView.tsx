@@ -70,9 +70,18 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
   const context = useMemo(() => aiContext(state, scores, grade), [state, scores, grade]);
 
   const go = (v: View) => {
+    if (v !== view) window.history.pushState({ aiyc: 1, section: "career", careerView: v }, "");
     setView(v);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  // Nút quay lại của điện thoại: lùi về màn trước trong phần Hướng nghiệp
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      if (e.state?.aiyc && e.state.section === "career") setView((e.state.careerView as View) || "home");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   const openCareer = (id: string) => {
     setDetailFrom(view === "detail" ? detailFrom : view);
     setDetailId(id);

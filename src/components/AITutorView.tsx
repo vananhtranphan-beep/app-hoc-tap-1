@@ -39,7 +39,8 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [subject, setSubject] = useState("Toán Học");
-  const [showKeyboard, setShowKeyboard] = useState(true);
+  // Điện thoại: bàn phím công thức ẩn sẵn để khung trò chuyện rộng hơn (bấm nút ∑ để mở)
+  const [showKeyboard, setShowKeyboard] = useState(() => typeof window === "undefined" || window.innerWidth >= 1024);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initialSent = useRef(false);
@@ -58,7 +59,8 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
 
   // Môn Toán / KHTN thì mở sẵn bàn phím công thức
   useEffect(() => {
-    setShowKeyboard(subject === "Toán Học" || subject === "Khoa Học Tự Nhiên");
+    // Môn Toán, KHTN: mở sẵn bàn phím công thức trên máy tính; điện thoại để ẩn cho khung trò chuyện rộng
+    setShowKeyboard((subject === "Toán Học" || subject === "Khoa Học Tự Nhiên") && window.innerWidth >= 1024);
   }, [subject]);
 
   const sendMessage = async (text: string, history: Message[]) => {
@@ -127,10 +129,10 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-14rem)] min-h-[560px] max-w-5xl mx-auto space-y-3">
+    <div className="flex flex-col h-[calc(100dvh-15.5rem)] lg:h-[calc(100vh-10rem)] min-h-[420px] max-w-5xl mx-auto space-y-2.5 sm:space-y-3">
       {/* Header Bar */}
-      <div className="p-2.5 rounded-2xl bg-white border-2 border-sky-line flex items-center justify-between gap-2">
-        <span className="pl-1 text-sm font-bold text-navy">Bạn đang hỏi môn</span>
+      <div className="p-1.5 sm:p-2.5 rounded-2xl bg-white border-2 border-sky-line flex items-center justify-between gap-2">
+        <span className="pl-1 text-sm font-bold text-navy">Môn</span>
         <div className="flex items-center gap-2">
           <span className="sr-only">Môn:</span>
           <select

@@ -74,19 +74,19 @@ export const CheckIn: React.FC<Props> = ({ remaining, isGuest, onSave }) => {
         </div>
       ) : (
         <>
-          <p className="text-xs text-muted">
+          <p className="hidden sm:block text-xs text-muted">
             Chọn một hoặc nhiều, cây sẽ đổi ngay. Mỗi ngày check-in tối đa {MAX_CHECKINS_PER_DAY} lần{used > 0 ? ` (bạn đã check-in ${used} lần hôm nay)` : ""}. Đây chỉ là cách diễn đạt, không phải bài kiểm tra.
           </p>
           <div className="grid grid-cols-3 gap-2">
             {WEATHERS.map((w) => {
               const on = weathers.includes(w.id);
               return (
-                <Chip key={w.id} active={on} onClick={() => toggle(weathers, setWeathers, w.id)} className="min-h-[4.5rem] p-2.5 flex flex-col items-center justify-center text-center gap-0.5">
+                <Chip key={w.id} active={on} onClick={() => toggle(weathers, setWeathers, w.id)} className="min-h-[3.75rem] sm:min-h-[4.5rem] p-2 sm:p-2.5 flex flex-col items-center justify-center text-center gap-0.5">
                   <span className="text-2xl leading-none" aria-hidden>
                     {w.emoji}
                   </span>
                   <span className="text-[13px] font-bold leading-tight">{w.label}</span>
-                  <span className={`text-[11px] leading-tight ${on ? "text-mist/80" : "text-muted"}`}>{w.hint}</span>
+                  <span className={`hidden sm:block text-[11px] leading-tight ${on ? "text-mist/80" : "text-muted"}`}>{w.hint}</span>
                 </Chip>
               );
             })}

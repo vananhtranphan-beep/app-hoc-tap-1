@@ -111,9 +111,27 @@ const Doodles: React.FC<{ color: string }> = ({ color }) => (
   </>
 );
 
-export const PageHeader: React.FC<{ section: NavSection; backLabel: string; onBack: () => void }> = ({ section, backLabel, onBack }) => {
+export const PageHeader: React.FC<{ section: NavSection; backLabel: string; onBack: () => void; compact?: boolean }> = ({ section, backLabel, onBack, compact }) => {
   const meta = PAGE_META[section];
   if (!meta) return null;
+  // Bản gọn (Gia sư AI): một dòng, nhường chỗ cho khung trò chuyện
+  if (compact)
+    return (
+      <header
+        className="fun-band relative overflow-hidden rounded-2xl text-navy px-2.5 py-2 flex items-center gap-2.5"
+        style={{ background: meta.bg, ["--band-edge" as string]: meta.edge }}
+      >
+        <button
+          onClick={onBack}
+          aria-label={`Quay lại ${backLabel}`}
+          className="w-10 h-10 shrink-0 flex items-center justify-center rounded-lg bg-white/60 hover:bg-white/85 text-navy cursor-pointer transition"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <Emoji3D emoji={meta.emoji} className="w-9 h-9 object-contain" />
+        <h2 className="text-lg sm:text-xl font-black tracking-tight text-navy">{meta.title}</h2>
+      </header>
+    );
   return (
     <header
       className="fun-band relative overflow-hidden rounded-3xl text-navy px-4 py-3.5 sm:px-6 sm:py-5"
