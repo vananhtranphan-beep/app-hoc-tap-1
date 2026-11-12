@@ -526,6 +526,9 @@ export const CAREERS: Career[] = NGHE.map((n) => {
 
 export const careerById = (id: string) => CAREERS.find((c) => c.id === id);
 
+/** Nhóm chính của nghề: O*NET (nếu đã ghép) lấy nhóm đứng đầu; Văn Lang thì các nhóm ngang nhau */
+export const mainGroups = (c: Career): RiasecCode[] => (c.codeSource === "onet" ? c.codes.slice(0, 1) : c.codes);
+
 /** Các nghề khác cùng lĩnh vực (theo cột lĩnh vực ở trên) */
 export const sameField = (c: Career) => CAREERS.filter((x) => x.id !== c.id && x.field === c.field);
 

@@ -55,7 +55,6 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
             {c.codes.map((x) => (
               <CodeBadge key={x} code={x} full />
             ))}
-            <span className="text-xs text-muted">{c.codeSource === "onet" ? "· mã Holland theo O*NET" : "· nhóm theo Trường ĐH Văn Lang"}</span>
           </div>
         </div>
         {c.profile ? (

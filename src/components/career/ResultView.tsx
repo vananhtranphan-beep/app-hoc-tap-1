@@ -260,7 +260,6 @@ export const ResultView: React.FC<Props> = (p) => {
                           {c.codes.map((x) => (
                             <CodeBadge key={x} code={x} />
                           ))}
-                          <span className="text-[11px] text-muted ml-1">{c.codeSource === "onet" ? "nhóm theo O*NET" : "nhóm theo ĐH Văn Lang"}</span>
                         </div>
                         {c.profile && (
                           <p className="text-sm text-ink">

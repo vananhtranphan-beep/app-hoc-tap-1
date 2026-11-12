@@ -198,11 +198,10 @@ export function matchCareer(career: Career, scores: Scores): Suggestion | null {
   const others = career.codes.filter((c) => c !== lead && tops.includes(c));
   const matched = career.codes.filter((c) => tops.includes(c));
   const level: MatchLevel = firsts.includes(lead) && others.length > 0 ? "rat-phu-hop" : "phu-hop";
-  const src = career.codeSource === "onet" ? "theo O*NET" : "theo Trường ĐH Văn Lang";
   const reasons = [
     firsts.includes(lead)
-      ? `Nghề thuộc nhóm ${RIASEC[lead].name} (${src}), trùng nhóm cao nhất của bạn.`
-      : `Nghề thuộc nhóm ${RIASEC[lead].name} (${src}), nằm trong 3 nhóm cao của bạn.`,
+      ? `Nghề thuộc nhóm ${RIASEC[lead].name}, trùng nhóm cao nhất của bạn.`
+      : `Nghề thuộc nhóm ${RIASEC[lead].name}, nằm trong 3 nhóm cao của bạn.`,
   ];
   if (others.length) reasons.push(`Nghề còn thuộc nhóm ${others.map((c) => RIASEC[c].name).join(", ")}, cũng là nhóm cao của bạn.`);
   return { career, level, lead, matched, reasons };
@@ -241,7 +240,7 @@ export function unclearPoints(state: CareerState, scores: Scores): string[] {
 }
 
 const groupLine = (c: Career) =>
-  `${c.name} [nhóm ${c.codes.map((x) => RIASEC[x].name).join(" – ")}${c.codeSource === "onet" ? ", theo O*NET" : ", theo Văn Lang"}]`;
+  `${c.name} [nhóm ${c.codes.map((x) => RIASEC[x].name).join(" – ")}]`;
 
 /** Tóm tắt gửi cho AI: không có tên, biệt danh hay tên đăng nhập */
 export function aiContext(state: CareerState, scores: Scores, grade: string): string {
@@ -257,7 +256,7 @@ export function aiContext(state: CareerState, scores: Scores, grade: string): st
     return [
       `Học sinh lớp ${grade}, chưa làm phiếu tự đánh giá (không bắt buộc) nên chưa có kết quả 6 nhóm.`,
       ...told,
-      `Danh mục nghề của web (theo tài liệu hướng nghiệp Trường ĐH Văn Lang): ${CAREERS.map(groupLine).join("; ")}.`,
+      `Danh mục nghề của web: ${CAREERS.map(groupLine).join("; ")}.`,
     ].join("\n");
   }
   const flat = isFlat(scores);
@@ -281,8 +280,7 @@ export function aiContext(state: CareerState, scores: Scores, grade: string): st
 
 export const careerDetailForAI = (c: Career) =>
   [
-    `Thông tin nghề "${c.name}" trong danh mục của web: lĩnh vực ${c.field}; nhóm theo Trường ĐH Văn Lang: ${c.vlu.map((x) => RIASEC[x].name).join(", ")}.`,
-    c.onet ? `Mã Holland theo O*NET (nghề "${c.onet.title}"): ${c.onet.codes.map((x) => RIASEC[x].name).join(" – ")}.` : "",
+    `Thông tin nghề "${c.name}" trong danh mục của web: lĩnh vực ${c.field}; nhóm: ${c.codes.map((x) => RIASEC[x].name).join(" – ")}.`,
     c.profile
       ? `Một nghề tiêu biểu trong lĩnh vực này là ${c.profile.name}: ${c.profile.desc} Hoạt động: ${c.profile.activities.join("; ")}. Kỹ năng: ${c.profile.skills.join(", ")}. Môn học liên quan: ${c.profile.subjects.join(", ")}.`
       : "",

@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { Bookmark, BookmarkCheck, Columns3, Search, X, ArrowRight, Sparkles } from "lucide-react";
-import { CAREERS, Career, RIASEC, RIASEC_ORDER, RiasecCode, careerById } from "../../data/careerData";
+import { CAREERS, Career, RIASEC, RIASEC_ORDER, RiasecCode, careerById, mainGroups } from "../../data/careerData";
 import { CareerState } from "../../lib/career";
 import { Card, CodeBadge, GhostBtn, PrimaryBtn } from "./ui";
 
 // ============================================================
-// DANH MỤC NGHỀ (theo Trường ĐH Văn Lang; lọc theo nhóm, lưu, so sánh)
+// DANH MỤC NGHỀ (lọc theo nhóm, lưu, so sánh)
 // ============================================================
 
 interface Props {
@@ -25,11 +25,7 @@ type Filter = "all" | "saved" | "rec" | RiasecCode;
 export const CompareTable: React.FC<{ ids: string[]; onClose: () => void; onRemove: (id: string) => void }> = ({ ids, onClose, onRemove }) => {
   const list = ids.map(careerById).filter(Boolean) as Career[];
   const rows: { label: string; get: (c: Career) => React.ReactNode }[] = [
-    { label: "Nhóm (ĐH Văn Lang)", get: (c) => <div className="flex flex-wrap gap-1">{c.vlu.map((x) => <CodeBadge key={x} code={x} full />)}</div> },
-    {
-      label: "Mã Holland (O*NET)",
-      get: (c) => (c.onet ? <div className="flex flex-wrap gap-1">{c.onet.codes.map((x) => <CodeBadge key={x} code={x} />)}</div> : <span className="text-muted">Chưa ghép</span>),
-    },
+    { label: "Nhóm", get: (c) => <div className="flex flex-wrap gap-1">{c.codes.map((x) => <CodeBadge key={x} code={x} full />)}</div> },
     { label: "Lĩnh vực", get: (c) => c.field },
     { label: "Nghề tiêu biểu", get: (c) => (c.profile ? <><b>{c.profile.name}</b>: {c.profile.desc}</> : <span className="text-muted">Chưa có mô tả</span>) },
     {
@@ -98,7 +94,7 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
     let l = CAREERS;
     if (filter === "saved") l = l.filter((c) => state.saved.includes(c.id));
     else if (filter === "rec") l = recommendedIds.map((id) => careerById(id)).filter(Boolean) as Career[];
-    else if (filter !== "all") l = l.filter((c) => c.vlu.includes(filter));
+    else if (filter !== "all") l = l.filter((c) => mainGroups(c).includes(filter));
     if (nq) l = l.filter((c) => norm(`${c.name} ${c.field} ${c.profile?.name || ""} ${c.profile?.desc || ""}`).includes(nq));
     return l;
   }, [filter, q, state.saved, recommendedIds]);
@@ -185,13 +181,12 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
                   </button>
                 </div>
                 <div className="flex flex-wrap items-center gap-1">
-                  {c.vlu.map((x) => (
+                  {c.codes.map((x) => (
                     <CodeBadge key={x} code={x} />
                   ))}
-                  {c.onet && <span className="text-[11px] text-muted ml-1">O*NET: {c.onet.codes.join("")}</span>}
                 </div>
                 <p className="text-sm text-ink line-clamp-3">
-                  {c.profile ? `Ví dụ nghề ${c.profile.name.toLowerCase()}: ${c.profile.desc}` : "Ngành nghề trong tài liệu hướng nghiệp của Trường ĐH Văn Lang."}
+                  {c.profile ? `Ví dụ nghề ${c.profile.name.toLowerCase()}: ${c.profile.desc}` : `Thuộc lĩnh vực ${c.field.toLowerCase()}.`}
                 </p>
                 <div className="mt-auto flex items-center justify-between gap-2 pt-1">
                   <button
