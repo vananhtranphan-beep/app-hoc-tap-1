@@ -29,7 +29,7 @@ export const PlanStep: React.FC<Props> = ({ state, update }) => {
   const firstSaved = state.saved.map(careerById).filter(Boolean)[0];
   const ideas = [
     firstSaved ? `Hỏi một người đang làm nghề ${firstSaved.name.toLowerCase()} về công việc của họ` : "Hỏi bố mẹ hoặc người thân về nghề họ đang làm",
-    firstSaved?.profile ? `Thử hoạt động trải nghiệm: ${firstSaved.profile.experience.title.toLowerCase()}` : "Thử một hoạt động trải nghiệm trong trang chi tiết nghề",
+    firstSaved ? `Thử hoạt động trải nghiệm: ${firstSaved.experience.title.toLowerCase()}` : "Thử một hoạt động trải nghiệm trong trang chi tiết nghề",
     "Xem một video giới thiệu nghề từ nguồn đáng tin cậy",
     "Tìm hiểu các trường THPT, trường nghề có ngành mình quan tâm",
   ].filter((i) => !state.plan.some((p) => p.text === i));

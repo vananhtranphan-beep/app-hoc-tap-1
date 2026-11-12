@@ -504,7 +504,95 @@ export interface Career {
   codeSource: "onet" | "vlu";
   /** Hồ sơ nghề tiêu biểu (mô tả, hoạt động trải nghiệm), có thể không có */
   profile?: CareerProfile;
+  /** Hoạt động trải nghiệm: của hồ sơ nghề nếu có, không thì hoạt động chung theo nhóm chính của nghề */
+  experience: Experience;
+  experienceGeneric: boolean;
 }
+
+// ---------- Hoạt động trải nghiệm chung theo nhóm (dùng cho nghề chưa có hồ sơ riêng) ----------
+// Hoạt động nhỏ, an toàn, làm được ở nhà hoặc ở trường.
+const askFirst = (name: string) => `Hỏi người lớn, thầy cô hoặc hỏi AI: người làm nghề ${name.toLowerCase()} thường làm những việc gì trong một ngày?`;
+
+const GROUP_EXPERIENCE: Record<RiasecCode, (name: string) => Experience> = {
+  R: (name) => ({
+    title: "Làm thử một việc bằng tay",
+    goal: "Thử cảm giác thao tác với dụng cụ, đồ vật như người làm nghề kĩ thuật",
+    steps: [
+      askFirst(name),
+      "Chọn một việc nhỏ, an toàn có thao tác tương tự (VD lắp ráp đồ chơi, sửa đồ dùng hỏng nhẹ, trồng một chậu cây), làm khi có người lớn bên cạnh",
+      "Ghi lại từng bước em đã làm",
+      "Chụp ảnh hoặc vẽ lại kết quả",
+    ],
+    minutes: 30,
+    result: "Một sản phẩm nhỏ và bảng ghi các bước đã làm",
+    reflect: REFLECT,
+  }),
+  I: (name) => ({
+    title: "Tìm câu trả lời cho một câu hỏi",
+    goal: "Thử cách làm việc của người nghiên cứu: đặt câu hỏi, tìm thông tin, rút ra kết luận",
+    steps: [
+      askFirst(name),
+      "Đặt một câu hỏi em tò mò về lĩnh vực của nghề này",
+      "Tìm thông tin từ ít nhất 2 nguồn (SGK, sách, trang tin chính thống) và ghi lại",
+      "So sánh các nguồn rồi viết câu trả lời của em trong khoảng 5 câu",
+    ],
+    minutes: 40,
+    result: "Một câu hỏi, các nguồn đã tìm và câu trả lời của em",
+    reflect: REFLECT,
+  }),
+  A: (name) => ({
+    title: "Tạo một sản phẩm sáng tạo nhỏ",
+    goal: "Thử tự do sáng tạo và thể hiện ý tưởng của mình",
+    steps: [
+      askFirst(name),
+      "Chọn một chủ đề gần gũi (trường lớp, gia đình, quê hương)",
+      "Làm một sản phẩm nhỏ theo cách của nghề này: vẽ, viết, quay video ngắn, thiết kế hoặc biểu diễn",
+      "Nhờ 2 người xem và góp ý, sau đó sửa lại một chỗ",
+    ],
+    minutes: 40,
+    result: "Một sản phẩm sáng tạo và 2 lời góp ý",
+    reflect: REFLECT,
+  }),
+  S: (name) => ({
+    title: "Giúp đỡ hoặc hướng dẫn một người",
+    goal: "Thử cảm giác lắng nghe và giúp đỡ người khác",
+    steps: [
+      askFirst(name),
+      "Chọn một người (bạn bè, em nhỏ, ông bà) đang cần giúp một việc nhỏ",
+      "Lắng nghe người đó cần gì, rồi giúp hoặc hướng dẫn cho họ",
+      "Hỏi lại người đó thấy thế nào và ghi lại",
+    ],
+    minutes: 30,
+    result: "Ghi chép ngắn về người em đã giúp và cảm nhận của họ",
+    reflect: REFLECT,
+  }),
+  E: (name) => ({
+    title: "Lên kế hoạch và thuyết phục",
+    goal: "Thử dẫn dắt một ý tưởng và thuyết phục người khác cùng làm",
+    steps: [
+      askFirst(name),
+      "Chọn một ý tưởng nhỏ (một buổi sinh hoạt lớp, một gian hàng hội chợ, một việc tốt cho trường)",
+      "Lập kế hoạch: mục tiêu, việc cần làm, ai làm, khi nào xong",
+      "Trình bày để thuyết phục 2–3 bạn tham gia và ghi lại ý kiến của các bạn",
+    ],
+    minutes: 40,
+    result: "Một bản kế hoạch ngắn và ý kiến của các bạn",
+    reflect: REFLECT,
+  }),
+  C: (name) => ({
+    title: "Sắp xếp và quản lí thông tin",
+    goal: "Thử làm việc cẩn thận với số liệu, giấy tờ theo quy trình",
+    steps: [
+      askFirst(name),
+      "Chọn một bộ thông tin thật (chi tiêu trong tuần, sách trong tủ, lịch học)",
+      "Lập bảng trên giấy hoặc Excel, có các cột rõ ràng",
+      "Kiểm tra lại số liệu cho chính xác, rồi viết 2 nhận xét",
+    ],
+    minutes: 30,
+    result: "Một bảng thông tin gọn gàng và 2 nhận xét",
+    reflect: REFLECT,
+  }),
+};
 
 const isCode = (x: string): x is RiasecCode => (RIASEC_ORDER as string[]).includes(x);
 
@@ -512,15 +600,19 @@ export const CAREERS: Career[] = NGHE.map((n) => {
   const o = ONET_CODES[n.id];
   const onetCodes = o ? o.codes.filter(isCode) : [];
   const onet = o && onetCodes.length ? { soc: o.soc, title: o.title, codes: onetCodes } : undefined;
+  const codes = onet ? onet.codes : n.vlu;
+  const profile = profileById(n.profile);
   return {
     id: n.id,
     name: n.name,
     field: n.field,
     vlu: n.vlu,
     onet,
-    codes: onet ? onet.codes : n.vlu,
+    codes,
     codeSource: onet ? "onet" : "vlu",
-    profile: profileById(n.profile),
+    profile,
+    experience: profile ? profile.experience : GROUP_EXPERIENCE[codes[0]](n.name),
+    experienceGeneric: !profile,
   };
 });
 

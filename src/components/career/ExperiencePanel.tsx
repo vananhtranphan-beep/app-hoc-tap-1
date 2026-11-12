@@ -1,6 +1,6 @@
 import React from "react";
 import { Clock, Target, ListChecks, Flag, CheckCircle2, Play, FlaskConical, LayoutGrid } from "lucide-react";
-import { Career } from "../../data/careerData";
+import { Career, RIASEC } from "../../data/careerData";
 import { CareerState } from "../../lib/career";
 
 // ============================================================
@@ -26,8 +26,7 @@ export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; upd
       const cur = s.experiences[c.id] || { status: "doing" as const, reflection: "" };
       return { ...s, experiences: { ...s.experiences, [c.id]: { ...cur, ...patch } } };
     });
-  const x = c.profile?.experience;
-  if (!x) return null;
+  const x = c.experience;
 
   return (
     <section id="trai-nghiem" className="rounded-2xl bg-clay-card border border-clay-soft p-5 sm:p-6 space-y-4 scroll-mt-24">
@@ -37,7 +36,11 @@ export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; upd
             <FlaskConical className="w-4 h-4" /> Hoạt động trải nghiệm
           </div>
           <h3 className="text-lg font-extrabold text-navy mt-1">{x.title}</h3>
-          {c.profile && <p className="text-xs text-muted mt-0.5">Thử làm như một {c.profile.name.toLowerCase()}</p>}
+          <p className="text-xs text-muted mt-0.5">
+            {c.profile
+              ? `Thử làm như một ${c.profile.name.toLowerCase()}`
+              : `Hoạt động chung của nhóm ${RIASEC[c.codes[0]].name}, giúp em thử làm việc như người trong nghề ${c.name.toLowerCase()}`}
+          </p>
         </div>
         <span
           className={`px-2.5 py-1 rounded-full text-xs font-semibold ${

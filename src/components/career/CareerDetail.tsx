@@ -73,11 +73,9 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
           <GhostBtn onClick={() => onToggleCompare(c.id)} aria-pressed={comparing} disabled={!comparing && state.compare.length >= 3}>
             <Columns3 className="w-4 h-4" /> {comparing ? "Bỏ so sánh" : "Thêm vào so sánh"}
           </GhostBtn>
-          {c.profile && (
-            <GhostBtn onClick={toActivity}>
-              <FlaskConical className="w-4 h-4" /> Thử hoạt động
-            </GhostBtn>
-          )}
+          <GhostBtn onClick={toActivity}>
+            <FlaskConical className="w-4 h-4" /> Thử hoạt động
+          </GhostBtn>
           <GhostBtn onClick={() => onAskAI(c)}>
             <Bot className="w-4 h-4" /> Hỏi AI về nghề này
           </GhostBtn>
@@ -125,7 +123,7 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
         </div>
       )}
 
-      {c.profile && <ExperiencePanel career={c} state={state} update={update} onMoreCareers={onMoreCareers} />}
+      <ExperiencePanel career={c} state={state} update={update} onMoreCareers={onMoreCareers} />
 
       {related.length > 0 && (
         <Card className="space-y-2">

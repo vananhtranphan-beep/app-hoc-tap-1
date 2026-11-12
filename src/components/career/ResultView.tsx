@@ -275,12 +275,9 @@ export const ResultView: React.FC<Props> = (p) => {
                             ))}
                           </ul>
                         </div>
-                        {c.profile && (
-                          <p className="text-xs text-muted inline-flex items-start gap-1.5">
-                            <FlaskConical className="w-3.5 h-3.5 text-clay-deep shrink-0 mt-0.5" /> Thử ngay: {c.profile.experience.title} (khoảng{" "}
-                            {c.profile.experience.minutes} phút)
-                          </p>
-                        )}
+                        <p className="text-xs text-muted inline-flex items-start gap-1.5">
+                          <FlaskConical className="w-3.5 h-3.5 text-clay-deep shrink-0 mt-0.5" /> Thử ngay: {c.experience.title} (khoảng {c.experience.minutes} phút)
+                        </p>
                         <div className="mt-auto flex flex-wrap gap-2">
                           <button onClick={() => p.onOpenCareer(c.id)} className="min-h-11 px-4 rounded-xl bg-clay-deep hover:bg-clay-dark text-white font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer">
                             Khám phá nghề này <ArrowRight className="w-4 h-4" />
