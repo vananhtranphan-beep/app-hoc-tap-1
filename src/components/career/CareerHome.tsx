@@ -6,8 +6,8 @@ import { Emoji3D, FunIcon, TONES, Tone } from "../FunIcon";
 
 // ============================================================
 // TRANG ĐẦU HƯỚNG NGHIỆP: 2 lựa chọn lớn, nhìn hình là biết bấm gì
-// 1. Làm trắc nghiệm sở thích (khuyến khích, không bắt buộc)
-// 2. Hỏi AI tư vấn nghề (không cần làm trắc nghiệm trước)
+// 1. Làm phiếu khám phá 6 nhóm tính cách (khuyến khích, không bắt buộc)
+// 2. Hỏi AI tư vấn nghề (không cần làm phiếu trước)
 // ============================================================
 
 interface Props {
@@ -62,10 +62,11 @@ export const CareerHome: React.FC<Props> = ({ state, hasQuiz, onStartQuiz, onRes
             <Emoji3D emoji="🎯" className="w-11 h-11 sm:w-12 sm:h-12 mb-1 rotate-12" />
           </div>
           <div>
-            <h3 className="text-2xl sm:text-[1.7rem] font-black text-navy leading-tight tracking-tight">Làm trắc nghiệm sở thích</h3>
+            <h3 className="text-2xl sm:text-[1.7rem] font-black text-navy leading-tight tracking-tight">Khám phá nhóm tính cách nghề nghiệp</h3>
             <div className="mt-3 flex flex-wrap gap-1.5">
               <Chip>📋 {INTEREST_ITEMS.length} câu</Chip>
-              <Chip>⏱️ 5–7 phút</Chip>
+              <Chip>⏱️ 3–5 phút</Chip>
+              <Chip>📗 Theo SGK Công nghệ 9</Chip>
               <Chip>🔒 Không cần tên thật</Chip>
             </div>
           </div>
@@ -103,7 +104,7 @@ export const CareerHome: React.FC<Props> = ({ state, hasQuiz, onStartQuiz, onRes
             <h3 className="text-2xl sm:text-[1.7rem] font-black text-navy leading-tight tracking-tight">Hỏi AI tư vấn nghề</h3>
             <div className="mt-3 flex flex-wrap gap-1.5">
               <Chip>💡 Hỏi gì về nghề cũng được</Chip>
-              <Chip>⚡ Không cần làm trắc nghiệm</Chip>
+              <Chip>⚡ Không cần làm phiếu</Chip>
             </div>
           </div>
           <div className="mt-auto pt-1 space-y-2">

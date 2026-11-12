@@ -1,22 +1,21 @@
 import React from "react";
-import { ArrowLeft, ArrowRight, SkipForward } from "lucide-react";
-import { ACTIVITIES, ENVIRONMENTS, INTEREST_ITEMS, LIKERT, ONET_LICENSE_URL, SKILLS_TO_GROW, STRENGTHS, SUBJECTS } from "../../data/careerData";
-import { CareerState, answeredCount } from "../../lib/career";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ACTIVITIES, AFTER_GRADE9, INTEREST_ITEMS, LIKERT, SUBJECTS } from "../../data/careerData";
+import { CareerState, answeredCount, isComplete } from "../../lib/career";
 import { Card, Chip, GhostBtn, PrimaryBtn } from "./ui";
 
 // ============================================================
-// KHẢO SÁT: KHÁM PHÁ BẢN THÂN
-// 30 câu sở thích (mỗi màn hình 1 câu) + trang câu hỏi thêm (không bắt buộc)
+// PHIẾU TỰ ĐÁNH GIÁ
+// 18 câu theo Hình 4.2 SGK Công nghệ 9 (KNTT), mỗi màn hình 1 câu, không hiện tên nhóm.
+// Phải trả lời đủ 18 câu (mỗi nhóm chỉ có 3 câu, bỏ 1 câu là điểm nhóm bị lệch).
+// Sau đó là trang "Thêm về bạn" (không bắt buộc).
 // ============================================================
 
-type ProfileKey = keyof CareerState["profile"];
+type ListKey = "subjects" | "activities";
 
-const EXTRA: { key: ProfileKey; title: string; options: string[] }[] = [
-  { key: "subjects", title: "Môn học bạn thích", options: SUBJECTS },
-  { key: "strengths", title: "Điểm mạnh bạn tự thấy ở mình", options: STRENGTHS },
-  { key: "activities", title: "Hoạt động bạn hay làm lúc rảnh", options: ACTIVITIES },
-  { key: "environments", title: "Nơi bạn muốn làm việc sau này", options: ENVIRONMENTS },
-  { key: "skills", title: "Kỹ năng bạn muốn rèn thêm", options: SKILLS_TO_GROW },
+const LISTS: { key: ListKey; title: string; options: string[] }[] = [
+  { key: "subjects", title: "Môn học bạn thích nhất", options: SUBJECTS },
+  { key: "activities", title: "Lúc rảnh bạn hay làm gì?", options: ACTIVITIES },
 ];
 
 const TOTAL = INTEREST_ITEMS.length;
@@ -30,13 +29,9 @@ interface Props {
 
 export const Attribution: React.FC<{ onOpenAbout: () => void }> = ({ onOpenAbout }) => (
   <p className="text-[11px] text-muted leading-relaxed">
-    Phỏng theo O*NET® Interest Profiler (USDOL/ETA) ·{" "}
-    <a href={ONET_LICENSE_URL} target="_blank" rel="noopener noreferrer" className="underline hover:text-navy">
-      Giấy phép
-    </a>{" "}
-    ·{" "}
+    Câu hỏi dựa trên Hình 4.2, SGK Công nghệ 9 – Định hướng nghề nghiệp (Kết nối tri thức) · Nghề theo Trường ĐH Văn Lang ·{" "}
     <button onClick={onOpenAbout} className="underline hover:text-navy cursor-pointer">
-      Về bộ câu hỏi này
+      Nguồn và cách tính điểm
     </button>
   </p>
 );
@@ -46,24 +41,29 @@ export const QuizStep: React.FC<Props> = ({ state, update, onFinish, onOpenAbout
   const onExtra = idx >= TOTAL;
   const item = INTEREST_ITEMS[idx];
   const done = answeredCount(state.answers);
+  const complete = isComplete(state.answers);
+  const firstMissing = INTEREST_ITEMS.findIndex((i) => typeof state.answers[i.id] !== "number");
   const progress = onExtra ? 100 : Math.round((idx / (TOTAL + 1)) * 100);
 
   const go = (i: number) => update((s) => ({ ...s, quizIndex: Math.max(0, Math.min(i, TOTAL)) }));
-  const answer = (value: number | null) =>
+  const answer = (value: number) =>
     update((s) => ({ ...s, answers: { ...s.answers, [item.id]: value }, quizIndex: Math.min(idx + 1, TOTAL) }));
-  const toggle = (key: ProfileKey, v: string) =>
+  const toggle = (key: ListKey, v: string) =>
     update((s) => {
       const list = s.profile[key];
       return { ...s, profile: { ...s.profile, [key]: list.includes(v) ? list.filter((x) => x !== v) : [...list, v] } };
     });
+  const setField = (key: "after9" | "dream", v: string) => update((s) => ({ ...s, profile: { ...s.profile, [key]: v } }));
 
   return (
     <Card className="space-y-5">
       {/* Thanh tiến độ */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-xs font-semibold text-muted">
-          <span>{onExtra ? "Câu hỏi thêm (không bắt buộc)" : `Câu ${idx + 1} / ${TOTAL}`}</span>
-          <span>Đã trả lời {done}/{TOTAL}</span>
+          <span>{onExtra ? "Thêm về bạn (không bắt buộc)" : `Câu ${idx + 1} / ${TOTAL}`}</span>
+          <span>
+            Đã trả lời {done}/{TOTAL}
+          </span>
         </div>
         <div className="h-2 rounded-full bg-clay-soft overflow-hidden" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
           <div className="h-full bg-clay-deep rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -73,9 +73,9 @@ export const QuizStep: React.FC<Props> = ({ state, update, onFinish, onOpenAbout
       {!onExtra ? (
         <div key={item.id} className="space-y-5 animate-rise">
           <div>
-            <p className="text-sm text-muted">Bạn thấy thích hay không thích làm việc này?</p>
+            <p className="text-sm text-muted">Câu này giống em đến mức nào?</p>
             <h3 className="text-xl sm:text-2xl font-extrabold text-navy mt-1 leading-snug">{item.text}</h3>
-            <p className="text-xs text-muted mt-2">Đừng nghĩ mình có giỏi việc đó không, chỉ cần thấy có thích hay không.</p>
+            <p className="text-xs text-muted mt-2">Chọn theo con người em hiện nay, không phải theo điều em mong muốn.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-1.5 sm:gap-2" role="radiogroup" aria-label={item.text}>
             {LIKERT.map((o) => {
@@ -90,7 +90,7 @@ export const QuizStep: React.FC<Props> = ({ state, update, onFinish, onOpenAbout
                     selected ? "bg-navy border-navy text-cream" : "bg-white border-clay-soft text-ink hover:border-clay hover:bg-clay-soft/40"
                   }`}
                 >
-                  {o.label}
+                  <span className="tabular-nums mr-1">{o.value}.</span> {o.label}
                 </button>
               );
             })}
@@ -99,18 +99,22 @@ export const QuizStep: React.FC<Props> = ({ state, update, onFinish, onOpenAbout
             <GhostBtn onClick={() => go(idx - 1)} disabled={idx === 0}>
               <ArrowLeft className="w-4 h-4" /> Câu trước
             </GhostBtn>
-            <button onClick={() => answer(null)} className="min-h-11 px-3 text-sm font-semibold text-muted hover:text-navy inline-flex items-center gap-1.5 cursor-pointer">
-              Bỏ qua <SkipForward className="w-4 h-4" />
-            </button>
+            {typeof state.answers[item.id] === "number" && (
+              <GhostBtn onClick={() => go(idx + 1)}>
+                Câu sau <ArrowRight className="w-4 h-4" />
+              </GhostBtn>
+            )}
           </div>
         </div>
       ) : (
         <div className="space-y-6 animate-rise">
           <div>
             <h3 className="text-xl font-extrabold text-navy">Thêm một chút về bạn</h3>
-            <p className="text-sm text-muted mt-1">Chọn bao nhiêu cũng được, hoặc bỏ trống. Thông tin này giúp gợi ý sát hơn.</p>
+            <p className="text-sm text-muted mt-1">
+              Không bắt buộc. Phần này không làm thay đổi điểm, chỉ giúp AI giải thích kết quả sát với bạn hơn.
+            </p>
           </div>
-          {EXTRA.map((g) => (
+          {LISTS.map((g) => (
             <div key={g.key} className="space-y-2">
               <h4 className="text-sm font-bold text-ink">{g.title}</h4>
               <div className="flex flex-wrap gap-2">
@@ -122,15 +126,43 @@ export const QuizStep: React.FC<Props> = ({ state, update, onFinish, onOpenAbout
               </div>
             </div>
           ))}
+          <div className="space-y-2">
+            <h4 className="text-sm font-bold text-ink">Sau lớp 9, em dự định</h4>
+            <div className="flex flex-wrap gap-2">
+              {AFTER_GRADE9.map((o) => (
+                <Chip key={o} active={state.profile.after9 === o} onClick={() => setField("after9", state.profile.after9 === o ? "" : o)}>
+                  {o}
+                </Chip>
+              ))}
+            </div>
+          </div>
+          <label className="block space-y-2">
+            <span className="text-sm font-bold text-ink">Nghề em từng mơ ước (nếu có)</span>
+            <input
+              value={state.profile.dream}
+              onChange={(e) => setField("dream", e.target.value.slice(0, 200))}
+              placeholder="VD: bác sĩ, kiến trúc sư... Không có thì để trống"
+              className="w-full min-h-11 px-3 rounded-xl border border-clay-soft bg-white text-sm focus:outline-none focus:ring-2 focus:ring-clay"
+            />
+          </label>
           <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-clay-soft">
             <GhostBtn onClick={() => go(TOTAL - 1)}>
-              <ArrowLeft className="w-4 h-4" /> Xem lại câu 30
+              <ArrowLeft className="w-4 h-4" /> Xem lại câu {TOTAL}
             </GhostBtn>
-            <PrimaryBtn onClick={onFinish} disabled={done < 10}>
+            <PrimaryBtn onClick={onFinish} disabled={!complete}>
               Xem kết quả <ArrowRight className="w-4 h-4" />
             </PrimaryBtn>
           </div>
-          {done < 10 && <p className="text-xs text-amber-800">Bạn cần trả lời ít nhất 10 câu sở thích để web tổng hợp được. Bấm "Xem lại" để trả lời thêm.</p>}
+          {!complete && (
+            <p className="text-xs text-amber-800">
+              Bạn cần trả lời đủ {TOTAL} câu thì web mới tính được điểm 6 nhóm.{" "}
+              {firstMissing >= 0 && (
+                <button onClick={() => go(firstMissing)} className="underline font-semibold cursor-pointer">
+                  Đến câu {firstMissing + 1} còn thiếu
+                </button>
+              )}
+            </p>
+          )}
         </div>
       )}
 

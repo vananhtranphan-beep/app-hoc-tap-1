@@ -4,11 +4,11 @@ import { Career, INTEREST_ITEMS, careerById } from "../data/careerData";
 import {
   CareerState,
   ChatMsg,
-  academicFirst,
   aiContext,
   answeredCount,
   careerDetailForAI,
   computeScores,
+  isComplete,
   loadCareerState,
   saveCareerState,
   suggestCareers,
@@ -26,7 +26,7 @@ import { resetPart } from "../lib/reset";
 
 // ============================================================
 // HƯỚNG NGHIỆP
-// Trang đầu có 2 lựa chọn: (1) Khảo sát → giới thiệu Holland → câu hỏi → kết quả
+// Trang đầu có 2 lựa chọn: (1) Phiếu 18 câu (Hình 4.2 SGK Công nghệ 9) → giới thiệu → câu hỏi → kết quả
 //                            (2) Trò chuyện trực tiếp với AI (không cần khảo sát)
 // Kết quả: nhận xét AI → chat → nút xem nghề → nhóm nghề gợi ý → chi tiết nghề (có trải nghiệm)
 // Tiến độ lưu theo tài khoản (đồng bộ lên máy chủ khi đăng nhập).
@@ -41,8 +41,8 @@ interface Props {
 
 const TITLES: Record<View, string> = {
   home: "",
-  intro: "Giới thiệu khảo sát",
-  quiz: "Khảo sát sở thích",
+  intro: "Giới thiệu",
+  quiz: "Khám phá nhóm tính cách nghề nghiệp",
   result: "Kết quả của bạn",
   catalog: "Danh mục nghề",
   detail: "Chi tiết nghề",
@@ -64,9 +64,9 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
 
   const update = (fn: (s: CareerState) => CareerState) => setState(fn);
   const scores = useMemo(() => computeScores(state.answers), [state.answers]);
-  const hasQuiz = Boolean(state.completedAt) && answeredCount(state.answers) >= 10;
-  const suggestions = useMemo(() => (hasQuiz ? suggestCareers(state, scores, 9) : []), [hasQuiz, state, scores]);
-  const recommendedIds = academicFirst(suggestions).map((s) => s.career.id);
+  const hasQuiz = Boolean(state.completedAt) && isComplete(state.answers);
+  const suggestions = useMemo(() => (hasQuiz ? suggestCareers(scores) : []), [hasQuiz, scores]);
+  const recommendedIds = suggestions.map((s) => s.career.id);
   const context = useMemo(() => aiContext(state, scores, grade), [state, scores, grade]);
 
   const go = (v: View) => {
@@ -155,7 +155,7 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
           onOpenSaved={() => openCatalog({ filter: "saved" })}
           onOpenPlan={() => go("plan")}
           onReset={() =>
-            resetPart(userId, "career", "Làm lại Hướng nghiệp từ đầu? Câu trả lời khảo sát, nhận xét của AI, nghề đã lưu, trải nghiệm, kế hoạch và cuộc trò chuyện sẽ bị xóa.")
+            resetPart(userId, "career", "Làm lại Hướng nghiệp từ đầu? Câu trả lời phiếu, nhận xét của AI, nghề đã lưu, trải nghiệm, kế hoạch và cuộc trò chuyện sẽ bị xóa.")
           }
         />
       )}
@@ -200,9 +200,9 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
         ) : (
           <section className="rounded-2xl bg-clay-card border border-clay-soft p-5 sm:p-6 space-y-3">
             <h3 className="text-lg font-extrabold text-navy">Chưa có kết quả</h3>
-            <p className="text-sm text-muted">Bạn làm khảo sát ngắn (khoảng 5–7 phút) để có kết quả, hoặc trò chuyện trực tiếp với AI.</p>
+            <p className="text-sm text-muted">Bạn làm phiếu ngắn 18 câu (khoảng 3–5 phút) để có kết quả, hoặc trò chuyện trực tiếp với AI.</p>
             <button onClick={startQuiz} className="min-h-11 px-4 rounded-xl bg-clay-deep hover:bg-clay-dark text-white font-bold text-sm cursor-pointer">
-              Bắt đầu khảo sát
+              Bắt đầu làm phiếu
             </button>
           </section>
         ))}

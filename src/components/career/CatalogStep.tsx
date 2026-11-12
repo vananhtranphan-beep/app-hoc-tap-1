@@ -5,7 +5,7 @@ import { CareerState } from "../../lib/career";
 import { Card, CodeBadge, GhostBtn, PrimaryBtn } from "./ui";
 
 // ============================================================
-// DANH MỤC NGHỀ (danh mục có sẵn, lọc theo nhóm, lưu, so sánh)
+// DANH MỤC NGHỀ (theo Trường ĐH Văn Lang; lọc theo nhóm, lưu, so sánh)
 // ============================================================
 
 interface Props {
@@ -25,12 +25,18 @@ type Filter = "all" | "saved" | "rec" | RiasecCode;
 export const CompareTable: React.FC<{ ids: string[]; onClose: () => void; onRemove: (id: string) => void }> = ({ ids, onClose, onRemove }) => {
   const list = ids.map(careerById).filter(Boolean) as Career[];
   const rows: { label: string; get: (c: Career) => React.ReactNode }[] = [
-    { label: "Nhóm sở thích", get: (c) => <div className="flex flex-wrap gap-1">{c.codes.map((x) => <CodeBadge key={x} code={x} full />)}</div> },
+    { label: "Nhóm (ĐH Văn Lang)", get: (c) => <div className="flex flex-wrap gap-1">{c.vlu.map((x) => <CodeBadge key={x} code={x} full />)}</div> },
+    {
+      label: "Mã Holland (O*NET)",
+      get: (c) => (c.onet ? <div className="flex flex-wrap gap-1">{c.onet.codes.map((x) => <CodeBadge key={x} code={x} />)}</div> : <span className="text-muted">Chưa ghép</span>),
+    },
     { label: "Lĩnh vực", get: (c) => c.field },
-    { label: "Công việc", get: (c) => c.desc },
-    { label: "Hoạt động tiêu biểu", get: (c) => <ul className="list-disc pl-4 space-y-0.5">{c.activities.map((a) => <li key={a}>{a}</li>)}</ul> },
-    { label: "Kỹ năng", get: (c) => c.skills.join(", ") },
-    { label: "Môn học liên quan", get: (c) => c.subjects.join(", ") },
+    { label: "Nghề tiêu biểu", get: (c) => (c.profile ? <><b>{c.profile.name}</b>: {c.profile.desc}</> : <span className="text-muted">Chưa có mô tả</span>) },
+    {
+      label: "Hoạt động tiêu biểu",
+      get: (c) => (c.profile ? <ul className="list-disc pl-4 space-y-0.5">{c.profile.activities.map((a) => <li key={a}>{a}</li>)}</ul> : <span className="text-muted">–</span>),
+    },
+    { label: "Môn học liên quan", get: (c) => (c.profile ? c.profile.subjects.join(", ") : <span className="text-muted">–</span>) },
   ];
   return (
     <Card className="space-y-4">
@@ -92,8 +98,8 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
     let l = CAREERS;
     if (filter === "saved") l = l.filter((c) => state.saved.includes(c.id));
     else if (filter === "rec") l = recommendedIds.map((id) => careerById(id)).filter(Boolean) as Career[];
-    else if (filter !== "all") l = l.filter((c) => c.codes[0] === filter);
-    if (nq) l = l.filter((c) => norm(`${c.name} ${c.field} ${c.desc}`).includes(nq));
+    else if (filter !== "all") l = l.filter((c) => c.vlu.includes(filter));
+    if (nq) l = l.filter((c) => norm(`${c.name} ${c.field} ${c.profile?.name || ""} ${c.profile?.desc || ""}`).includes(nq));
     return l;
   }, [filter, q, state.saved, recommendedIds]);
 
@@ -101,7 +107,7 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
     ...(recommendedIds.length ? [{ id: "rec" as Filter, label: "Gợi ý cho bạn" }] : []),
     { id: "all", label: `Tất cả (${CAREERS.length})` },
     { id: "saved", label: `Đã lưu (${state.saved.length})` },
-    ...RIASEC_ORDER.map((c) => ({ id: c as Filter, label: `${c} · ${RIASEC[c].name}` })),
+    ...RIASEC_ORDER.map((c) => ({ id: c as Filter, label: `Nhóm ${RIASEC[c].name}` })),
   ];
 
   return (
@@ -116,7 +122,7 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Tìm nghề, VD: bác sĩ, thiết kế..."
+              placeholder="Tìm nghề, VD: bác sĩ, thiết kế, kế toán..."
               className="w-full min-h-11 pl-10 pr-3 rounded-xl border border-clay-soft bg-white text-sm focus:outline-none focus:ring-2 focus:ring-clay"
             />
           </label>
@@ -178,12 +184,15 @@ export const CatalogStep: React.FC<Props> = ({ state, recommendedIds, onOpenCare
                     {saved ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
                   </button>
                 </div>
-                <div className="flex gap-1">
-                  {c.codes.map((x) => (
+                <div className="flex flex-wrap items-center gap-1">
+                  {c.vlu.map((x) => (
                     <CodeBadge key={x} code={x} />
                   ))}
+                  {c.onet && <span className="text-[11px] text-muted ml-1">O*NET: {c.onet.codes.join("")}</span>}
                 </div>
-                <p className="text-sm text-ink line-clamp-3">{c.desc}</p>
+                <p className="text-sm text-ink line-clamp-3">
+                  {c.profile ? `Ví dụ nghề ${c.profile.name.toLowerCase()}: ${c.profile.desc}` : "Ngành nghề trong tài liệu hướng nghiệp của Trường ĐH Văn Lang."}
+                </p>
                 <div className="mt-auto flex items-center justify-between gap-2 pt-1">
                   <button
                     onClick={() => onToggleCompare(c.id)}

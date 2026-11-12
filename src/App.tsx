@@ -283,9 +283,10 @@ export default function App() {
       <div className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto min-w-0">
         <Navigation currentSection={currentSection} onSelectSection={go} />
 
-        <main className="flex-1 px-4 pt-4 lg:p-8 pb-bottom-nav min-w-0 overflow-x-hidden space-y-4">
-          {currentSection !== "home" && (
-            <PageHeader compact={currentSection === "ai_tutor"} section={currentSection} backLabel={isStudyPage ? "Học tập thông minh" : "Trang chủ"} onBack={() => go(isStudyPage ? "study" : "home")} />
+        <main className="flex-1 px-4 pt-4 lg:p-8 pb-bottom-nav min-w-0 overflow-x-clip space-y-4">
+          {/* Gia sư AI có thanh tiêu đề gọn riêng (nhường chỗ cho khung trò chuyện) */}
+          {currentSection !== "home" && currentSection !== "ai_tutor" && (
+            <PageHeader section={currentSection} backLabel={isStudyPage ? "Học tập thông minh" : "Trang chủ"} onBack={() => go(isStudyPage ? "study" : "home")} />
           )}
 
           {currentSection === "home" && (
@@ -306,6 +307,7 @@ export default function App() {
           {currentSection === "ai_tutor" && (
             <AITutorView
               key={activeUserId}
+              onBack={() => go("study")}
               userId={activeUserId}
               grade={activeProfile.grade}
               initialQuestion={pendingQuestion}

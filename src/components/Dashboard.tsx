@@ -30,13 +30,13 @@ const MENU: NavItem[] = [MAIN_ITEMS[1], MAIN_ITEMS[2], ...STUDY_ITEMS, STUDY_HUB
 // Đọc tiến độ hướng nghiệp THẬT đã lưu của tài khoản (không có thì coi như chưa bắt đầu)
 function readCareerProgress(userId: string): { started: boolean; hasResult: boolean; saved: number } {
   try {
-    const raw = localStorage.getItem(`user_${userId}_career_v3`);
+    const raw = localStorage.getItem(`user_${userId}_career_v4`);
     if (!raw) return { started: false, hasResult: false, saved: 0 };
     const s = JSON.parse(raw);
     const answered = Object.values(s?.answers || {}).filter((v) => typeof v === "number").length;
     return {
       started: answered > 0,
-      hasResult: Boolean(s?.completedAt) && answered >= 10,
+      hasResult: Boolean(s?.completedAt) && answered >= 18,
       saved: Array.isArray(s?.saved) ? s.saved.length : 0,
     };
   } catch {
@@ -172,7 +172,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onAskAI, profi
                   Bạn đã có kết quả tổng hợp{career.saved ? ` và đã lưu ${career.saved} nghề` : ""}. Bạn có thể hỏi thêm AI bất cứ lúc nào.
                 </span>
               ) : career.started ? (
-                <span className="text-navy font-bold">Bạn đã bắt đầu khảo sát nhưng chưa xem kết quả.</span>
+                <span className="text-navy font-bold">Bạn đã bắt đầu làm phiếu nhưng chưa xem kết quả.</span>
               ) : (
                 <span className="text-muted">Bạn chưa bắt đầu. Mất khoảng 5 phút.</span>
               )}

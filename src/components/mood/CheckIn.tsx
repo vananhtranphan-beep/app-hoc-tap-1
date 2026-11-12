@@ -139,13 +139,18 @@ export const CheckIn: React.FC<Props> = ({ remaining, isGuest, onSave }) => {
             </div>
           )}
 
-          <button
-            onClick={save}
-            disabled={!canSave}
-            className="w-full min-h-12 rounded-xl bg-leaf-deep hover:bg-leaf-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold inline-flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Check className="w-4 h-4" /> Check-in
-          </button>
+          {/* Điện thoại: chọn xong là nút Check-in nổi ở đáy màn hình (trên thanh menu), không phải kéo tìm */}
+          <div className={canSave ? "sticky bottom-[calc(5.75rem+env(safe-area-inset-bottom))] lg:static z-20" : ""}>
+            <button
+              onClick={save}
+              disabled={!canSave}
+              className={`w-full min-h-12 rounded-xl bg-leaf-deep hover:bg-leaf-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold inline-flex items-center justify-center gap-2 cursor-pointer ${
+                canSave ? "shadow-[0_8px_20px_-6px_rgba(35,122,47,0.65)] lg:shadow-none" : ""
+              }`}
+            >
+              <Check className="w-4 h-4" /> Check-in
+            </button>
+          </div>
           {!canSave && <p className="text-xs text-muted text-center">Chọn ít nhất một thời tiết hoặc tự gọi tên cảm xúc để check-in.</p>}
         </>
       )}

@@ -101,12 +101,12 @@ export const CareerChat: React.FC<Props> = ({ grade, messages, onChange, context
     <div className="space-y-3">
       {!ready && messages.length === 0 && (
         <div className="p-3 rounded-xl bg-clay-soft/50 border border-clay-soft text-sm text-navy">
-          Bạn hỏi gì cũng được: nghề nghiệp, ngành học, sở thích, thế mạnh, con đường sau lớp 9. Nếu muốn AI gợi ý nghề sát với bạn hơn, bạn có thể làm khảo sát (không bắt buộc).
+          Bạn hỏi gì cũng được: nghề nghiệp, ngành học, sở thích, thế mạnh, con đường sau lớp 9. Nếu muốn AI gợi ý nghề sát với bạn hơn, bạn có thể làm phiếu 18 câu (không bắt buộc).
         </div>
       )}
       <p className="flex items-start gap-1.5 text-xs text-muted">
         <Info className="w-4 h-4 text-clay-deep shrink-0" />
-        Khi bạn bấm gửi, web gửi cho AI: khối lớp, câu bạn hỏi và kết quả khảo sát nếu có (không có tên). AI không truy cập được số liệu mới trên mạng và có thể sai; hãy hỏi thêm thầy cô, bố mẹ.
+        Khi bạn bấm gửi, web gửi cho AI: khối lớp, câu bạn hỏi và kết quả phiếu nếu có (không có tên). AI không truy cập được số liệu mới trên mạng và có thể sai; hãy hỏi thêm thầy cô, bố mẹ.
       </p>
 
       {messages.length > 0 && (

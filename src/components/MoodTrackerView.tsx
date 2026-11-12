@@ -133,11 +133,13 @@ const MoodTrackerInner: React.FC<Props & { onLock?: () => void }> = ({ userId = 
   const saveCheckIn = (r: CheckInResult) => {
     const n = addEntry(state, r);
     if (n === state) return; // đã đủ 5 lần hôm nay
-    // Điện thoại: cây đang bị khuất phía trên thì tự cuộn lên cho thấy cây vừa đổi
+    // Điện thoại / máy tính bảng: check-in xong luôn cuộn lên cho thấy cây vừa đổi (chờ giao diện cập nhật xong mới cuộn)
     setTimeout(() => {
       const el = treeRef.current;
-      if (el && el.getBoundingClientRect().top < 70) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 60);
+      if (!el || window.innerWidth >= 1024) return;
+      const y = el.getBoundingClientRect().top + window.scrollY - 88;
+      window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+    }, 180);
     const f = formOf(r.weathers);
     const grew = stageIndex(n) > stage ? ` Cây đã lớn thành "${STAGES[stageIndex(n)].name}".` : "";
     let msg: string;

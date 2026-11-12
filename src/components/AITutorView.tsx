@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Bot, User, Sparkles, RefreshCw, Sigma } from "lucide-react";
+import { Send, Bot, User, Sparkles, RefreshCw, Sigma, ArrowLeft } from "lucide-react";
 import { MathMarkdown } from "./MathMarkdown";
 import { MathKeyboard } from "./MathKeyboard";
+import { Emoji3D } from "./FunIcon";
 
 interface Message {
   role: "user" | "model";
@@ -14,6 +15,8 @@ interface AITutorViewProps {
   /** Câu hỏi gửi sang từ Trang chủ hoặc Bản đồ chinh phục (kèm ngữ cảnh môn, chương) */
   initialQuestion?: string;
   onInitialQuestionUsed?: () => void;
+  /** Nút quay lại ở thanh tiêu đề */
+  onBack?: () => void;
 }
 
 const WELCOME: Message = {
@@ -34,13 +37,13 @@ const QUICK_ACTIONS: [string, string][] = [
 // Chỉ gửi những tin nhắn gần nhất để AI trả lời nhanh và không vượt giới hạn
 const MAX_HISTORY = 12;
 
-export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion, onInitialQuestionUsed }) => {
+export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion, onInitialQuestionUsed, onBack }) => {
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [subject, setSubject] = useState("Toán Học");
-  // Điện thoại: bàn phím công thức ẩn sẵn để khung trò chuyện rộng hơn (bấm nút ∑ để mở)
-  const [showKeyboard, setShowKeyboard] = useState(() => typeof window === "undefined" || window.innerWidth >= 1024);
+  // Bàn phím công thức ẩn sẵn để khung trò chuyện rộng (bấm nút ∑ cạnh ô nhập để mở)
+  const [showKeyboard, setShowKeyboard] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initialSent = useRef(false);
@@ -59,8 +62,8 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
 
   // Môn Toán / KHTN thì mở sẵn bàn phím công thức
   useEffect(() => {
-    // Môn Toán, KHTN: mở sẵn bàn phím công thức trên máy tính; điện thoại để ẩn cho khung trò chuyện rộng
-    setShowKeyboard((subject === "Toán Học" || subject === "Khoa Học Tự Nhiên") && window.innerWidth >= 1024);
+    // Đổi môn thì đóng bàn phím công thức (mở lại bằng nút ∑)
+    setShowKeyboard(false);
   }, [subject]);
 
   const sendMessage = async (text: string, history: Message[]) => {
@@ -129,16 +132,31 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-15.5rem)] lg:h-[calc(100vh-10rem)] min-h-[420px] max-w-5xl mx-auto space-y-2.5 sm:space-y-3">
+    <div className="flex flex-col h-[calc(100dvh-11.5rem)] lg:h-[calc(100vh-8rem)] min-h-[380px] max-w-5xl mx-auto space-y-2.5">
       {/* Header Bar */}
-      <div className="p-1.5 sm:p-2.5 rounded-2xl bg-white border-2 border-sky-line flex items-center justify-between gap-2">
-        <span className="pl-1 text-sm font-bold text-navy">Môn</span>
-        <div className="flex items-center gap-2">
+      <header
+        className="fun-band shrink-0 rounded-2xl px-2 py-1.5 flex items-center gap-2 text-navy"
+        style={{ background: "#86c8ff", ["--band-edge" as string]: "#4f9de6" }}
+      >
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Quay lại Học tập thông minh"
+            className="w-10 h-10 shrink-0 flex items-center justify-center rounded-lg bg-white/60 hover:bg-white/85 text-navy cursor-pointer transition"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
+        <Emoji3D emoji="🤖" className="w-9 h-9 object-contain shrink-0" />
+        <h2 className="shrink-0 whitespace-nowrap text-base sm:text-lg font-black tracking-tight">Gia sư AI</h2>
+        <div className="ml-auto min-w-0 flex items-center gap-1.5">
           <span className="sr-only">Môn:</span>
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="min-h-10 px-3 rounded-xl bg-sky-bg border-2 border-sky-line text-sm font-bold text-navy focus:outline-none focus:border-ocean"
+            aria-label="Chọn môn"
+            className="min-h-10 w-[6.75rem] sm:w-auto sm:max-w-[9.5rem] px-2 sm:px-2.5 rounded-xl bg-white border-2 border-white text-sm font-bold text-navy focus:outline-none focus:border-ocean"
           >
             <option value="Toán Học">Toán</option>
             <option value="Ngữ Văn">Ngữ văn</option>
@@ -152,12 +170,13 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ grade, initialQuestion
             onClick={handleNewChat}
             disabled={isLoading}
             title="Bắt đầu cuộc trò chuyện mới"
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border-2 border-sky-line hover:border-ocean text-ocean transition cursor-pointer disabled:opacity-50"
+            aria-label="Bắt đầu cuộc trò chuyện mới"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 hover:bg-white text-ocean transition cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Chat Messages Box */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4 rounded-2xl bg-white border border-sky-line shadow-sm space-y-4">

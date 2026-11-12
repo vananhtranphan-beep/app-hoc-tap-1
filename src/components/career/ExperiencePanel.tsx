@@ -21,6 +21,8 @@ export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; upd
       const cur = s.experiences[c.id] || { status: "doing" as const, reflection: "" };
       return { ...s, experiences: { ...s.experiences, [c.id]: { ...cur, ...patch } } };
     });
+  const x = c.profile?.experience;
+  if (!x) return null;
 
   return (
     <section id="trai-nghiem" className="rounded-2xl bg-clay-card border border-clay-soft p-5 sm:p-6 space-y-4 scroll-mt-24">
@@ -29,7 +31,8 @@ export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; upd
           <div className="text-xs font-bold text-clay-deep uppercase tracking-wide flex items-center gap-1.5">
             <FlaskConical className="w-4 h-4" /> Hoạt động trải nghiệm
           </div>
-          <h3 className="text-lg font-extrabold text-navy mt-1">{c.experience.title}</h3>
+          <h3 className="text-lg font-extrabold text-navy mt-1">{x.title}</h3>
+          {c.profile && <p className="text-xs text-muted mt-0.5">Thử làm như một {c.profile.name.toLowerCase()}</p>}
         </div>
         <span
           className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -45,19 +48,19 @@ export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; upd
           <div className="text-xs font-bold text-muted flex items-center gap-1">
             <Target className="w-3.5 h-3.5" /> Mục tiêu
           </div>
-          <p className="mt-1 text-ink">{c.experience.goal}</p>
+          <p className="mt-1 text-ink">{x.goal}</p>
         </div>
         <div className="p-3 rounded-xl bg-white border border-clay-soft">
           <div className="text-xs font-bold text-muted flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" /> Thời gian
           </div>
-          <p className="mt-1 text-ink">Khoảng {c.experience.minutes} phút</p>
+          <p className="mt-1 text-ink">Khoảng {x.minutes} phút</p>
         </div>
         <div className="p-3 rounded-xl bg-white border border-clay-soft">
           <div className="text-xs font-bold text-muted flex items-center gap-1">
             <Flag className="w-3.5 h-3.5" /> Kết quả cần có
           </div>
-          <p className="mt-1 text-ink">{c.experience.result}</p>
+          <p className="mt-1 text-ink">{x.result}</p>
         </div>
       </div>
 
@@ -66,7 +69,7 @@ export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; upd
           <ListChecks className="w-4 h-4" /> Hướng dẫn
         </h4>
         <ol className="list-decimal pl-5 space-y-1 text-sm text-ink">
-          {c.experience.steps.map((s) => (
+          {x.steps.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ol>
@@ -81,7 +84,7 @@ export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; upd
           <div>
             <h4 className="text-sm font-bold text-navy mb-1">Tự suy ngẫm (không bắt buộc)</h4>
             <ul className="text-sm text-muted list-disc pl-5 space-y-0.5 mb-2">
-              {c.experience.reflect.map((r) => (
+              {x.reflect.map((r) => (
                 <li key={r}>{r}</li>
               ))}
             </ul>

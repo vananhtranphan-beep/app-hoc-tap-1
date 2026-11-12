@@ -5,14 +5,14 @@ import { CodeBadge } from "./ui";
 import { Attribution } from "./QuizStep";
 
 // ============================================================
-// MÀN GIỚI THIỆU TRƯỚC KHI LÀM KHẢO SÁT (mô hình Holland – RIASEC)
+// MÀN GIỚI THIỆU TRƯỚC KHI LÀM PHIẾU (lí thuyết mật mã Holland theo SGK Công nghệ 9)
 // Không tuyên bố đây là bài trắc nghiệm chuẩn hóa hay đã được kiểm định.
 // ============================================================
 
 const NOTES = [
-  "Không có câu trả lời đúng hay sai. Bạn chỉ cần chọn mức độ thích hay không thích.",
-  "Câu trả lời giúp AI hiểu thêm sở thích và lĩnh vực bạn quan tâm để gợi ý nghề có cơ sở hơn.",
-  "Kết quả chỉ để tham khảo, không quyết định nghề nghiệp tương lai của bạn. Sở thích có thể thay đổi khi bạn lớn lên và trải nghiệm thêm.",
+  "Không có câu trả lời đúng hay sai. Em chỉ cần chọn mỗi câu giống mình đến mức nào.",
+  "Web tự cộng điểm 6 nhóm theo công thức cố định, rồi so với danh sách nghề để gợi ý. AI chỉ giải thích kết quả.",
+  "Kết quả chỉ để tham khảo, giúp em hiểu mình hơn. Sở thích và tính cách có thể thay đổi khi em lớn lên và trải nghiệm thêm.",
   "Không cần cung cấp tên thật, ngày sinh, trường lớp hay bất kỳ thông tin nhận dạng nào.",
 ];
 
@@ -21,8 +21,8 @@ export const HollandIntro: React.FC<{ onStart: () => void; onOpenAbout: () => vo
     <div>
       <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight">Trước khi khám phá những nghề nghiệp tương lai...</h2>
       <p className="text-sm sm:text-base text-ink mt-2 leading-relaxed">
-        Khảo sát này vận dụng <b>mô hình sở thích nghề nghiệp của nhà tâm lý học John Holland</b> (gọi tắt là RIASEC). Theo mô hình này, sở thích nghề nghiệp
-        của mỗi người thường nghiêng về một vài trong 6 nhóm dưới đây. Ai cũng có một chút của nhiều nhóm.
+        Phiếu này dựa trên <b>lí thuyết mật mã Holland</b> mà em được học trong SGK Công nghệ 9 (Hình 4.2). Theo lí thuyết này có 6 nhóm tính cách nghề nghiệp.
+        Mỗi người thường mang đặc điểm của 2–3 nhóm, không ai chỉ thuộc đúng một nhóm.
       </p>
     </div>
 
@@ -32,10 +32,9 @@ export const HollandIntro: React.FC<{ onStart: () => void; onOpenAbout: () => vo
           <div className="flex items-center gap-2">
             <CodeBadge code={c} />
             <span className="font-bold text-navy">{RIASEC[c].name}</span>
-            <span className="text-xs text-muted italic">{RIASEC[c].en}</span>
           </div>
           <p className="text-sm text-ink">{RIASEC[c].short}.</p>
-          <p className="text-xs text-muted">Ví dụ: {RIASEC[c].like.toLowerCase()}.</p>
+          <p className="text-xs text-muted">{RIASEC[c].like}.</p>
         </li>
       ))}
     </ul>
@@ -49,15 +48,15 @@ export const HollandIntro: React.FC<{ onStart: () => void; onOpenAbout: () => vo
     </ul>
 
     <p className="text-xs text-muted leading-relaxed">
-      {INTEREST_ITEMS.length} câu hỏi được phỏng theo bản 30 câu của O*NET® Interest Profiler (Bộ Lao động Hoa Kỳ), dịch và viết lại cho học sinh lớp 6–9. Đây là
-      công cụ khám phá, chưa phải bài trắc nghiệm đã được chuẩn hóa hay kiểm định cho học sinh Việt Nam.
+      {INTEREST_ITEMS.length} câu được tách từ đặc điểm của 6 nhóm trong Hình 4.2, mỗi nhóm 3 câu, viết lại cho dễ hiểu và xếp xen kẽ. Đây là công cụ tự khám phá,
+      chưa phải bài trắc nghiệm đã được chuẩn hóa.
     </p>
 
     <div className="flex flex-wrap items-center gap-3">
       <button onClick={onStart} className="min-h-12 px-6 rounded-xl bg-clay-deep hover:bg-clay-dark text-white font-bold inline-flex items-center gap-2 cursor-pointer">
-        {resumeAt ? `Làm tiếp từ câu ${resumeAt}` : "Bắt đầu khảo sát"} <ArrowRight className="w-4 h-4" />
+        {resumeAt ? `Làm tiếp từ câu ${resumeAt}` : "Bắt đầu"} <ArrowRight className="w-4 h-4" />
       </button>
-      <span className="text-xs text-muted">Khoảng 5–7 phút · Có thể bỏ qua câu bất kỳ</span>
+      <span className="text-xs text-muted">Khoảng 3–5 phút · Cần trả lời đủ {INTEREST_ITEMS.length} câu</span>
     </div>
     <Attribution onOpenAbout={onOpenAbout} />
   </section>
