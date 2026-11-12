@@ -1,12 +1,12 @@
 import React from "react";
-import { Bookmark, BookmarkCheck, Columns3, Bot, FlaskConical, ArrowLeft, Lightbulb, BookOpen } from "lucide-react";
+import { Bookmark, BookmarkCheck, Columns3, Bot, FlaskConical, ArrowLeft, Lightbulb } from "lucide-react";
 import { Career, RIASEC, sameField } from "../../data/careerData";
 import { CareerState, LEVEL_LABEL, Suggestion } from "../../lib/career";
 import { Card, CodeBadge, GhostBtn, PrimaryBtn, SourceTag } from "./ui";
 import { ExperiencePanel } from "./ExperiencePanel";
 
 // ============================================================
-// CHI TIẾT NGHỀ: nhóm theo nguồn, lý do gợi ý, nghề tiêu biểu + hoạt động trải nghiệm (nếu có)
+// CHI TIẾT NGHỀ: lý do gợi ý, nghề tiêu biểu, hoạt động trải nghiệm (nếu có), nghề cùng lĩnh vực
 // ============================================================
 
 interface Props {
@@ -20,6 +20,7 @@ interface Props {
   onToggleCompare: (id: string) => void;
   update: (fn: (s: CareerState) => CareerState) => void;
   onAskAI: (c: Career) => void;
+  onMoreCareers: () => void;
   backLabel: string;
 }
 
@@ -34,7 +35,7 @@ const Block: React.FC<{ title: string; items: string[] }> = ({ title, items }) =
   </div>
 );
 
-export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, hasQuiz, onBack, onOpenCareer, onToggleSave, onToggleCompare, update, onAskAI, backLabel }) => {
+export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, hasQuiz, onBack, onOpenCareer, onToggleSave, onToggleCompare, update, onAskAI, onMoreCareers, backLabel }) => {
   const saved = state.saved.includes(c.id);
   const comparing = state.compare.includes(c.id);
   const related = sameField(c);
@@ -112,25 +113,6 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
         )}
       </Card>
 
-      {/* Nguồn */}
-      <Card className="space-y-2">
-        <h3 className="font-extrabold text-navy flex items-center gap-1.5">
-          <BookOpen className="w-4 h-4 text-clay-deep" /> Nguồn
-        </h3>
-        <ul className="text-sm text-ink list-disc pl-5 space-y-1">
-          <li>
-            Trường ĐH Văn Lang xếp nghề này vào nhóm: <b>{c.vlu.map((x) => RIASEC[x].name).join(", ")}</b>.
-          </li>
-          {c.onet ? (
-            <li>
-              Ghép với nghề O*NET "{c.onet.title}" ({c.onet.soc}), mã Holland: <b>{c.onet.codes.map((x) => RIASEC[x].name).join(" – ")}</b>.
-            </li>
-          ) : (
-            <li className="text-muted">Chưa ghép với cơ sở dữ liệu O*NET.</li>
-          )}
-        </ul>
-      </Card>
-
       {c.profile && (
         <div className="grid md:grid-cols-2 gap-4">
           <Card className="space-y-4">
@@ -144,6 +126,8 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
         </div>
       )}
 
+      {c.profile && <ExperiencePanel career={c} state={state} update={update} onMoreCareers={onMoreCareers} />}
+
       {related.length > 0 && (
         <Card className="space-y-2">
           <h4 className="text-sm font-bold text-navy">Các nghề cùng lĩnh vực {c.field.toLowerCase()}</h4>
@@ -156,8 +140,6 @@ export const CareerDetail: React.FC<Props> = ({ career: c, state, suggestion, ha
           </div>
         </Card>
       )}
-
-      {c.profile && <ExperiencePanel career={c} state={state} update={update} />}
     </div>
   );
 };

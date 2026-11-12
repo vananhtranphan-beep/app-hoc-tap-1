@@ -224,10 +224,7 @@ export const ResultView: React.FC<Props> = (p) => {
             <h3 className="text-xl font-extrabold text-navy">Những nghề phù hợp với bạn</h3>
             <SourceTag kind="web" />
           </div>
-          <p className="text-sm text-muted">
-            Web so mã Holland của bạn với nhóm của từng nghề. <b>Rất phù hợp</b>: nghề trùng nhóm cao nhất của bạn và còn trùng thêm nhóm cao khác. <b>Phù hợp</b>: nhóm
-            của nghề nằm trong 3 nhóm cao của bạn. Đây là gợi ý để khám phá, không phải kết luận. Không nghề nào cao quý hơn nghề nào.
-          </p>
+          <p className="text-base sm:text-lg text-ink">Đây là gợi ý để khám phá, không phải kết luận. Không nghề nào cao quý hơn nghề nào.</p>
 
           {groups.map((g) => {
             const open = expanded[g.code];

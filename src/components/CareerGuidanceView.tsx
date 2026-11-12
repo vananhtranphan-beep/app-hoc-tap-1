@@ -234,6 +234,7 @@ export const CareerGuidanceView: React.FC<Props> = ({ userId = "default", grade 
           onToggleCompare={toggleCompare}
           update={update}
           onAskAI={askAboutCareer}
+          onMoreCareers={() => openCatalog({ filter: recommendedIds.length ? "rec" : "all" })}
         />
       )}
 

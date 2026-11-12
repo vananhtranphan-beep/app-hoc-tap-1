@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock, Target, ListChecks, Flag, CheckCircle2, Play, FlaskConical } from "lucide-react";
+import { Clock, Target, ListChecks, Flag, CheckCircle2, Play, FlaskConical, LayoutGrid } from "lucide-react";
 import { Career } from "../../data/careerData";
 import { CareerState } from "../../lib/career";
 
@@ -14,7 +14,12 @@ const FIT = [
   { id: "chua-hop", label: "Chưa thấy hợp" },
 ] as const;
 
-export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; update: (fn: (s: CareerState) => CareerState) => void }> = ({ career: c, state, update }) => {
+export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; update: (fn: (s: CareerState) => CareerState) => void; onMoreCareers?: () => void }> = ({
+  career: c,
+  state,
+  update,
+  onMoreCareers,
+}) => {
   const e = state.experiences[c.id];
   const setExp = (patch: Partial<CareerState["experiences"][string]>) =>
     update((s) => {
@@ -127,6 +132,16 @@ export const ExperiencePanel: React.FC<{ career: Career; state: CareerState; upd
             <p className="text-sm font-semibold text-clay-deep inline-flex items-center gap-1.5" role="status">
               <CheckCircle2 className="w-4 h-4" /> Đã lưu là hoàn thành
             </p>
+          )}
+          {onMoreCareers && (
+            <div>
+              <button
+                onClick={onMoreCareers}
+                className="min-h-11 px-4 rounded-xl bg-white border border-clay-soft hover:border-clay text-navy font-semibold text-sm inline-flex items-center gap-2 cursor-pointer"
+              >
+                <LayoutGrid className="w-4 h-4" /> Xem thêm các nghề khác
+              </button>
+            </div>
           )}
         </div>
       )}

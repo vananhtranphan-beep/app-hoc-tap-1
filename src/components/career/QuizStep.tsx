@@ -29,7 +29,7 @@ interface Props {
 
 export const Attribution: React.FC<{ onOpenAbout: () => void }> = ({ onOpenAbout }) => (
   <p className="text-[11px] text-muted leading-relaxed">
-    Câu hỏi dựa trên Hình 4.2, SGK Công nghệ 9 – Định hướng nghề nghiệp (Kết nối tri thức) · Nghề theo Trường ĐH Văn Lang ·{" "}
+    Câu hỏi dựa trên Hình 4.2, SGK Công nghệ 9 – Định hướng nghề nghiệp (Kết nối tri thức) · Nghề theo Trường ĐH Văn Lang · Mã Holland của nghề tham khảo O*NET® (Bộ Lao động Hoa Kỳ) ·{" "}
     <button onClick={onOpenAbout} className="underline hover:text-navy cursor-pointer">
       Nguồn và cách tính điểm
     </button>
